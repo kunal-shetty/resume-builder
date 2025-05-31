@@ -111,7 +111,7 @@ export default function HomePage() {
               </Button>
             </Link>
 
-            <Link href="/templates" className="w-full">
+    /*        <Link href="/templates" className="w-full">
               <Button
                 variant="outline"
                 size="lg"
@@ -120,7 +120,7 @@ export default function HomePage() {
                 View Templates
                 <Sparkles className="ml-2 w-4 h-4" />
               </Button>
-            </Link>
+            </Link> */
           </motion.div>
         </motion.div>
       </section>
