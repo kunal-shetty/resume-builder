@@ -732,20 +732,21 @@ export default function BuilderPage() {
         animate={{ y: 0 }}
         className="bg-black/20 backdrop-blur-md border-b border-white/10 sticky top-0 z-50"
       >
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl md:text-2xl font-bold text-white">Portfolio Builder</h1>
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-white truncate">Portfolio Builder</h1>
 
-            {/* Desktop Header Buttons */}
-            <div className="hidden md:flex items-center gap-3">
+            {/* Mobile-First Button Layout */}
+            <div className="flex items-center gap-1 sm:gap-2">
+              {/* Always visible core buttons */}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={togglePreviewMode}
-                className="text-white border-white/40 hover:bg-white/10 bg-white/5 opacity-100 font-medium"
+                className="text-white border-white/40 hover:bg-white/10 bg-white/5 opacity-100 font-medium text-xs sm:text-sm px-2 sm:px-3"
               >
-                <Eye className="w-4 h-4 mr-2" />
-                {isPreviewMode ? "Edit" : "Preview"}
+                <Eye className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                <span className="hidden sm:inline">{isPreviewMode ? "Edit" : "Preview"}</span>
               </Button>
 
               <Button
@@ -753,189 +754,105 @@ export default function BuilderPage() {
                 size="sm"
                 onClick={savePortfolio}
                 disabled={isSaving}
-                className="text-white border-white/40 hover:bg-white/10 bg-white/5 opacity-100 font-medium"
+                className="text-white border-white/40 hover:bg-white/10 bg-white/5 opacity-100 font-medium text-xs sm:text-sm px-2 sm:px-3"
               >
                 {isSaving ? (
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                    className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full"
+                    className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full"
                   />
                 ) : (
-                  <Save className="w-4 h-4 mr-2" />
+                  <Save className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
                 )}
-                {isSaving ? "Saving..." : "Save"}
+                <span className="hidden sm:inline">{isSaving ? "Saving..." : "Save"}</span>
               </Button>
 
-              <Button
-                size="sm"
-                onClick={exportPortfolio}
-                disabled={isExporting}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white opacity-100 font-medium"
-              >
-                {isExporting ? (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                    className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full"
-                  />
-                ) : (
-                  <Download className="w-4 h-4 mr-2" />
-                )}
-                {isExporting ? "Exporting..." : "Export ZIP"}
-              </Button>
-
-              <Button
-                size="sm"
-                onClick={generateAndViewPortfolio}
-                disabled={isDeploying}
-                className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white opacity-100 font-medium"
-              >
-                {isDeploying ? (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                    className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full"
-                  />
-                ) : (
-                  <Globe className="w-4 h-4 mr-2" />
-                )}
-                {isDeploying ? "Generating..." : "View Live Site"}
-              </Button>
-
-              {generatedPortfolioUrl && (
+              {/* Mobile dropdown for additional actions */}
+              <div className="relative">
                 <Button
-                  size="sm"
-                  onClick={viewGeneratedPortfolio}
                   variant="outline"
-                  className="text-white border-white/40 hover:bg-white/10 bg-white/5 opacity-100 font-medium"
+                  size="sm"
+                  onClick={() => setShowMobileMenu(!showMobileMenu)}
+                  className="text-white border-white/40 hover:bg-white/10 bg-white/5 opacity-100 font-medium text-xs sm:text-sm px-2 sm:px-3"
                 >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Open Site
+                  <Menu className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden lg:inline ml-1">More</span>
                 </Button>
-              )}
-            </div>
 
-            {/* Mobile Menu Button */}
-            <div className="md:hidden">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="text-white border-white/40 hover:bg-white/10 bg-white/5 opacity-100"
-              >
-                <Menu className="w-4 h-4" />
-              </Button>
+                {/* Dropdown Menu */}
+                <AnimatePresence>
+                  {showMobileMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                      className="absolute right-0 top-full mt-2 w-48 sm:w-56 bg-gray-900 border border-gray-700 rounded-lg shadow-xl z-50"
+                    >
+                      <div className="p-2 space-y-1">
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            exportPortfolio()
+                            setShowMobileMenu(false)
+                          }}
+                          disabled={isExporting}
+                          className="w-full justify-start bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white opacity-100 font-medium text-xs"
+                        >
+                          {isExporting ? (
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                              className="w-3 h-3 mr-2 border-2 border-white border-t-transparent rounded-full"
+                            />
+                          ) : (
+                            <Download className="w-3 h-3 mr-2" />
+                          )}
+                          {isExporting ? "Exporting..." : "Export ZIP"}
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            generateAndViewPortfolio()
+                            setShowMobileMenu(false)
+                          }}
+                          disabled={isDeploying}
+                          className="w-full justify-start bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white opacity-100 font-medium text-xs"
+                        >
+                          {isDeploying ? (
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                              className="w-3 h-3 mr-2 border-2 border-white border-t-transparent rounded-full"
+                            />
+                          ) : (
+                            <Globe className="w-3 h-3 mr-2" />
+                          )}
+                          {isDeploying ? "Generating..." : "View Live Site"}
+                        </Button>
+
+                        {generatedPortfolioUrl && (
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              viewGeneratedPortfolio()
+                              setShowMobileMenu(false)
+                            }}
+                            variant="outline"
+                            className="w-full justify-start text-white border-white/40 hover:bg-white/10 bg-white/5 opacity-100 font-medium text-xs"
+                          >
+                            <ExternalLink className="w-3 h-3 mr-2" />
+                            Open Site
+                          </Button>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
-
-          {/* Mobile Menu */}
-          <AnimatePresence>
-            {showMobileMenu && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="md:hidden mt-4 space-y-3"
-              >
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      togglePreviewMode()
-                      setShowMobileMenu(false)
-                    }}
-                    className="text-white border-white/40 hover:bg-white/10 bg-white/5 opacity-100 font-medium text-xs"
-                  >
-                    <Eye className="w-3 h-3 mr-1" />
-                    {isPreviewMode ? "Edit" : "Preview"}
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      savePortfolio()
-                      setShowMobileMenu(false)
-                    }}
-                    disabled={isSaving}
-                    className="text-white border-white/40 hover:bg-white/10 bg-white/5 opacity-100 font-medium text-xs"
-                  >
-                    {isSaving ? (
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                        className="w-3 h-3 mr-1 border-2 border-white border-t-transparent rounded-full"
-                      />
-                    ) : (
-                      <Save className="w-3 h-3 mr-1" />
-                    )}
-                    {isSaving ? "Saving..." : "Save"}
-                  </Button>
-                </div>
-
-                <div className="grid grid-cols-1 gap-2">
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      exportPortfolio()
-                      setShowMobileMenu(false)
-                    }}
-                    disabled={isExporting}
-                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white opacity-100 font-medium text-xs"
-                  >
-                    {isExporting ? (
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                        className="w-3 h-3 mr-1 border-2 border-white border-t-transparent rounded-full"
-                      />
-                    ) : (
-                      <Download className="w-3 h-3 mr-1" />
-                    )}
-                    {isExporting ? "Exporting..." : "Export ZIP"}
-                  </Button>
-
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      generateAndViewPortfolio()
-                      setShowMobileMenu(false)
-                    }}
-                    disabled={isDeploying}
-                    className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white opacity-100 font-medium text-xs"
-                  >
-                    {isDeploying ? (
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                        className="w-3 h-3 mr-1 border-2 border-white border-t-transparent rounded-full"
-                      />
-                    ) : (
-                      <Globe className="w-3 h-3 mr-1" />
-                    )}
-                    {isDeploying ? "Generating..." : "View Live Site"}
-                  </Button>
-
-                  {generatedPortfolioUrl && (
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        viewGeneratedPortfolio()
-                        setShowMobileMenu(false)
-                      }}
-                      variant="outline"
-                      className="text-white border-white/40 hover:bg-white/10 bg-white/5 opacity-100 font-medium text-xs"
-                    >
-                      <ExternalLink className="w-3 h-3 mr-1" />
-                      Open Site
-                    </Button>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       </motion.header>
 
@@ -1027,21 +944,23 @@ export default function BuilderPage() {
                   </CardHeader>
                   <CardContent>
                     <Tabs value={activeTab} onValueChange={setActiveTab}>
-                      <TabsList className="grid w-full grid-cols-5 bg-white/5 text-xs md:text-sm">
-                        <TabsTrigger value="basic" className="text-xs md:text-sm">
-                          Basic Info
+                      <TabsList className="grid w-full grid-cols-5 bg-white/5 text-xs h-auto">
+                        <TabsTrigger value="basic" className="text-xs py-2 px-1 data-[state=active]:bg-white/20">
+                          <span className="hidden sm:inline">Basic Info</span>
+                          <span className="sm:hidden">Basic</span>
                         </TabsTrigger>
-                        <TabsTrigger value="projects" className="text-xs md:text-sm">
+                        <TabsTrigger value="projects" className="text-xs py-2 px-1 data-[state=active]:bg-white/20">
                           Projects
                         </TabsTrigger>
-                        <TabsTrigger value="skills" className="text-xs md:text-sm">
+                        <TabsTrigger value="skills" className="text-xs py-2 px-1 data-[state=active]:bg-white/20">
                           Skills
                         </TabsTrigger>
-                        <TabsTrigger value="theme" className="text-xs md:text-sm">
+                        <TabsTrigger value="theme" className="text-xs py-2 px-1 data-[state=active]:bg-white/20">
                           Theme
                         </TabsTrigger>
-                        <TabsTrigger value="settings" className="text-xs md:text-sm">
-                          Settings
+                        <TabsTrigger value="settings" className="text-xs py-2 px-1 data-[state=active]:bg-white/20">
+                          <span className="hidden sm:inline">Settings</span>
+                          <span className="sm:hidden">Set</span>
                         </TabsTrigger>
                       </TabsList>
 

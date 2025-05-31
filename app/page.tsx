@@ -78,10 +78,10 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 0.5 }}
             className="mb-8"
           >
-            <GlitchText text="PORTFOLIO" className="text-8xl md:text-9xl font-black mb-4" />
+            <GlitchText text="PORTFOLIO" className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-black mb-4" />
             <TypewriterText
               text="BUILDER"
-              className="text-6xl md:text-8xl font-black bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 bg-clip-text text-transparent"
+              className="text-3xl sm:text-5xl md:text-6xl lg:text-8xl font-black bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 bg-clip-text text-transparent"
             />
           </motion.div>
 
@@ -89,7 +89,7 @@ export default function HomePage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.5 }}
-            className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed"
+            className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed px-4"
           >
             Create stunning, animated portfolios with crazy effects, real-time customization, and one-click deployment.
             No coding required.
@@ -99,26 +99,26 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 2 }}
-            className="flex flex-col sm:flex-row gap-6 justify-center items-center"
+            className="flex flex-col gap-4 justify-center items-center max-w-md mx-auto"
           >
-            <Link href="/builder">
+            <Link href="/builder" className="w-full">
               <Button
                 size="lg"
-                className="group bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/25"
+                className="group bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 text-base font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/25 w-full"
               >
                 Start Building
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
 
-            <Link href="/templates">
+            <Link href="/templates" className="w-full">
               <Button
                 variant="outline"
                 size="lg"
-                className="border-2 border-purple-500 text-purple-400 hover:bg-purple-500 hover:text-white px-8 py-4 text-lg font-semibold rounded-full transition-all duration-300 hover:scale-105"
+                className="border-2 border-purple-500 text-purple-400 hover:bg-purple-500 hover:text-white px-6 py-3 text-base font-semibold rounded-full transition-all duration-300 hover:scale-105 w-full"
               >
                 View Templates
-                <Sparkles className="ml-2 w-5 h-5" />
+                <Sparkles className="ml-2 w-4 h-4" />
               </Button>
             </Link>
           </motion.div>
