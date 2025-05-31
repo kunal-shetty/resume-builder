@@ -99,28 +99,17 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 2 }}
-            className="flex flex-col gap-4 justify-center items-center max-w-md mx-auto"
+            className="flex justify-center items-center"
           >
-            <Link href="/builder" className="w-full">
+            <Link href="/builder">
               <Button
                 size="lg"
-                className="group bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 text-base font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/25 w-full"
+                className="group bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-6 py-3 text-base font-semibold rounded-full transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/25"
               >
                 Start Building
                 <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
-
-    /*        <Link href="/templates" className="w-full">
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-2 border-purple-500 text-purple-400 hover:bg-purple-500 hover:text-white px-6 py-3 text-base font-semibold rounded-full transition-all duration-300 hover:scale-105 w-full"
-              >
-                View Templates
-                <Sparkles className="ml-2 w-4 h-4" />
-              </Button>
-            </Link> */
           </motion.div>
         </motion.div>
       </section>
