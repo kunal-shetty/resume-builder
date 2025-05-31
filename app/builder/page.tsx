@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Eye, Download, Globe, Plus, Trash2, Edit3, Save, ExternalLink, Copy, Upload, User } from "lucide-react"
+import { Eye, Download, Globe, Plus, Trash2, Edit3, Save, ExternalLink, Copy, Upload, User, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -118,6 +118,7 @@ export default function BuilderPage() {
   const [customUrl, setCustomUrl] = useState("")
   const [showDeployDialog, setShowDeployDialog] = useState(false)
   const [generatedPortfolioUrl, setGeneratedPortfolioUrl] = useState("")
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
 
   // Load saved data on mount
   useEffect(() => {
@@ -731,58 +732,59 @@ export default function BuilderPage() {
         animate={{ y: 0 }}
         className="bg-black/20 backdrop-blur-md border-b border-white/10 sticky top-0 z-50"
       >
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-white">Portfolio Builder</h1>
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl md:text-2xl font-bold text-white">Portfolio Builder</h1>
 
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={togglePreviewMode}
-              className="text-white border-white/40 hover:bg-white/10 bg-white/5 opacity-100 font-medium"
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              {isPreviewMode ? "Edit" : "Preview"}
-            </Button>
+            {/* Desktop Header Buttons */}
+            <div className="hidden md:flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={togglePreviewMode}
+                className="text-white border-white/40 hover:bg-white/10 bg-white/5 opacity-100 font-medium"
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                {isPreviewMode ? "Edit" : "Preview"}
+              </Button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={savePortfolio}
-              disabled={isSaving}
-              className="text-white border-white/40 hover:bg-white/10 bg-white/5 opacity-100 font-medium"
-            >
-              {isSaving ? (
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                  className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full"
-                />
-              ) : (
-                <Save className="w-4 h-4 mr-2" />
-              )}
-              {isSaving ? "Saving..." : "Save"}
-            </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={savePortfolio}
+                disabled={isSaving}
+                className="text-white border-white/40 hover:bg-white/10 bg-white/5 opacity-100 font-medium"
+              >
+                {isSaving ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                    className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full"
+                  />
+                ) : (
+                  <Save className="w-4 h-4 mr-2" />
+                )}
+                {isSaving ? "Saving..." : "Save"}
+              </Button>
 
-            <Button
-              size="sm"
-              onClick={exportPortfolio}
-              disabled={isExporting}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white opacity-100 font-medium"
-            >
-              {isExporting ? (
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                  className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full"
-                />
-              ) : (
-                <Download className="w-4 h-4 mr-2" />
-              )}
-              {isExporting ? "Exporting..." : "Export ZIP"}
-            </Button>
+              <Button
+                size="sm"
+                onClick={exportPortfolio}
+                disabled={isExporting}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white opacity-100 font-medium"
+              >
+                {isExporting ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                    className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full"
+                  />
+                ) : (
+                  <Download className="w-4 h-4 mr-2" />
+                )}
+                {isExporting ? "Exporting..." : "Export ZIP"}
+              </Button>
 
-            <div className="flex gap-2">
               <Button
                 size="sm"
                 onClick={generateAndViewPortfolio}
@@ -813,7 +815,127 @@ export default function BuilderPage() {
                 </Button>
               )}
             </div>
+
+            {/* Mobile Menu Button */}
+            <div className="md:hidden">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="text-white border-white/40 hover:bg-white/10 bg-white/5 opacity-100"
+              >
+                <Menu className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
+
+          {/* Mobile Menu */}
+          <AnimatePresence>
+            {showMobileMenu && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="md:hidden mt-4 space-y-3"
+              >
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      togglePreviewMode()
+                      setShowMobileMenu(false)
+                    }}
+                    className="text-white border-white/40 hover:bg-white/10 bg-white/5 opacity-100 font-medium text-xs"
+                  >
+                    <Eye className="w-3 h-3 mr-1" />
+                    {isPreviewMode ? "Edit" : "Preview"}
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      savePortfolio()
+                      setShowMobileMenu(false)
+                    }}
+                    disabled={isSaving}
+                    className="text-white border-white/40 hover:bg-white/10 bg-white/5 opacity-100 font-medium text-xs"
+                  >
+                    {isSaving ? (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                        className="w-3 h-3 mr-1 border-2 border-white border-t-transparent rounded-full"
+                      />
+                    ) : (
+                      <Save className="w-3 h-3 mr-1" />
+                    )}
+                    {isSaving ? "Saving..." : "Save"}
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      exportPortfolio()
+                      setShowMobileMenu(false)
+                    }}
+                    disabled={isExporting}
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white opacity-100 font-medium text-xs"
+                  >
+                    {isExporting ? (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                        className="w-3 h-3 mr-1 border-2 border-white border-t-transparent rounded-full"
+                      />
+                    ) : (
+                      <Download className="w-3 h-3 mr-1" />
+                    )}
+                    {isExporting ? "Exporting..." : "Export ZIP"}
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      generateAndViewPortfolio()
+                      setShowMobileMenu(false)
+                    }}
+                    disabled={isDeploying}
+                    className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white opacity-100 font-medium text-xs"
+                  >
+                    {isDeploying ? (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                        className="w-3 h-3 mr-1 border-2 border-white border-t-transparent rounded-full"
+                      />
+                    ) : (
+                      <Globe className="w-3 h-3 mr-1" />
+                    )}
+                    {isDeploying ? "Generating..." : "View Live Site"}
+                  </Button>
+
+                  {generatedPortfolioUrl && (
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        viewGeneratedPortfolio()
+                        setShowMobileMenu(false)
+                      }}
+                      variant="outline"
+                      className="text-white border-white/40 hover:bg-white/10 bg-white/5 opacity-100 font-medium text-xs"
+                    >
+                      <ExternalLink className="w-3 h-3 mr-1" />
+                      Open Site
+                    </Button>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </motion.header>
 
@@ -822,13 +944,13 @@ export default function BuilderPage() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           onClick={() => setDeploymentUrl("")}
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-gray-900 border border-gray-700 text-white p-6 rounded-lg max-w-md w-full mx-4"
+            className="bg-gray-900 border border-gray-700 text-white p-6 rounded-lg max-w-md w-full"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold mb-4 text-green-400">🎉 Portfolio Generated!</h3>
@@ -898,26 +1020,36 @@ export default function BuilderPage() {
               <div className="lg:col-span-2">
                 <Card className="bg-black/20 backdrop-blur-md border-white/10 text-white">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                    <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
                       <Edit3 className="w-5 h-5" />
                       Portfolio Editor
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <Tabs value={activeTab} onValueChange={setActiveTab}>
-                      <TabsList className="grid w-full grid-cols-5 bg-white/5">
-                        <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                        <TabsTrigger value="projects">Projects</TabsTrigger>
-                        <TabsTrigger value="skills">Skills</TabsTrigger>
-                        <TabsTrigger value="theme">Theme</TabsTrigger>
-                        <TabsTrigger value="settings">Settings</TabsTrigger>
+                      <TabsList className="grid w-full grid-cols-5 bg-white/5 text-xs md:text-sm">
+                        <TabsTrigger value="basic" className="text-xs md:text-sm">
+                          Basic Info
+                        </TabsTrigger>
+                        <TabsTrigger value="projects" className="text-xs md:text-sm">
+                          Projects
+                        </TabsTrigger>
+                        <TabsTrigger value="skills" className="text-xs md:text-sm">
+                          Skills
+                        </TabsTrigger>
+                        <TabsTrigger value="theme" className="text-xs md:text-sm">
+                          Theme
+                        </TabsTrigger>
+                        <TabsTrigger value="settings" className="text-xs md:text-sm">
+                          Settings
+                        </TabsTrigger>
                       </TabsList>
 
                       <TabsContent value="basic" className="space-y-6 mt-6">
                         {/* Profile Picture Section */}
                         <div className="space-y-4">
                           <Label className="text-white">Profile Picture</Label>
-                          <div className="flex items-center gap-4">
+                          <div className="flex flex-col sm:flex-row items-center gap-4">
                             <div className="relative">
                               <div
                                 className="w-20 h-20 rounded-full bg-gradient-to-r flex items-center justify-center text-white text-2xl font-bold overflow-hidden"
@@ -940,11 +1072,11 @@ export default function BuilderPage() {
                                 )}
                               </div>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                               <Button
                                 onClick={() => fileInputRef.current?.click()}
                                 size="sm"
-                                className="bg-purple-600 hover:bg-purple-700"
+                                className="bg-purple-600 hover:bg-purple-700 text-xs md:text-sm"
                               >
                                 <Upload className="w-4 h-4 mr-2" />
                                 Upload Photo
@@ -954,7 +1086,7 @@ export default function BuilderPage() {
                                   onClick={removeProfilePicture}
                                   size="sm"
                                   variant="outline"
-                                  className="border-red-500 text-red-400 hover:bg-red-500 hover:text-white"
+                                  className="border-red-500 text-red-400 hover:bg-red-500 hover:text-white text-xs md:text-sm"
                                 >
                                   <Trash2 className="w-4 h-4 mr-2" />
                                   Remove
@@ -1009,7 +1141,7 @@ export default function BuilderPage() {
                           />
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 gap-4">
                           <div>
                             <Label htmlFor="email">Email</Label>
                             <Input
@@ -1045,12 +1177,12 @@ export default function BuilderPage() {
                       </TabsContent>
 
                       <TabsContent value="projects" className="space-y-6 mt-6">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                           <h3 className="text-lg font-semibold">Projects</h3>
                           <Button
                             onClick={addProject}
                             size="sm"
-                            className="bg-purple-600 hover:bg-purple-700 text-white"
+                            className="bg-purple-600 hover:bg-purple-700 text-white w-full sm:w-auto"
                           >
                             <Plus className="w-4 h-4 mr-2" />
                             Add Project
@@ -1080,17 +1212,21 @@ export default function BuilderPage() {
                       </TabsContent>
 
                       <TabsContent value="skills" className="space-y-6 mt-6">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                           <h3 className="text-lg font-semibold">Skills</h3>
-                          <Button onClick={addSkill} size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                          <Button
+                            onClick={addSkill}
+                            size="sm"
+                            className="bg-purple-600 hover:bg-purple-700 text-white w-full sm:w-auto"
+                          >
                             <Plus className="w-4 h-4 mr-2" />
                             Add Skill
                           </Button>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4">
                           {portfolioData.skills.length === 0 ? (
-                            <div className="col-span-2 text-center py-12 text-gray-400">
+                            <div className="text-center py-12 text-gray-400">
                               <p className="mb-4">No skills added yet.</p>
                               <Button onClick={addSkill} className="bg-purple-600 hover:bg-purple-700 text-white">
                                 <Plus className="w-4 h-4 mr-2" />
@@ -1193,8 +1329,8 @@ export default function BuilderPage() {
                 </Card>
               </div>
 
-              {/* Live Preview Panel */}
-              <div className="lg:col-span-1">
+              {/* Live Preview Panel - Hidden on mobile when in edit mode */}
+              <div className="hidden lg:block lg:col-span-1">
                 <Card className="bg-black/20 backdrop-blur-md border-white/10 text-white sticky top-24">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
