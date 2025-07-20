@@ -84,94 +84,95 @@ export default function ThemeCustomizer({ theme, themes, onThemeChange }: ThemeC
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="primary-color" className="text-white">
-                Primary Color
-              </Label>
-              <div className="flex items-center gap-2 mt-1">
-                <input
-                  id="primary-color"
-                  type="color"
-                  value={theme.primaryColor}
-                  onChange={(e) => updateTheme("primaryColor", e.target.value)}
-                  className="w-12 h-10 rounded border-white/20"
-                />
-                <input
-                  type="text"
-                  value={theme.primaryColor}
-                  onChange={(e) => updateTheme("primaryColor", e.target.value)}
-                  className="flex-1 bg-white/5 border border-white/20 rounded px-3 py-2 text-white"
-                />
-              </div>
-            </div>
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div>
+      <Label htmlFor="primary-color" className="text-white">
+        Primary Color
+      </Label>
+      <div className="flex items-center gap-2 mt-1">
+        <input
+          id="primary-color"
+          type="color"
+          value={theme.primaryColor}
+          onChange={(e) => updateTheme("primaryColor", e.target.value)}
+          className="w-12 h-10 rounded border-white/20"
+        />
+        <input
+          type="text"
+          value={theme.primaryColor}
+          onChange={(e) => updateTheme("primaryColor", e.target.value)}
+          className="w-full bg-white/5 border border-white/20 rounded px-3 py-2 text-white"
+        />
+      </div>
+    </div>
 
-            <div>
-              <Label htmlFor="secondary-color" className="text-white">
-                Secondary Color
-              </Label>
-              <div className="flex items-center gap-2 mt-1">
-                <input
-                  id="secondary-color"
-                  type="color"
-                  value={theme.secondaryColor}
-                  onChange={(e) => updateTheme("secondaryColor", e.target.value)}
-                  className="w-12 h-10 rounded border-white/20"
-                />
-                <input
-                  type="text"
-                  value={theme.secondaryColor}
-                  onChange={(e) => updateTheme("secondaryColor", e.target.value)}
-                  className="flex-1 bg-white/5 border border-white/20 rounded px-3 py-2 text-white"
-                />
-              </div>
-            </div>
-          </div>
+    <div>
+      <Label htmlFor="secondary-color" className="text-white">
+        Secondary Color
+      </Label>
+      <div className="flex items-center gap-2 mt-1">
+        <input
+          id="secondary-color"
+          type="color"
+          value={theme.secondaryColor}
+          onChange={(e) => updateTheme("secondaryColor", e.target.value)}
+          className="w-12 h-10 rounded border-white/20"
+        />
+        <input
+          type="text"
+          value={theme.secondaryColor}
+          onChange={(e) => updateTheme("secondaryColor", e.target.value)}
+          className="w-full bg-white/5 border border-white/20 rounded px-3 py-2 text-white"
+        />
+      </div>
+    </div>
+  </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="bg-color" className="text-white">
-                Background Color
-              </Label>
-              <div className="flex items-center gap-2 mt-1">
-                <input
-                  id="bg-color"
-                  type="color"
-                  value={theme.backgroundColor}
-                  onChange={(e) => updateTheme("backgroundColor", e.target.value)}
-                  className="w-12 h-10 rounded border-white/20"
-                />
-                <input
-                  type="text"
-                  value={theme.backgroundColor}
-                  onChange={(e) => updateTheme("backgroundColor", e.target.value)}
-                  className="flex-1 bg-white/5 border border-white/20 rounded px-3 py-2 text-white"
-                />
-              </div>
-            </div>
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div>
+      <Label htmlFor="bg-color" className="text-white">
+        Background Color
+      </Label>
+      <div className="flex items-center gap-2 mt-1">
+        <input
+          id="bg-color"
+          type="color"
+          value={theme.backgroundColor}
+          onChange={(e) => updateTheme("backgroundColor", e.target.value)}
+          className="w-12 h-10 rounded border-white/20"
+        />
+        <input
+          type="text"
+          value={theme.backgroundColor}
+          onChange={(e) => updateTheme("backgroundColor", e.target.value)}
+          className="w-full bg-white/5 border border-white/20 rounded px-3 py-2 text-white"
+        />
+      </div>
+    </div>
 
-            <div>
-              <Label htmlFor="text-color" className="text-white">
-                Text Color
-              </Label>
-              <div className="flex items-center gap-2 mt-1">
-                <input
-                  id="text-color"
-                  type="color"
-                  value={theme.textColor}
-                  onChange={(e) => updateTheme("textColor", e.target.value)}
-                  className="w-12 h-10 rounded border-white/20"
-                />
-                <input
-                  type="text"
-                  value={theme.textColor}
-                  onChange={(e) => updateTheme("textColor", e.target.value)}
-                  className="flex-1 bg-white/5 border border-white/20 rounded px-3 py-2 text-white"
-                />
-              </div>
-            </div>
-          </div>
-        </CardContent>
+    <div>
+      <Label htmlFor="text-color" className="text-white">
+        Text Color
+      </Label>
+      <div className="flex items-center gap-2 mt-1">
+        <input
+          id="text-color"
+          type="color"
+          value={theme.textColor}
+          onChange={(e) => updateTheme("textColor", e.target.value)}
+          className="w-12 h-10 rounded border-white/20"
+        />
+        <input
+          type="text"
+          value={theme.textColor}
+          onChange={(e) => updateTheme("textColor", e.target.value)}
+          className="w-full bg-white/5 border border-white/20 rounded px-3 py-2 text-white"
+        />
+      </div>
+    </div>
+  </div>
+</CardContent>
+
       </Card>
 
       {/* Typography & Layout */}
