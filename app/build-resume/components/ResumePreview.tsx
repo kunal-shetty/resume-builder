@@ -5,12 +5,12 @@ import { Github, ExternalLink, Mail, Linkedin, User } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import Image from "next/image"
 
-interface PortfolioPreviewProps {
+interface ResumePreviewProps {
   data: any
   isCompact?: boolean
 }
 
-export default function PortfolioPreview({ data, isCompact = false }: PortfolioPreviewProps) {
+export default function ResumePreview({ data, isCompact = false }: ResumePreviewProps) {
   const { name, title, bio, email, github, linkedin, profilePicture, projects, skills, theme, animations } = data
 
   const containerClass = isCompact ? "w-full h-full overflow-y-auto text-xs" : "w-full min-h-screen"

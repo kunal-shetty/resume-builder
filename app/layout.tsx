@@ -7,15 +7,15 @@ import { Toaster } from "@/components/ui/toaster"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Portfolio Builder - Create Stunning Portfolios",
+  title: "Resume Builder - Create Stunning Resumes",
   description:
-    "Build amazing animated portfolios with crazy effects, real-time customization, and one-click deployment. No coding required.",
-  keywords: "portfolio builder, web design, animations, templates, developer portfolio",
-  authors: [{ name: "Portfolio Builder Team" }],
+    "Build amazing animated Resumes with crazy effects, real-time customization, and one-click deployment. No coding required.",
+  keywords: "Resume builder, web design, animations, templates, developer Resume",
+  authors: [{ name: "Resume Builder Team" }],
   openGraph: {
-    title: "Portfolio Builder - Create Stunning Portfolios",
+    title: "Resume Builder - Create Stunning Resumes",
     description:
-      "Build amazing animated portfolios with crazy effects, real-time customization, and one-click deployment.",
+      "Build amazing animated Resumes with crazy effects, real-time customization, and one-click deployment.",
     type: "website",
   },
     generator: 'v0.dev'

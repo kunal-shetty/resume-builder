@@ -43,7 +43,9 @@ export default function ParticlesBackground() {
     function animate() {
       if (!ctx || !canvas) return
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      // Paint background every frame
+      ctx.fillStyle = "#0f172a" // 🔹 Change this color to whatever you want
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
 
       particles.forEach((particle, index) => {
         particle.x += particle.vx
@@ -93,6 +95,9 @@ export default function ParticlesBackground() {
   }, [])
 
   return (
-    <canvas ref={canvasRef} className="fixed inset-0 pointer-events-none z-0" style={{ background: "transparent" }} />
+    <canvas
+      ref={canvasRef}
+      className="fixed inset-0 pointer-events-none z-0"
+    />
   )
 }

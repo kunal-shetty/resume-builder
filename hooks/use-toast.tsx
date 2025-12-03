@@ -170,7 +170,8 @@ function toast({ ...props }: Toast) {
     update,
   }
 }
-const useToast:any = () => {
+
+function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
 
   React.useEffect(() => {

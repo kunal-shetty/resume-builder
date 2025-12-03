@@ -17,8 +17,8 @@ export default function TypewriterText({ text, className = "", delay = 0 }: Type
     const timer = setTimeout(
       () => {
         if (currentIndex < text.length) {
-          setDisplayText((prev) => prev + text[currentIndex])
-          setCurrentIndex((prev) => prev + 1)
+          setDisplayText(text.slice(0, currentIndex + 1))
+          setCurrentIndex(currentIndex + 1)
         }
       },
       delay + currentIndex * 100,
@@ -28,15 +28,18 @@ export default function TypewriterText({ text, className = "", delay = 0 }: Type
   }, [currentIndex, text, delay])
 
   return (
-    <div className={className}>
+    <motion.h1
+      className={className}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: delay / 1000 }}
+    >
       {displayText}
       <motion.span
-        animate={{ opacity: [1, 0] }}
-        transition={{ duration: 0.8, repeat: Number.POSITIVE_INFINITY }}
-        className="inline-block w-1 h-full bg-current ml-1"
-      >
-        |
-      </motion.span>
-    </div>
+        className="inline-block w-1 h-full bg-orange-500 ml-1"
+        animate={{ opacity: [1, 0, 1] }}
+        transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY }}
+      />
+    </motion.h1>
   )
 }

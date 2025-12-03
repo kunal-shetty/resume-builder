@@ -1,268 +1,384 @@
 "use client"
 
 import { useState } from "react"
-import { motion } from "framer-motion"
-import { Eye, Code, Download, Star, Heart, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import Link from "next/link"
-import Image from "next/image"
+import { Input } from "@/components/ui/input"
+import { ArrowLeft, Search, Eye, Palette, User, Camera, FileText, Star, Zap } from "lucide-react"
+import { cn } from "@/lib/utils"
 
-const templates = [
+interface Template {
+  id: string
+  name: string
+  category: string
+  hasPhoto: boolean
+  isPremium: boolean
+  rating: number
+  downloads: string
+  preview: string
+  description: string
+  colors: string[]
+}
+
+const templates: Template[] = [
   {
-    id: 1,
-    name: "Neon Cyber",
-    description: "Futuristic portfolio with neon effects and cyberpunk aesthetics",
-    image: "/placeholder.svg?height=300&width=400",
-    category: "Modern",
-    features: ["Neon Glow", "Particle Effects", "3D Animations", "Dark Theme"],
+    id: "artistic-minimalistic",
+    name: "Artistic Minimalistic",
+    category: "Minimimalistic",
+    hasPhoto: false,
+    isPremium: false,
     rating: 4.9,
-    downloads: 1234,
-    preview: "https://neon-cyber-demo.vercel.app",
+    downloads: "12.5K",
+    preview: "/no-photo/artistic-minimalistic-1.jpg",
+    description: "Clean, artistic design perfect for any industry",
+    colors: ["#1f2937", "#8b5cf6", "#ffffff"],
   },
   {
-    id: 2,
-    name: "Minimal Clean",
-    description: "Clean and professional design with subtle animations",
-    image: "/placeholder.svg?height=300&width=400",
-    category: "Minimal",
-    features: ["Clean Design", "Smooth Transitions", "Light Theme", "Typography Focus"],
+    id: "creative-photo",
+    name: "Creative Photo",
+    category: "Creative",
+    hasPhoto: true,
+    isPremium: false,
     rating: 4.8,
-    downloads: 987,
-    preview: "https://minimal-clean-demo.vercel.app",
+    downloads: "8.2K",
+    preview: "/creative-resume-template-with-photo-section-colorf.png",
+    description: "Eye-catching design with photo section for creative roles",
+    colors: ["#8b5cf6", "#ec4899", "#ffffff"],
   },
   {
-    id: 3,
-    name: "Brutalist Bold",
-    description: "Bold and experimental design with strong typography",
-    image: "/placeholder.svg?height=300&width=400",
-    category: "Experimental",
-    features: ["Bold Typography", "Geometric Shapes", "High Contrast", "Experimental Layout"],
+    id: "executive-pro",
+    name: "Executive Pro",
+    category: "Executive",
+    hasPhoto: true,
+    isPremium: true,
+    rating: 5.0,
+    downloads: "15.1K",
+    preview: "/executive-professional-resume-template-with-photo-.png",
+    description: "Premium template for senior executives and managers",
+    colors: ["#1f2937", "#059669", "#ffffff"],
+  },
+  {
+    id: "tech-focused",
+    name: "Tech Focused",
+    category: "Technology",
+    hasPhoto: false,
+    isPremium: false,
     rating: 4.7,
-    downloads: 756,
-    preview: "https://brutalist-bold-demo.vercel.app",
+    downloads: "9.8K",
+    preview: "/tech-resume-template-modern-coding-developer-desig.png",
+    description: "Perfect for developers and tech professionals",
+    colors: ["#1f2937", "#3b82f6", "#ffffff"],
   },
   {
-    id: 4,
-    name: "Glass Morphism",
-    description: "Modern glassmorphism design with frosted glass effects",
-    image: "/placeholder.svg?height=300&width=400",
-    category: "Modern",
-    features: ["Glass Effects", "Backdrop Blur", "Gradient Backgrounds", "Modern UI"],
+    id: "artistic-flair",
+    name: "Artistic Flair",
+    category: "Creative",
+    hasPhoto: true,
+    isPremium: true,
     rating: 4.9,
-    downloads: 1456,
-    preview: "https://glass-morphism-demo.vercel.app",
+    downloads: "6.7K",
+    preview: "/artistic-creative-resume-template-with-photo-artis.png",
+    description: "Bold, artistic design for creative professionals",
+    colors: ["#8b5cf6", "#f59e0b", "#ffffff"],
   },
   {
-    id: 5,
-    name: "Retro Wave",
-    description: "80s inspired design with synthwave aesthetics",
-    image: "/placeholder.svg?height=300&width=400",
-    category: "Retro",
-    features: ["Retro Colors", "Synthwave Style", "Neon Grids", "Vintage Effects"],
+    id: "classic-elegant",
+    name: "Classic Elegant",
+    category: "Traditional",
+    hasPhoto: false,
+    isPremium: false,
     rating: 4.6,
-    downloads: 623,
-    preview: "https://retro-wave-demo.vercel.app",
+    downloads: "11.3K",
+    preview: "/classic-elegant-resume-template-traditional-profes.png",
+    description: "Timeless design suitable for traditional industries",
+    colors: ["#1f2937", "#6b7280", "#ffffff"],
   },
   {
-    id: 6,
-    name: "Nature Organic",
-    description: "Organic design inspired by nature with earth tones",
-    image: "/placeholder.svg?height=300&width=400",
-    category: "Organic",
-    features: ["Earth Tones", "Organic Shapes", "Nature Inspired", "Soft Animations"],
+    id: "startup-dynamic",
+    name: "Startup Dynamic",
+    category: "Modern",
+    hasPhoto: true,
+    isPremium: true,
+    rating: 4.8,
+    downloads: "7.9K",
+    preview: "/startup-dynamic-resume-template-with-photo-modern-.png",
+    description: "Dynamic design perfect for startup environments",
+    colors: ["#8b5cf6", "#ef4444", "#ffffff"],
+  },
+  {
+    id: "academic-scholar",
+    name: "Academic Scholar",
+    category: "Academic",
+    hasPhoto: false,
+    isPremium: false,
     rating: 4.5,
-    downloads: 445,
-    preview: "https://nature-organic-demo.vercel.app",
+    downloads: "5.4K",
+    preview: "/academic-scholar-resume-template-clean-professiona.png",
+    description: "Designed for academics and researchers",
+    colors: ["#1f2937", "#059669", "#ffffff"],
+  },
+  {
+    id: "sales-champion",
+    name: "Sales Champion",
+    category: "Sales",
+    hasPhoto: true,
+    isPremium: true,
+    rating: 4.7,
+    downloads: "8.6K",
+    preview: "/sales-champion-resume-template-with-photo-professi.png",
+    description: "Results-focused design for sales professionals",
+    colors: ["#1f2937", "#f59e0b", "#ffffff"],
   },
 ]
 
-const categories = ["All", "Modern", "Minimal", "Experimental", "Retro", "Organic"]
+const categories = [
+  "All",
+  "Professional",
+  "Creative",
+  "Executive",
+  "Technology",
+  "Traditional",
+  "Modern",
+  "Academic",
+  "Sales",
+]
 
 export default function TemplatesPage() {
   const [selectedCategory, setSelectedCategory] = useState("All")
-  const [hoveredTemplate, setHoveredTemplate] = useState<number | null>(null)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null)
 
-  const filteredTemplates =
-    selectedCategory === "All" ? templates : templates.filter((template) => template.category === selectedCategory)
+  const filteredTemplates = templates.filter((template) => {
+    const matchesCategory = selectedCategory === "All" || template.category === selectedCategory
+    const matchesSearch =
+      template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      template.description.toLowerCase().includes(searchQuery.toLowerCase())
+    return matchesCategory && matchesSearch
+  })
+
+  const handleSelectTemplate = (template: Template) => {
+    setSelectedTemplate(template)
+    // Navigate to editor with selected template
+    setTimeout(() => {
+      window.location.href = `/editor?template=${template.id}`
+    }, 500)
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-accent/10">
       {/* Header */}
-      <motion.header
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        className="bg-black/20 backdrop-blur-md border-b border-white/10"
-      >
-        <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="bg-card/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-white mb-2">Portfolio Templates</h1>
-              <p className="text-gray-300">Choose from our collection of stunning portfolio templates</p>
-            </div>
-            <Link href="/builder">
-              <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-                Start Building
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" size="sm" onClick={() => window.history.back()}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back
               </Button>
-            </Link>
+              <div>
+                <h1 className="text-2xl font-bold">Choose Your Template</h1>
+                <p className="text-sm text-muted-foreground">Select from our collection of professional templates</p>
+              </div>
+            </div>
+            <Badge variant="secondary" className="px-3 py-1">
+              {filteredTemplates.length} Templates
+            </Badge>
           </div>
         </div>
-      </motion.header>
+      </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        {/* Category Filter */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap gap-4 mb-12 justify-center"
-        >
-          {categories.map((category) => (
-            <Button
-              key={category}
-              variant={selectedCategory === category ? "default" : "outline"}
-              onClick={() => setSelectedCategory(category)}
-              className={`${
-                selectedCategory === category
-                  ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                  : "border-white/20 text-white hover:bg-white/10"
-              }`}
-            >
-              {category}
-            </Button>
-          ))}
-        </motion.div>
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Search and Filters */}
+        <div className="mb-8 space-y-4">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
+              placeholder="Search templates..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {categories.map((category) => (
+              <Button
+                key={category}
+                variant={selectedCategory === category ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedCategory(category)}
+                className={cn("transition-all duration-200", selectedCategory === category && "animate-pulse-glow")}
+              >
+                {category}
+              </Button>
+            ))}
+          </div>
+
+          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+            <div className="flex items-center space-x-1">
+              <Camera className="w-4 h-4" />
+              <span>With Photo</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <User className="w-4 h-4" />
+              <span>No Photo</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <Star className="w-4 h-4 text-accent" />
+              <span>Premium</span>
+            </div>
+          </div>
+        </div>
 
         {/* Templates Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredTemplates.map((template, index) => (
-            <motion.div
+            <Card
               key={template.id}
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              onHoverStart={() => setHoveredTemplate(template.id)}
-              onHoverEnd={() => setHoveredTemplate(null)}
-              whileHover={{ scale: 1.05, rotateY: 5 }}
-              className="group"
+              className={cn(
+                "group cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-2 bg-card/60 backdrop-blur-sm border-border/50 overflow-hidden",
+                selectedTemplate?.id === template.id && "ring-2 ring-accent animate-pulse-glow",
+              )}
+              onClick={() => handleSelectTemplate(template)}
+              style={{
+                animationDelay: `${index * 100}ms`,
+              }}
             >
-              <Card className="bg-black/20 backdrop-blur-md border-white/10 overflow-hidden hover:border-purple-500/50 transition-all duration-300">
-                <div className="relative overflow-hidden">
-                  <Image
-                    src={template.image || "/placeholder.svg"}
-                    alt={template.name}
-                    width={400}
-                    height={300}
-                    className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110"
-                  />
+              {/* Template Preview */}
+              <div className="relative aspect-[3/4] overflow-hidden">
+                <img
+                  src={template.preview || "/placeholder.svg"}
+                  alt={template.name}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
 
-                  {/* Overlay */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: hoveredTemplate === template.id ? 1 : 0 }}
-                    className="absolute inset-0 bg-black/60 flex items-center justify-center gap-4"
-                  >
+                {/* Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute bottom-4 left-4 right-4">
                     <Button
                       size="sm"
-                      variant="outline"
-                      className="border-white text-white hover:bg-white hover:text-black"
+                      className="w-full bg-white/20 backdrop-blur-sm text-white border-white/30 hover:bg-white/30"
                     >
                       <Eye className="w-4 h-4 mr-2" />
                       Preview
                     </Button>
-                    <Link href={`/builder?template=${template.id}`}>
-                      <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
-                        <Code className="w-4 h-4 mr-2" />
-                        Use Template
-                      </Button>
-                    </Link>
-                  </motion.div>
-
-                  {/* Category Badge */}
-                  <Badge className="absolute top-4 left-4 bg-purple-600/80 text-white">{template.category}</Badge>
+                  </div>
                 </div>
 
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-white">{template.name}</CardTitle>
-                    <div className="flex items-center gap-1 text-yellow-400">
-                      <Star className="w-4 h-4 fill-current" />
-                      <span className="text-sm">{template.rating}</span>
-                    </div>
+                {/* Badges */}
+                <div className="absolute top-3 left-3 flex flex-col gap-1">
+                  {template.isPremium && (
+                    <Badge className="bg-accent text-accent-foreground text-xs">
+                      <Star className="w-3 h-3 mr-1" />
+                      Premium
+                    </Badge>
+                  )}
+                  {template.hasPhoto && (
+                    <Badge variant="secondary" className="text-xs">
+                      <Camera className="w-3 h-3 mr-1" />
+                      Photo
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Color Palette */}
+                <div className="absolute top-3 right-3 flex space-x-1">
+                  {template.colors.map((color, i) => (
+                    <div
+                      key={i}
+                      className="w-3 h-3 rounded-full border border-white/50"
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Template Info */}
+              <div className="p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <h3 className="font-semibold text-sm mb-1">{template.name}</h3>
+                    <p className="text-xs text-muted-foreground">{template.category}</p>
                   </div>
-                  <p className="text-gray-300 text-sm">{template.description}</p>
-                </CardHeader>
-
-                <CardContent>
-                  <div className="space-y-4">
-                    {/* Features */}
-                    <div className="flex flex-wrap gap-2">
-                      {template.features.map((feature, featureIndex) => (
-                        <Badge key={featureIndex} variant="secondary" className="bg-white/10 text-gray-300 text-xs">
-                          {feature}
-                        </Badge>
-                      ))}
+                  <div className="text-right">
+                    <div className="flex items-center space-x-1 text-xs">
+                      <Star className="w-3 h-3 fill-accent text-accent" />
+                      <span>{template.rating}</span>
                     </div>
-
-                    {/* Stats */}
-                    <div className="flex items-center justify-between text-sm text-gray-400">
-                      <div className="flex items-center gap-1">
-                        <Download className="w-4 h-4" />
-                        <span>{template.downloads.toLocaleString()} downloads</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Heart className="w-4 h-4" />
-                        <span>Popular</span>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex gap-2 pt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 border-white/20 text-white hover:bg-white/10"
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        Preview
-                      </Button>
-                      <Link href={`/builder?template=${template.id}`} className="flex-1">
-                        <Button
-                          size="sm"
-                          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                        >
-                          <Zap className="w-4 h-4 mr-2" />
-                          Use
-                        </Button>
-                      </Link>
-                    </div>
+                    <p className="text-xs text-muted-foreground">{template.downloads} downloads</p>
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+                </div>
+
+                <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{template.description}</p>
+
+                <Button
+                  size="sm"
+                  className="w-full group-hover:animate-pulse-glow"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleSelectTemplate(template)
+                  }}
+                >
+                  {template.isPremium ? "Upgrade & Use" : "Use Template"}
+                </Button>
+              </div>
+            </Card>
           ))}
         </div>
 
-        {/* CTA Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mt-20"
-        >
-          <h2 className="text-4xl font-bold text-white mb-6">Can't Find What You're Looking For?</h2>
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Create your own custom portfolio from scratch with our powerful builder
-          </p>
-          <Link href="/builder">
+        {filteredTemplates.length === 0 && (
+          <div className="text-center py-12">
+            <FileText className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+            <h3 className="text-lg font-semibold mb-2">No templates found</h3>
+            <p className="text-muted-foreground mb-4">Try adjusting your search or filter criteria</p>
             <Button
-              size="lg"
-              className="bg-gradient-to-r from-yellow-500 via-red-500 to-pink-500 hover:from-yellow-600 hover:via-red-600 hover:to-pink-600 text-white px-12 py-6 text-xl font-bold rounded-full"
+              variant="outline"
+              onClick={() => {
+                setSearchQuery("")
+                setSelectedCategory("All")
+              }}
             >
-              Start From Scratch
+              Clear Filters
             </Button>
-          </Link>
-        </motion.div>
+          </div>
+        )}
+
+        {/* Featured Section */}
+        <div className="mt-16">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold mb-2">Why Choose Our Templates?</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Our templates are designed by professionals and optimized for success
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            <Card className="p-6 text-center bg-card/60 backdrop-blur-sm border-border/50">
+              <div className="w-12 h-12 bg-gradient-to-br from-accent to-secondary rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Zap className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="font-semibold mb-2">ATS Optimized</h3>
+              <p className="text-sm text-muted-foreground">All templates pass through Applicant Tracking Systems</p>
+            </Card>
+
+            <Card className="p-6 text-center bg-card/60 backdrop-blur-sm border-border/50">
+              <div className="w-12 h-12 bg-gradient-to-br from-accent to-secondary rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Palette className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="font-semibold mb-2">Fully Customizable</h3>
+              <p className="text-sm text-muted-foreground">Change colors, fonts, and layout to match your style</p>
+            </Card>
+
+            <Card className="p-6 text-center bg-card/60 backdrop-blur-sm border-border/50">
+              <div className="w-12 h-12 bg-gradient-to-br from-accent to-secondary rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Star className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="font-semibold mb-2">Proven Results</h3>
+              <p className="text-sm text-muted-foreground">Used by thousands of successful job seekers</p>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   )
