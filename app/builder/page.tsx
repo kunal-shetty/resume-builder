@@ -9,12 +9,10 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { toast } from "@/components/ui/use-toast"
-
-
 import { ArrowLeft, ArrowRight, User, Briefcase, GraduationCap, Zap, FileText, Plus, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import GeneralToast from "@/components/Toast"
+import CurtainReveal from "@/components/CurtainReveal"
 
 interface ResumeData {
   personal: {
@@ -315,6 +313,7 @@ export default function ResumeBuilderPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50/30">
+      <CurtainReveal />
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-50 shadow-sm">
         <div className="max-w-4xl mx-auto px-6 py-4">
@@ -393,12 +392,15 @@ export default function ResumeBuilderPage() {
 
           {currentStep === steps.length ? (
             <Button
+
               className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 shadow-lg shadow-orange-500/30 hover:shadow-orange-500/40 hover:scale-105 transition-all duration-200"
               onClick={() => {
-                window.location.href = "/templates"
+                localStorage.setItem("resume-data", JSON.stringify(resumeData))
+
+                window.location.href = "/editor"
               }}
             >
-              Choose Template
+              Preview
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           ) : (

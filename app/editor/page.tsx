@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -88,6 +88,7 @@ interface ResumeStyle {
 }
 
 export default function EditorPage() {
+
   const [resumeData, setResumeData] = useState<ResumeData>({
     personal: {
       firstName: "",
@@ -102,6 +103,21 @@ export default function EditorPage() {
     skills: [],
     customSections: [],
   })
+
+  // Load on first render
+  useEffect(() => {
+    const saved = localStorage.getItem("resume-data")
+    if (saved) {
+      setResumeData(JSON.parse(saved))
+    }
+  }, [])
+
+  // SAVE anytime resumeData updates (customSections or anything else)
+  useEffect(() => {
+    localStorage.setItem("resume-data", JSON.stringify(resumeData))
+  }, [resumeData])
+
+
 
   const [resumeStyle, setResumeStyle] = useState<ResumeStyle>({
     template: "modern-minimal",
@@ -600,6 +616,17 @@ export default function EditorPage() {
                         Add Section
                       </Button>
                     </div>
+
+                    {/* Empty State */}
+                    {resumeData.customSections.length === 0 && (
+                      <div className="text-center py-16 text-gray-500">
+                        <Plus className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                        <p className="text-sm">No custom sections added yet</p>
+                        <p className="text-xs">Click “Add Section” to create one</p>
+                      </div>
+                    )}
+
+                    {/* Sections List */}
                     <div className="space-y-4">
                       {resumeData.customSections.map((section, index) => (
                         <Card key={section.id} className="p-4 bg-muted/30">
@@ -608,6 +635,7 @@ export default function EditorPage() {
                               <GripVertical className="w-4 h-4 text-muted-foreground cursor-move" />
                               <span className="font-medium">Section #{index + 1}</span>
                             </div>
+
                             <Button
                               variant="ghost"
                               size="sm"
@@ -617,6 +645,7 @@ export default function EditorPage() {
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
+
                           <div className="space-y-3">
                             <div className="space-y-2">
                               <Label>Section Title</Label>
@@ -626,6 +655,7 @@ export default function EditorPage() {
                                 placeholder="Section title"
                               />
                             </div>
+
                             <div className="space-y-2">
                               <Label>Content</Label>
                               <Textarea
@@ -640,6 +670,7 @@ export default function EditorPage() {
                       ))}
                     </div>
                   </Card>
+
                 </TabsContent>
 
                 <TabsContent value="design" className="space-y-6">

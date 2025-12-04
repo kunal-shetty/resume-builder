@@ -4,35 +4,35 @@ import { motion } from "framer-motion"
 
 export default function AnimatedBlob() {
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
       <motion.div
-        className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-orange-500/20 to-yellow-500/20 rounded-full blur-3xl"
         animate={{
           scale: [1, 1.2, 1],
           rotate: [0, 180, 360],
-          x: [0, 100, 0],
-          y: [0, -50, 0],
         }}
         transition={{
           duration: 20,
           repeat: Number.POSITIVE_INFINITY,
           ease: "linear",
         }}
-      />
-      <motion.div
-        className="absolute top-3/4 right-1/4 w-80 h-80 bg-gradient-to-r from-red-500/20 to-pink-500/20 rounded-full blur-3xl"
-        animate={{
-          scale: [1.2, 1, 1.2],
-          rotate: [360, 180, 0],
-          x: [0, -100, 0],
-          y: [0, 50, 0],
-        }}
-        transition={{
-          duration: 25,
-          repeat: Number.POSITIVE_INFINITY,
-          ease: "linear",
-        }}
-      />
+        className="relative"
+      >
+        <motion.div
+          animate={{
+            borderRadius: [
+              "60% 40% 30% 70%/60% 30% 70% 40%",
+              "30% 60% 70% 40%/50% 60% 30% 60%",
+              "60% 40% 30% 70%/60% 30% 70% 40%",
+            ],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Number.POSITIVE_INFINITY,
+            ease: "easeInOut",
+          }}
+          className="w-96 h-96 md:w-[500px] md:h-[500px] bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-red-600/20 blur-3xl"
+        />
+      </motion.div>
     </div>
   )
 }

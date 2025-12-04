@@ -92,7 +92,7 @@ export default function HomePage() {
       />
 
       {/* Hero */}
-      <section className="relative min-h-screen flex items-center justify-center px-4">
+      <section className="relative min-h-screen py-8 flex items-center justify-center px-4">
         <AnimatedBlob />
         <motion.div
           initial={{ opacity: 0, y: 50 }}
@@ -129,7 +129,7 @@ export default function HomePage() {
             transition={{ delay: 2 }}
             className="flex justify-center items-center"
           >
-            <Link href="/build-resume">
+            <Link href="/builder">
               <Button
                 size="lg"
                 className="relative group bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-8 py-4 text-lg font-semibold rounded-full overflow-hidden"
@@ -146,7 +146,9 @@ export default function HomePage() {
       </section>
 
        {/* Features */}
-      <section className="py-2 px-6 relative">
+      <section className="mt-6 py-2 px-6 relative">
+        <AnimatedBlob />
+
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -197,6 +199,8 @@ export default function HomePage() {
 
       {/* CTA */}
       <section className="py-32 px-4 relative">
+        <AnimatedBlob />
+
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           whileInView={{ opacity: 1, scale: 1 }}

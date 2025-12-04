@@ -9,50 +9,59 @@ interface GlitchTextProps {
 
 export default function GlitchText({ text, className = "" }: GlitchTextProps) {
   return (
-    <div className={`relative ${className}`}>
-      <motion.h1
-        className="relative z-10"
+    <div className={`relative inline-block leading-none ${className}`}>
+      {/* Main layer */}
+      <motion.span
+        className="relative z-10 block m-0 p-0"
         animate={{
-          textShadow: ["0 0 0 transparent", "2px 0 0 #ff0000, -2px 0 0 #00ff00", "0 0 0 transparent"],
+          textShadow: [
+            "0 0 0 transparent",
+            "2px 0 0 #ff004c, -2px 0 0 #00f7ff",
+            "0 0 0 transparent"
+          ],
         }}
         transition={{
-          duration: 0.1,
-          repeat: Number.POSITIVE_INFINITY,
-          repeatDelay: 3,
+          duration: 0.25,
+          repeat: Infinity,
+          repeatDelay: 1.8,
         }}
       >
         {text}
-      </motion.h1>
-      <motion.h1
-        className="absolute top-0 left-0 opacity-80"
+      </motion.span>
+
+      {/* Red layer */}
+      <motion.span
+        className="absolute top-0 left-0 block m-0 p-0"
         animate={{
-          x: [0, 2, -2, 0],
-          opacity: [0.8, 0.9, 0.7, 0.8],
+          x: [0, 1.5, -1.5, 0],
+          opacity: [0.6, 0.85, 0.65, 0.6],
         }}
         transition={{
-          duration: 0.2,
-          repeat: Number.POSITIVE_INFINITY,
+          duration: 0.3,
+          repeat: Infinity,
           repeatDelay: 2,
         }}
-        style={{ color: "#ff0000", mixBlendMode: "multiply" }}
+        style={{ color: "#ff004c", mixBlendMode: "screen" }}
       >
         {text}
-      </motion.h1>
-      <motion.h1
-        className="absolute top-0 left-0 opacity-80"
+      </motion.span>
+
+      {/* Blue/green layer */}
+      <motion.span
+        className="absolute top-0 left-0 block m-0 p-0"
         animate={{
-          x: [0, -2, 2, 0],
-          opacity: [0.8, 0.7, 0.9, 0.8],
+          x: [0, -1.5, 1.5, 0],
+          opacity: [0.6, 0.7, 0.9, 0.6],
         }}
         transition={{
-          duration: 0.2,
-          repeat: Number.POSITIVE_INFINITY,
-          repeatDelay: 2.5,
+          duration: 0.3,
+          repeat: Infinity,
+          repeatDelay: 2.3,
         }}
-        style={{ color: "#00ff00", mixBlendMode: "multiply" }}
+        style={{ color: "#00f7ff", mixBlendMode: "screen" }}
       >
         {text}
-      </motion.h1>
+      </motion.span>
     </div>
   )
 }
