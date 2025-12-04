@@ -30,7 +30,9 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { TemplatePreview } from "@/components/template-preview"
-import { ThemeToggle } from "@/components/theme-toggle"
+import html2canvas from "html2canvas"
+import jsPDF from "jspdf"
+import GeneralToast from "@/components/Toast"
 
 interface ResumeData {
   personal: {
@@ -88,6 +90,12 @@ interface ResumeStyle {
 }
 
 export default function EditorPage() {
+  const [showToast, setShowToast] = useState(false)
+  const [toastPayload, setToastPayload] = useState<{
+    variant: "success" | "error" | "warning" | "info"
+    title: string
+    description: string
+  } | null>(null)
 
   const [resumeData, setResumeData] = useState<ResumeData>({
     personal: {
@@ -108,9 +116,30 @@ export default function EditorPage() {
   useEffect(() => {
     const saved = localStorage.getItem("resume-data")
     if (saved) {
-      setResumeData(JSON.parse(saved))
+      try {
+        const parsed = JSON.parse(saved)
+
+        setResumeData({
+          personal: {
+            firstName: parsed.personal?.firstName || "",
+            lastName: parsed.personal?.lastName || "",
+            email: parsed.personal?.email || "",
+            phone: parsed.personal?.phone || "",
+            location: parsed.personal?.location || "",
+            summary: parsed.personal?.summary || "",
+            photo: parsed.personal?.photo || "",
+          },
+          experience: parsed.experience || [],
+          education: parsed.education || [],
+          skills: parsed.skills || [],
+          customSections: parsed.customSections || [],
+        })
+      } catch (e) {
+        console.error("Error loading saved data:", e)
+      }
     }
   }, [])
+
 
   // SAVE anytime resumeData updates (customSections or anything else)
   useEffect(() => {
@@ -169,7 +198,21 @@ export default function EditorPage() {
     }
   }
 
+  const triggerToast = (
+    variant: "success" | "error" | "warning" | "info",
+    title: string,
+    description: string
+  ) => {
+    setShowToast(false)
+    setToastPayload({ variant, title, description })
+
+    setTimeout(() => {
+      setShowToast(true)
+    }, 10)
+  }
+
   const updatePersonal = (field: string, value: string) => {
+    saveToHistory()
     setResumeData((prev) => ({
       ...prev,
       personal: { ...prev.personal, [field]: value },
@@ -186,6 +229,7 @@ export default function EditorPage() {
       current: false,
       description: "",
     }
+    saveToHistory()
     setResumeData((prev) => ({
       ...prev,
       experience: [...prev.experience, newExp],
@@ -193,6 +237,7 @@ export default function EditorPage() {
   }
 
   const updateExperience = (id: string, field: string, value: any) => {
+    saveToHistory()
     setResumeData((prev) => ({
       ...prev,
       experience: prev.experience.map((exp) => (exp.id === id ? { ...exp, [field]: value } : exp)),
@@ -200,6 +245,7 @@ export default function EditorPage() {
   }
 
   const removeExperience = (id: string) => {
+    saveToHistory()
     setResumeData((prev) => ({
       ...prev,
       experience: prev.experience.filter((exp) => exp.id !== id),
@@ -214,6 +260,7 @@ export default function EditorPage() {
       field: "",
       graduationDate: "",
     }
+    saveToHistory()
     setResumeData((prev) => ({
       ...prev,
       education: [...prev.education, newEdu],
@@ -221,6 +268,7 @@ export default function EditorPage() {
   }
 
   const updateEducation = (id: string, field: string, value: string) => {
+    saveToHistory()
     setResumeData((prev) => ({
       ...prev,
       education: prev.education.map((edu) => (edu.id === id ? { ...edu, [field]: value } : edu)),
@@ -228,6 +276,7 @@ export default function EditorPage() {
   }
 
   const removeEducation = (id: string) => {
+    saveToHistory()
     setResumeData((prev) => ({
       ...prev,
       education: prev.education.filter((edu) => edu.id !== id),
@@ -235,6 +284,7 @@ export default function EditorPage() {
   }
 
   const addSkill = (skill: string) => {
+    saveToHistory()
     if (skill.trim() && !resumeData.skills.includes(skill.trim())) {
       setResumeData((prev) => ({
         ...prev,
@@ -244,6 +294,7 @@ export default function EditorPage() {
   }
 
   const removeSkill = (skill: string) => {
+    saveToHistory()
     setResumeData((prev) => ({
       ...prev,
       skills: prev.skills.filter((s) => s !== skill),
@@ -257,6 +308,7 @@ export default function EditorPage() {
       content: "",
       type: "text" as const,
     }
+    saveToHistory()
     setResumeData((prev) => ({
       ...prev,
       customSections: [...prev.customSections, newSection],
@@ -264,6 +316,7 @@ export default function EditorPage() {
   }
 
   const updateCustomSection = (id: string, field: string, value: any) => {
+    saveToHistory()
     setResumeData((prev) => ({
       ...prev,
       customSections: prev.customSections.map((section) =>
@@ -273,6 +326,7 @@ export default function EditorPage() {
   }
 
   const removeCustomSection = (id: string) => {
+    saveToHistory()
     setResumeData((prev) => ({
       ...prev,
       customSections: prev.customSections.filter((section) => section.id !== id),
@@ -280,6 +334,7 @@ export default function EditorPage() {
   }
 
   const updateStyle = (category: string, field: string, value: any) => {
+    saveToHistory()
     setResumeStyle((prev) => ({
       ...prev,
       [category]:
@@ -289,12 +344,42 @@ export default function EditorPage() {
     }))
   }
 
-  const exportResume = (format: "pdf" | "png" | "svg") => {
-    // Export functionality would be implemented here
-    console.log(`Exporting resume as ${format}`)
-    // For demo purposes, we'll just show an alert
-    alert(`Resume exported as ${format.toUpperCase()}!`)
+  const exportResume = async (format: "pdf" | "png") => {
+    const element = document.getElementById("export-area")
+    if (!element) return
+
+    // Capture full-quality screenshot
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: null,
+    })
+
+    const imgData = canvas.toDataURL("image/png")
+
+    // PNG EXPORT
+    if (format === "png") {
+      const link = document.createElement("a")
+      link.href = imgData
+      link.download = "resume.png"
+      link.click()
+      return
+    }
+
+    // PDF EXPORT
+    if (format === "pdf") {
+      const pdf = new jsPDF({
+        orientation: canvas.width > canvas.height ? "l" : "p",
+        unit: "px",
+        format: [canvas.width, canvas.height],
+      })
+
+      pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height)
+      pdf.save("resume.pdf")
+    }
   }
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-accent/10">
@@ -314,7 +399,7 @@ export default function EditorPage() {
             </div>
 
             <div className="flex items-center space-x-2">
-              <ThemeToggle />
+              {/* <ThemeToggle /> */}
               <Button variant="ghost" size="sm" onClick={undo} disabled={historyIndex <= 0}>
                 <Undo className="w-4 h-4" />
               </Button>
@@ -325,7 +410,12 @@ export default function EditorPage() {
                 {previewMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 {previewMode ? "Edit" : "Preview"}
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm"
+                onClick={() => {
+                  saveToHistory()
+                  triggerToast("success", "Progress Saved", "Your resume has been updated successfully.")
+                }}
+              >
                 <Save className="w-4 h-4 mr-2" />
                 Save
               </Button>
@@ -414,7 +504,7 @@ export default function EditorPage() {
                           id="summary"
                           value={resumeData.personal.summary}
                           onChange={(e) => updatePersonal("summary", e.target.value)}
-                          rows={3}
+                          rows={7}
                         />
                       </div>
                     </div>
@@ -855,7 +945,7 @@ export default function EditorPage() {
                   {/* Export Options */}
                   <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50">
                     <h3 className="text-lg font-semibold mb-4">Export Options</h3>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 gap-3">
                       <Button onClick={() => exportResume("pdf")} className="flex-col h-auto py-4">
                         <Download className="w-6 h-6 mb-2" />
                         PDF
@@ -863,10 +953,6 @@ export default function EditorPage() {
                       <Button onClick={() => exportResume("png")} variant="outline" className="flex-col h-auto py-4">
                         <Download className="w-6 h-6 mb-2" />
                         PNG
-                      </Button>
-                      <Button onClick={() => exportResume("svg")} variant="outline" className="flex-col h-auto py-4">
-                        <Download className="w-6 h-6 mb-2" />
-                        SVG
                       </Button>
                     </div>
                   </Card>
@@ -887,15 +973,22 @@ export default function EditorPage() {
                   </Badge>
                 </div>
               </div>
-              <div className="border border-border/50 rounded-lg overflow-hidden bg-white">
-                <div className="transform scale-75 origin-top-left w-[133.33%] h-fit">
-                  <TemplatePreview templateId={resumeStyle.template} data={resumeData} className="w-full" />
-                </div>
+              <div id="export-area" className="bg-white inline-block p-0 m-0">
+                <TemplatePreview templateId={resumeStyle.template} data={resumeData} />
               </div>
+
+
             </Card>
           </div>
         </div>
       </div>
+      {showToast && toastPayload && (
+        <GeneralToast
+          variant={toastPayload.variant}
+          title={toastPayload.title}
+          description={toastPayload.description}
+        />
+      )}
     </div>
   )
 }

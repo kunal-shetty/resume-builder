@@ -41,6 +41,7 @@ interface ResumeData {
     gpa?: string
   }>
   skills: string[]
+  customSections: string[]
 }
 
 const steps = [
@@ -72,6 +73,7 @@ export default function ResumeBuilderPage() {
     experience: [],
     education: [],
     skills: [],
+    customSections: []
   })
 
   const progress = (currentStep / steps.length) * 100
@@ -237,9 +239,10 @@ export default function ResumeBuilderPage() {
       if (!p.firstName || !p.lastName || !p.email || !p.phone || !p.location) {
         triggerToast(
           "error",
-          "Personal Details Required",
-          "Please complete all personal information before continuing."
+          "You're Almost There!",
+          "Please complete all personal details (name, email, phone, and location) before moving forward."
         )
+
         return false
       }
 
@@ -256,9 +259,10 @@ export default function ResumeBuilderPage() {
         if (!exp.company || !exp.position || !exp.startDate) {
           triggerToast(
             "error",
-            "Experience Incomplete",
-            "Please fill company name, job title, and start date."
+            "Incomplete Work Experience",
+            "Each experience entry must include a company name, position title, and start date."
           )
+
           return false
         }
       }
@@ -271,9 +275,10 @@ export default function ResumeBuilderPage() {
       if (resumeData.education.length === 0) {
         triggerToast(
           "warning",
-          "Add Your Education",
-          "You need to add at least one education entry to continue."
+          "Education Required",
+          "Add at least one education entry to proceed to the next step."
         )
+
         return false
       }
 
@@ -281,9 +286,10 @@ export default function ResumeBuilderPage() {
         if (!edu.school || !edu.degree || !edu.field || !edu.graduationDate) {
           triggerToast(
             "error",
-            "Education Details Missing",
-            "Please fill school, degree, field of study, and graduation date."
+            "Education Details Incomplete",
+            "Please fill in your school name, degree, field of study, and graduation date."
           )
+
           return false
         }
       }
@@ -296,9 +302,10 @@ export default function ResumeBuilderPage() {
       if (resumeData.skills.length === 0) {
         triggerToast(
           "warning",
-          "Add Your Skills",
-          "Please add at least one skill before continuing."
+          "No Skills Added",
+          "Add at least one skill so recruiters can understand your strengths."
         )
+
         return false
       }
 
@@ -307,10 +314,6 @@ export default function ResumeBuilderPage() {
 
     return true
   }
-
-
-
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-orange-50/30">
       <CurtainReveal />
@@ -339,7 +342,6 @@ export default function ResumeBuilderPage() {
           </Progress>
         </div>
       </div>
-
       <div className="max-w-4xl mx-auto px-6 py-8">
         {/* Step Navigation */}
         <div className="flex justify-center mb-8">
@@ -395,7 +397,13 @@ export default function ResumeBuilderPage() {
 
               className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 shadow-lg shadow-orange-500/30 hover:shadow-orange-500/40 hover:scale-105 transition-all duration-200"
               onClick={() => {
-                localStorage.setItem("resume-data", JSON.stringify(resumeData))
+                localStorage.setItem(
+                  "resume-data",
+                  JSON.stringify({
+                    ...resumeData,
+                    customSections: resumeData.customSections || [],
+                  })
+                )
 
                 window.location.href = "/editor"
               }}
@@ -414,7 +422,6 @@ export default function ResumeBuilderPage() {
           )}
         </div>
       </div>
-
       {showToast && toastPayload && (
         <GeneralToast
           variant={toastPayload.variant}
@@ -422,10 +429,6 @@ export default function ResumeBuilderPage() {
           description={toastPayload.description}
         />
       )}
-
-
-
-
     </div>
   )
 }
@@ -509,6 +512,8 @@ function PersonalInfoStep({ data, onChange }: any) {
 function ExperienceStep({ experiences, onAdd, onRemove, onUpdate }: any) {
   return (
     <div className="space-y-6">
+      <CurtainReveal />
+
       <div className="text-center mb-8">
         <h2 className="text-2xl font-semibold text-gray-900 mb-2 drop-shadow-sm">Work Experience</h2>
         <p className="text-gray-600">Add your professional experience</p>
@@ -617,6 +622,7 @@ function ExperienceStep({ experiences, onAdd, onRemove, onUpdate }: any) {
 function EducationStep({ education, onAdd, onRemove, onUpdate }: any) {
   return (
     <div className="space-y-6">
+      <CurtainReveal />
       <div className="text-center mb-8">
         <h2 className="text-2xl font-semibold text-gray-900 mb-2 drop-shadow-sm">Education</h2>
         <p className="text-gray-600">Add your educational background</p>
@@ -724,6 +730,7 @@ function SkillsStep({ skills, onAdd, onRemove }: any) {
 
   return (
     <div className="space-y-6">
+      <CurtainReveal />
       <div className="text-center mb-8">
         <h2 className="text-2xl font-semibold text-gray-900 mb-2 drop-shadow-sm">Skills</h2>
         <p className="text-gray-600">Add your key skills and competencies</p>
@@ -778,6 +785,7 @@ function SkillsStep({ skills, onAdd, onRemove }: any) {
 function SummaryStep({ data, onSummaryChange }: any) {
   return (
     <div className="space-y-6">
+      <CurtainReveal />
       <div className="text-center mb-8">
         <h2 className="text-2xl font-semibold text-gray-900 mb-2 drop-shadow-sm">Review & Summary</h2>
         <p className="text-gray-600">Add a professional summary to complete your resume</p>

@@ -71,7 +71,7 @@ export function TemplatePreview({ templateId, data, className }: TemplatePreview
 
 function ModernMinimalTemplate({ data }: { data: any }) {
   return (
-    <Card className="w-full max-w-2xl mx-auto p-8 bg-white text-gray-900 shadow-lg">
+    <Card className="p-8 bg-white text-gray-900 shadow-lg">
       {/* Header */}
       <div className="border-b border-gray-200 pb-6 mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -263,7 +263,7 @@ function ExecutiveProTemplate({ data }: { data: any }) {
   return (
     <Card className="w-full max-w-2xl mx-auto bg-white shadow-lg">
       {/* Header with Photo */}
-      <div className="bg-gradient-to-r from-gray-800 to-green-600 p-6 text-white">
+      <div className="px-4 py-2">
         <div className="flex items-center gap-6">
           <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center">
             <User className="w-10 h-10" />
@@ -363,13 +363,13 @@ function ExecutiveProTemplate({ data }: { data: any }) {
 
 function TechFocusedTemplate({ data }: { data: any }) {
   return (
-    <Card className="w-full max-w-2xl mx-auto bg-white shadow-lg">
+    <Card className="p-8 bg-white text-gray-900 shadow-lg">
       {/* Header */}
-      <div className="bg-gradient-to-r from-gray-900 to-blue-600 p-6 text-white">
+      <div className="px-6 py-0">
         <h1 className="text-2xl font-bold mb-2">
           {data.personal.firstName} {data.personal.lastName}
         </h1>
-        <p className="text-blue-200 mb-4">{data.personal.summary}</p>
+        <p className="mb-4">{data.personal.summary}</p>
         <div className="flex flex-wrap gap-4 text-sm">
           <div className="flex items-center gap-1">
             <Mail className="w-4 h-4" />
