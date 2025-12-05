@@ -239,9 +239,10 @@ export default function ResumeBuilderPage() {
       if (!p.firstName || !p.lastName || !p.email || !p.phone || !p.location) {
         triggerToast(
           "error",
-          "You're Almost There!",
-          "Please complete all personal details (name, email, phone, and location) before moving forward."
+          "Missing Information",
+          "Please fill in your name, email, phone, and location to continue."
         )
+
 
         return false
       }

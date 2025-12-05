@@ -33,6 +33,7 @@ import { TemplatePreview } from "@/components/template-preview"
 import html2canvas from "html2canvas"
 import jsPDF from "jspdf"
 import GeneralToast from "@/components/Toast"
+import ExportPayButton from "@/components/PayButton"
 
 interface ResumeData {
   personal: {
@@ -423,10 +424,7 @@ export default function EditorPage() {
                 <Share className="w-4 h-4 mr-2" />
                 Share
               </Button>
-              <Button size="sm" className="animate-pulse-glow">
-                <Download className="w-4 h-4 mr-2" />
-                Export
-              </Button>
+              <ExportPayButton />
             </div>
           </div>
         </div>

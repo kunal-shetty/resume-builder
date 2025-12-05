@@ -30,6 +30,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         {children}
+        <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
         <Toaster />
       </body>
     </html>
