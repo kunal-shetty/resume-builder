@@ -154,14 +154,28 @@ export default function EditorPage() {
 });
   
 const [isBlurred, setIsBlurred] = useState(true);
+const [plan, setPlan] = useState("");
 
 useEffect(() => {
-  const unlocked = localStorage.getItem("resume_unlocked") === "true";
-  if (unlocked) {
-    setIsBlurred(false);
-    setShowModal(false);
+  const unlocked = localStorage.getItem("resume_unlocked");
+
+  if (!unlocked) return; // nothing unlocked → skip
+
+  // Set the plan based on stored value
+  switch (unlocked) {
+    case "basic":
+    case "advanced":
+    case "premium":
+      setPlan(unlocked);
+      break;
+    default:
+      setPlan(""); // fallback
   }
+
+  setIsBlurred(false);
+  setShowModal(false);
 }, []);
+
 
 const [showModal, setShowModal] = useState(false);
 
@@ -431,7 +445,6 @@ const canvasToPDF = (canvas: HTMLCanvasElement) => {
 
   return new Blob([pdfData], { type: "application/pdf" });
 }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-accent/10">
       {/* Header */}
@@ -1154,7 +1167,7 @@ const canvasToPDF = (canvas: HTMLCanvasElement) => {
         </ul>
 
         <button
-  onClick={() => window.location.href = `/checkout?plan=49`}
+  onClick={() => window.location.href = `/checkout?plan=basic`}
   className="w-full py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition"
 >
   Choose ₹49
@@ -1198,18 +1211,16 @@ const canvasToPDF = (canvas: HTMLCanvasElement) => {
         </ul>
 
         <button
-          onClick={() => {
-            setShowModal(false);
-          }}
+  onClick={() => window.location.href = `/checkout?plan=advanced`}
           className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
-        >
-          Choose ₹99
-        </button>
+>
+  Choose ₹99
+</button>
       </div>
 
       {/* OPTION 3 */}
       <div className="border rounded-2xl p-7 bg-gray-50 hover:shadow-xl transition cursor-pointer">
-        <h3 className="text-xl font-semibold text-gray-900 text-center">₹199</h3>
+        <h3 className="text-xl font-semibold text-gray-900 text-center">₹129</h3>
         <p className="text-sm text-gray-600 text-center mb-4">Premium Pack</p>
 
         <ul className="text-[15px] text-gray-700 space-y-2 mb-6">
@@ -1219,13 +1230,11 @@ const canvasToPDF = (canvas: HTMLCanvasElement) => {
         </ul>
 
         <button
-          onClick={() => {
-            setShowModal(false);
-          }}
-          className="w-full py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition"
-        >
-          Choose ₹199
-        </button>
+  onClick={() => window.location.href = `/checkout?plan=premium`}
+  className="w-full py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition"
+>
+  Choose ₹129
+</button>
       </div>
     </div>
 
