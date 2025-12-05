@@ -147,7 +147,23 @@ export default function EditorPage() {
     localStorage.setItem("resume-data", JSON.stringify(resumeData))
   }, [resumeData])
 
+  const [formData, setFormData] = useState({
+  name: "",
+  email: "",
+  phone: "",
+});
+  
+const [isBlurred, setIsBlurred] = useState(true);
 
+useEffect(() => {
+  const unlocked = localStorage.getItem("resume_unlocked") === "true";
+  if (unlocked) {
+    setIsBlurred(false);
+    setShowModal(false);
+  }
+}, []);
+
+const [showModal, setShowModal] = useState(false);
 
   const [resumeStyle, setResumeStyle] = useState<ResumeStyle>({
     template: "modern-minimal",
@@ -346,41 +362,75 @@ export default function EditorPage() {
   }
 
   const exportResume = async (format: "pdf" | "png") => {
-    const element = document.getElementById("export-area")
-    if (!element) return
+  const element = document.getElementById("export-area");
+  if (!element) return;
 
-    // Capture full-quality screenshot
-    const canvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: null,
-    })
+  // Clone HTML into SVG wrapper
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${element.offsetWidth}" height="${element.offsetHeight}">
+      <foreignObject width="100%" height="100%">
+        ${new XMLSerializer().serializeToString(element)}
+      </foreignObject>
+    </svg>
+  `;
 
-    const imgData = canvas.toDataURL("image/png")
+  // Convert SVG → Blob
+  const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
+
+  // Convert Blob → URL
+  const blobURL = URL.createObjectURL(blob);
+
+  // Create an image from the blob URL
+  const img = new Image();
+  img.src = blobURL;
+
+  img.onload = () => {
+    // Draw image onto canvas
+    const canvas = document.createElement("canvas");
+    canvas.width = img.width * 2;
+    canvas.height = img.height * 2;
+
+    const ctx = canvas.getContext("2d")!;
+    ctx.scale(2, 2);
+    ctx.drawImage(img, 0, 0);
+
+    const pngData = canvas.toDataURL("image/png");
 
     // PNG EXPORT
     if (format === "png") {
-      const link = document.createElement("a")
-      link.href = imgData
-      link.download = "resume.png"
-      link.click()
-      return
+      const link = document.createElement("a");
+      link.href = pngData;
+      link.download = "resume.png";
+      link.click();
     }
 
-    // PDF EXPORT
+    // PDF EXPORT (using browser-native print-to-pdf style)
     if (format === "pdf") {
-      const pdf = new jsPDF({
-        orientation: canvas.width > canvas.height ? "l" : "p",
-        unit: "px",
-        format: [canvas.width, canvas.height],
-      })
+      const pdfBlob = canvasToPDF(canvas);
+      const pdfURL = URL.createObjectURL(pdfBlob);
 
-      pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height)
-      pdf.save("resume.pdf")
+      const link = document.createElement("a");
+      link.href = pdfURL;
+      link.download = "resume.pdf";
+      link.click();
     }
-  }
 
+    URL.revokeObjectURL(blobURL);
+  };
+};
 
+const canvasToPDF = (canvas: HTMLCanvasElement) => {
+  const pdfCanvas = document.createElement("canvas");
+  pdfCanvas.width = canvas.width;
+  pdfCanvas.height = canvas.height;
+
+  const pdfCtx = pdfCanvas.getContext("2d")!;
+  pdfCtx.drawImage(canvas, 0, 0);
+
+  const pdfData = pdfCanvas.toDataURL("image/png");
+
+  return new Blob([pdfData], { type: "application/pdf" });
+}
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-accent/10">
@@ -389,10 +439,7 @@ export default function EditorPage() {
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm" onClick={() => window.history.back()}>
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
-              </Button>
+              
               <div>
                 <h1 className="text-xl font-bold">Resume Editor</h1>
                 <p className="text-sm text-muted-foreground">Customize your resume</p>
@@ -971,10 +1018,103 @@ export default function EditorPage() {
                   </Badge>
                 </div>
               </div>
-              <div id="export-area" className="bg-white inline-block p-0 m-0">
-                <TemplatePreview templateId={resumeStyle.template} data={resumeData} />
-              </div>
+              <div
+    id="export-area"
+    style={{
+      position: "relative",
+      background: "white",
+      padding: 0,
+      margin: 0,
+      userSelect: "none",
+      WebkitUserSelect: "none",
+      MozUserSelect: "none",
+      overflow: "hidden",
+    }}
+  >
+    {/* BLUR OVERLAY */}
+    {/* BLUR OVERLAY */}
+{isBlurred && (
+  <div
+    style={{
+      position: "absolute",
+      inset: 0,
+      backdropFilter: "blur(12px)",
+      WebkitBackdropFilter: "blur(12px)",
+      background: "rgba(255, 255, 255, 0.45)",
+      pointerEvents: "none",
+      zIndex: 99999,
+    }}
+  ></div>
+)}
 
+{/* PREVIEW BUTTON */}
+{isBlurred && (
+  <button
+    onClick={() => setShowModal(true)}
+    style={{
+      position: "absolute",
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      padding: "14px 28px",
+      fontSize: "16px",
+      fontWeight: "600",
+      background: "#111827",
+      color: "white",
+      borderRadius: "8px",
+      border: "none",
+      cursor: "pointer",
+      zIndex: 100000,
+      boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
+    }}
+  >
+    Preview Resume
+  </button>
+)}
+{/* BLUR OVERLAY */}
+{isBlurred && (
+  <div
+    style={{
+      position: "absolute",
+      inset: 0,
+      backdropFilter: "blur(12px)",
+      WebkitBackdropFilter: "blur(12px)",
+      background: "rgba(255, 255, 255, 0.45)",
+      pointerEvents: "none",
+      zIndex: 99999,
+    }}
+  ></div>
+)}
+
+{/* PREVIEW BUTTON */}
+{isBlurred && (
+  <button
+    onClick={() => setShowModal(true)}
+    style={{
+      position: "absolute",
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      padding: "14px 28px",
+      fontSize: "16px",
+      fontWeight: "600",
+      background: "#111827",
+      color: "white",
+      borderRadius: "8px",
+      border: "none",
+      cursor: "pointer",
+      zIndex: 100000,
+      boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
+    }}
+  >
+    Preview Resume
+  </button>
+)}
+
+
+
+    <TemplatePreview templateId={resumeStyle.template} data={resumeData} />
+  </div>
 
             </Card>
           </div>
@@ -987,6 +1127,124 @@ export default function EditorPage() {
           description={toastPayload.description}
         />
       )}
+      {showModal && (
+  <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[200000] px-6 py-10">
+  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-10 relative">
+
+    {/* Title */}
+    <h2 className="text-3xl font-bold text-gray-900 text-center mb-3">
+      Unlock Full Resume Access
+    </h2>
+    <p className="text-lg text-gray-600 text-center mb-10">
+      Choose a plan to preview your resume in HD & export without any limits.
+    </p>
+
+    {/* Pricing Options */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+
+      {/* OPTION 1 */}
+      <div className="border rounded-2xl p-7 bg-gray-50 hover:shadow-xl transition cursor-pointer">
+        <h3 className="text-xl font-semibold text-gray-900 text-center">₹49</h3>
+        <p className="text-sm text-gray-600 text-center mb-4">One-Time Unlock</p>
+
+        <ul className="text-[15px] text-gray-700 space-y-2 mb-6">
+          <li>✔ Full HD Preview</li>
+          <li>✔ Export PDF & PNG</li>
+          <li>✔ Remove Watermark</li>
+        </ul>
+
+        <button
+  onClick={() => window.location.href = `/checkout?plan=49`}
+  className="w-full py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition"
+>
+  Choose ₹49
+</button>
+      </div>
+
+      {/* OPTION 2 (MOST POPULAR) */}
+<div className="relative border-2 border-blue-600 rounded-2xl p-7 bg-blue-50 hover:shadow-xl transition cursor-pointer">
+  <div className="absolute top-4 left-4">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="w-6 h-6 fill-yellow-300 drop-shadow-md"
+      viewBox="0 0 20 20"
+    >
+      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.2 3.674a1 1 0 00.95.69h3.862c.969 0 1.371 1.24.588 1.81l-3.125 2.27a1 1 0 00-.364 1.118l1.2 3.674c.3.921-.755 1.688-1.54 1.118l-3.125-2.27a1 1 0 00-1.176 0l-3.125 2.27c-.784.57-1.838-.197-1.539-1.118l1.2-3.674a1 1 0 00-.364-1.118L2.45 9.1c-.783-.57-.38-1.81.588-1.81H6.9a1 1 0 00.95-.69l1.2-3.674z" />
+    </svg>
+  </div>
+        {/* Tilted Ribbon */}
+  <span className="absolute -top-5 left-1/2 -translate-x-1/2 rotate-[5deg] bg-blue-600 text-white px-6 py-1 rounded-full text-xs font-semibold shadow-md">
+    MOST POPULAR
+  </span>
+
+  {/* Floating Star Icon */}
+  <div className="absolute top-4 right-4">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="w-6 h-6 fill-yellow-300 drop-shadow-md"
+      viewBox="0 0 20 20"
+    >
+      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.2 3.674a1 1 0 00.95.69h3.862c.969 0 1.371 1.24.588 1.81l-3.125 2.27a1 1 0 00-.364 1.118l1.2 3.674c.3.921-.755 1.688-1.54 1.118l-3.125-2.27a1 1 0 00-1.176 0l-3.125 2.27c-.784.57-1.838-.197-1.539-1.118l1.2-3.674a1 1 0 00-.364-1.118L2.45 9.1c-.783-.57-.38-1.81.588-1.81H6.9a1 1 0 00.95-.69l1.2-3.674z" />
+    </svg>
+  </div>
+
+        <h3 className="text-xl font-semibold text-blue-700 text-center">₹99</h3>
+        <p className="text-sm text-blue-600 text-center mb-4">Unlimited Exports</p>
+
+        <ul className="text-[15px] text-gray-700 space-y-2 mb-6">
+          <li>✔ Unlimited Downloads</li>
+          <li>✔ HD Preview Forever</li>
+          <li>✔ Access All Templates</li>
+        </ul>
+
+        <button
+          onClick={() => {
+            setShowModal(false);
+          }}
+          className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
+        >
+          Choose ₹99
+        </button>
+      </div>
+
+      {/* OPTION 3 */}
+      <div className="border rounded-2xl p-7 bg-gray-50 hover:shadow-xl transition cursor-pointer">
+        <h3 className="text-xl font-semibold text-gray-900 text-center">₹199</h3>
+        <p className="text-sm text-gray-600 text-center mb-4">Premium Pack</p>
+
+        <ul className="text-[15px] text-gray-700 space-y-2 mb-6">
+          <li>✔ Unlimited Everything</li>
+          <li>✔ All Future Templates</li>
+          <li>✔ Priority Support</li>
+        </ul>
+
+        <button
+          onClick={() => {
+            setShowModal(false);
+          }}
+          className="w-full py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition"
+        >
+          Choose ₹199
+        </button>
+      </div>
     </div>
+
+    {/* Close Button */}
+    <div className="flex justify-center mt-10">
+      <button
+        onClick={() => setShowModal(false)}
+        className="px-6 py-3 rounded-lg bg-gray-200 text-gray-800 font-medium hover:bg-gray-300 transition"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+)}
+
+
+    </div>
+    
   )
 }
