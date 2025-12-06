@@ -859,53 +859,53 @@ export default function EditorPage() {
 
                 <TabsContent value="design" className="space-y-6">
                   {/* Template Selection */}
-{plan && (
-  <Card
-    className="p-6 bg-card/60 backdrop-blur-sm border-border/50 relative"
-    onClick={() => {
-      if (plan === "basic") {
-        setShowTemplateLockModal(true);
-      }
-    }}
-  >
+                  {plan && (
+                    <Card
+                      className="p-6 bg-card/60 backdrop-blur-sm border-border/50 relative"
+                      onClick={() => {
+                        if (plan === "basic") {
+                          setShowTemplateLockModal(true);
+                        }
+                      }}
+                    >
 
-    <h3 className="text-lg font-semibold mb-0">Template</h3>
+                      <h3 className="text-lg font-semibold mb-0">Template</h3>
 
-    {/* 🟡 BASIC PLAN → LOCKED UI */}
-    {plan === "basic" && (
-      <>
-        {/* Overlay to block interaction */}
-        <div className="absolute inset-0 bg-black/10 rounded-lg cursor-pointer z-10"></div>
+                      {/* 🟡 BASIC PLAN → LOCKED UI */}
+                      {plan === "basic" && (
+                        <>
+                          {/* Overlay to block interaction */}
+                          <div className="absolute inset-0 bg-black/10 rounded-lg cursor-pointer z-10"></div>
 
-        {/* Disabled Select */}
-        <Select disabled>
-          <SelectTrigger>
-            <SelectValue placeholder="Locked • Upgrade to use" />
-          </SelectTrigger>
-        </Select>
-      </>
-    )}
+                          {/* Disabled Select */}
+                          <Select disabled>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Locked • Upgrade to use" />
+                            </SelectTrigger>
+                          </Select>
+                        </>
+                      )}
 
-    {/* 🟢 ADVANCED / PREMIUM → UNLOCKED UI */}
-    {(plan === "advanced" || plan === "premium") && (
-      <Select
-        value={resumeStyle.template}
-        onValueChange={(value) => updateStyle("template", "", value)}
-      >
-        <SelectTrigger>
-          <SelectValue />
-        </SelectTrigger>
+                      {/* 🟢 ADVANCED / PREMIUM → UNLOCKED UI */}
+                      {(plan === "advanced" || plan === "premium") && (
+                        <Select
+                          value={resumeStyle.template}
+                          onValueChange={(value) => updateStyle("template", "", value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
 
-        <SelectContent>
-          <SelectItem value="modern-minimal">Modern Minimal</SelectItem>
-          <SelectItem value="creative-photo">Creative Photo</SelectItem>
-          <SelectItem value="executive-pro">Executive Pro</SelectItem>
-          <SelectItem value="tech-focused">Tech Focused</SelectItem>
-        </SelectContent>
-      </Select>
-    )}
-  </Card>
-)}
+                          <SelectContent>
+                            <SelectItem value="modern-minimal">Modern Minimal</SelectItem>
+                            <SelectItem value="creative-photo">Creative Photo</SelectItem>
+                            <SelectItem value="executive-pro">Executive Pro</SelectItem>
+                            <SelectItem value="tech-focused">Tech Focused</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </Card>
+                  )}
 
 
 
@@ -1064,14 +1064,35 @@ export default function EditorPage() {
                   <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50">
                     <h3 className="text-lg font-semibold mb-4">Export Options</h3>
                     <div className="grid grid-cols-2 gap-3">
-                      <Button onClick={() => exportResume("pdf")} className="flex-col h-auto py-4">
+                      <Button
+                        onClick={() => {
+                          if (!plan) {
+                            setShowModal(true);
+                            return;
+                          }
+                          exportResume("pdf");
+                        }}
+                        className="flex-col h-auto py-4"
+                      >
                         <Download className="w-6 h-6 mb-2" />
                         PDF
                       </Button>
-                      <Button onClick={() => exportResume("png")} variant="outline" className="flex-col h-auto py-4">
+
+                      <Button
+                        onClick={() => {
+                          if (!plan) {
+                            setShowModal(true);
+                            return;
+                          }
+                          exportResume("png");
+                        }}
+                        variant="outline"
+                        className="flex-col h-auto py-4"
+                      >
                         <Download className="w-6 h-6 mb-2" />
                         PNG
                       </Button>
+
                     </div>
                   </Card>
                 </TabsContent>
@@ -1201,10 +1222,10 @@ export default function EditorPage() {
         />
       )}
       {showModal && (
-  <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[200000] px-3 py-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[200000] px-3 py-4 overflow-y-auto">
 
-    <div
-      className="
+          <div
+            className="
         bg-white 
         rounded-2xl 
         shadow-2xl 
@@ -1215,93 +1236,93 @@ export default function EditorPage() {
         transition-all 
         animate-in fade-in zoom-in-95
       "
-    >
-      {/* Title */}
-      <h2 className="text-xl sm:text-3xl font-bold text-gray-900 text-center mb-2 sm:mb-3">
-        Unlock Full Resume Access
-      </h2>
-
-      <p className="text-sm sm:text-lg text-gray-600 text-center mb-5 sm:mb-10">
-        Choose a plan to preview in HD & export without limits.
-      </p>
-
-      {/* Pricing Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-
-        {/* OPTION 1 */}
-        <div className="border rounded-2xl p-4 sm:p-6 bg-gray-50 hover:shadow-xl transition cursor-pointer">
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 text-center">₹49</h3>
-          <p className="text-xs sm:text-sm text-gray-600 text-center mb-3">
-            One-Time Unlock
-          </p>
-
-          <ul className="text-[13px] sm:text-[15px] text-gray-700 space-y-1.5 mb-4">
-            <li>✔ Full HD Preview</li>
-            <li>✔ Export PDF & PNG</li>
-            <li>✔ Remove Watermark</li>
-          </ul>
-
-          <button
-            onClick={() => window.location.href = `/checkout?plan=basic`}
-            className="w-full py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition text-sm sm:text-base"
           >
-            Choose ₹49
-          </button>
-        </div>
+            {/* Title */}
+            <h2 className="text-xl sm:text-3xl font-bold text-gray-900 text-center mb-2 sm:mb-3">
+              Unlock Full Resume Access
+            </h2>
 
-        {/* OPTION 2 (Popular) */}
-        <div className="relative border-2 border-blue-600 rounded-2xl p-4 sm:p-6 bg-blue-50 hover:shadow-xl transition cursor-pointer">
+            <p className="text-sm sm:text-lg text-gray-600 text-center mb-5 sm:mb-10">
+              Choose a plan to preview in HD & export without limits.
+            </p>
 
-          {/* Ribbon */}
-          <span className="absolute -top-3 sm:-top-5 left-1/2 -translate-x-1/2 rotate-[5deg] bg-blue-600 text-white px-3 sm:px-6 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold shadow-md">
-            MOST POPULAR
-          </span>
+            {/* Pricing Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
 
-          <h3 className="text-lg sm:text-xl font-semibold text-blue-700 text-center">₹99</h3>
-          <p className="text-xs sm:text-sm text-blue-600 text-center mb-3">Unlimited Exports</p>
+              {/* OPTION 1 */}
+              <div className="border rounded-2xl p-4 sm:p-6 bg-gray-50 hover:shadow-xl transition cursor-pointer">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 text-center">₹49</h3>
+                <p className="text-xs sm:text-sm text-gray-600 text-center mb-3">
+                  One-Time Unlock
+                </p>
 
-          <ul className="text-[13px] sm:text-[15px] text-gray-700 space-y-1.5 mb-4">
-            <li>✔ Unlimited Downloads</li>
-            <li>✔ HD Preview Forever</li>
-            <li>✔ Access All Templates</li>
-          </ul>
+                <ul className="text-[13px] sm:text-[15px] text-gray-700 space-y-1.5 mb-4">
+                  <li>✔ Full HD Preview</li>
+                  <li>✔ Export PDF & PNG</li>
+                  <li>✔ Remove Watermark</li>
+                </ul>
 
-          <button
-            onClick={() => window.location.href = `/checkout?plan=advanced`}
-            className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition text-sm sm:text-base"
-          >
-            Choose ₹99
-          </button>
-        </div>
+                <button
+                  onClick={() => window.location.href = `/checkout?plan=basic`}
+                  className="w-full py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition text-sm sm:text-base"
+                >
+                  Choose ₹49
+                </button>
+              </div>
 
-        {/* OPTION 3 */}
-        <div className="border rounded-2xl p-4 sm:p-6 bg-gray-50 hover:shadow-xl transition cursor-pointer">
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 text-center">₹129</h3>
-          <p className="text-xs sm:text-sm text-gray-600 text-center mb-3">
-            Premium Pack
-          </p>
+              {/* OPTION 2 (Popular) */}
+              <div className="relative border-2 border-blue-600 rounded-2xl p-4 sm:p-6 bg-blue-50 hover:shadow-xl transition cursor-pointer">
 
-          <ul className="text-[13px] sm:text-[15px] text-gray-700 space-y-1.5 mb-4">
-            <li>✔ Unlimited Everything</li>
-            <li>✔ All Future Templates</li>
-            <li>✔ Priority Support</li>
-          </ul>
+                {/* Ribbon */}
+                <span className="absolute -top-3 sm:-top-5 left-1/2 -translate-x-1/2 rotate-[5deg] bg-blue-600 text-white px-3 sm:px-6 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold shadow-md">
+                  MOST POPULAR
+                </span>
 
-          <button
-            onClick={() => window.location.href = `/checkout?plan=premium`}
-            className="w-full py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition text-sm sm:text-base"
-          >
-            Choose ₹129
-          </button>
-        </div>
+                <h3 className="text-lg sm:text-xl font-semibold text-blue-700 text-center">₹99</h3>
+                <p className="text-xs sm:text-sm text-blue-600 text-center mb-3">Unlimited Exports</p>
 
-      </div>
+                <ul className="text-[13px] sm:text-[15px] text-gray-700 space-y-1.5 mb-4">
+                  <li>✔ Unlimited Downloads</li>
+                  <li>✔ HD Preview Forever</li>
+                  <li>✔ Access All Templates</li>
+                </ul>
 
-      {/* CLOSE BUTTON */}
-      <div className="flex justify-center mt-6 sm:mt-10">
-        <button
-          onClick={() => setShowModal(false)}
-          className="
+                <button
+                  onClick={() => window.location.href = `/checkout?plan=advanced`}
+                  className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition text-sm sm:text-base"
+                >
+                  Choose ₹99
+                </button>
+              </div>
+
+              {/* OPTION 3 */}
+              <div className="border rounded-2xl p-4 sm:p-6 bg-gray-50 hover:shadow-xl transition cursor-pointer">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 text-center">₹129</h3>
+                <p className="text-xs sm:text-sm text-gray-600 text-center mb-3">
+                  Premium Pack
+                </p>
+
+                <ul className="text-[13px] sm:text-[15px] text-gray-700 space-y-1.5 mb-4">
+                  <li>✔ Unlimited Everything</li>
+                  <li>✔ All Future Templates</li>
+                  <li>✔ Priority Support</li>
+                </ul>
+
+                <button
+                  onClick={() => window.location.href = `/checkout?plan=premium`}
+                  className="w-full py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition text-sm sm:text-base"
+                >
+                  Choose ₹129
+                </button>
+              </div>
+
+            </div>
+
+            {/* CLOSE BUTTON */}
+            <div className="flex justify-center mt-6 sm:mt-10">
+              <button
+                onClick={() => setShowModal(false)}
+                className="
             w-full sm:w-auto
             px-10 
             py-4 
@@ -1315,14 +1336,14 @@ export default function EditorPage() {
             shadow-md 
             active:scale-95
           "
-        >
-          Close
-        </button>
-      </div>
+              >
+                Close
+              </button>
+            </div>
 
-    </div>
-  </div>
-)}
+          </div>
+        </div>
+      )}
 
 
       {showTemplateLockModal && (
@@ -1365,12 +1386,9 @@ export default function EditorPage() {
             >
               Close
             </button>
-
           </div>
         </div>
       )}
-
-
     </div>
   )
 }
