@@ -839,7 +839,7 @@ const exportResume = async (format: "pdf" | "png") => {
                     <Card
                       className="p-6 bg-card/60 backdrop-blur-sm border-border/50 relative"
                       onClick={() => {
-                        if (plan === "basic") {
+                        if (plan === "qZ7mP1xA9tL4sVwE2cN8rGfH0bJkT5yU3dQpR6hWnSgCjKvM") {
                           setShowTemplateLockModal(true);
                         }
                       }}
@@ -848,7 +848,7 @@ const exportResume = async (format: "pdf" | "png") => {
                       <h3 className="text-lg font-semibold mb-0">Template</h3>
 
                       {/* 🟡 BASIC PLAN → LOCKED UI */}
-                      {plan === "basic" && (
+                      {plan === "qZ7mP1xA9tL4sVwE2cN8rGfH0bJkT5yU3dQpR6hWnSgCjKvM" && (
                         <>
                           {/* Overlay to block interaction */}
                           <div className="absolute inset-0 bg-black/10 rounded-lg cursor-pointer z-10"></div>
@@ -1239,7 +1239,7 @@ const exportResume = async (format: "pdf" | "png") => {
                 </ul>
 
                 <button
-                  onClick={() => window.location.href = `/checkout?plan=basic`}
+                  onClick={() => window.location.href = `/checkout?plan=qZ7mP1xA9tL4sVwE2cN8rGfH0bJkT5yU3dQpR6hWnSgCjKvM`}
                   className="w-full py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition text-sm sm:text-base"
                 >
                   Choose ₹49
@@ -1264,7 +1264,7 @@ const exportResume = async (format: "pdf" | "png") => {
                 </ul>
 
                 <button
-                  onClick={() => window.location.href = `/checkout?plan=advanced`}
+                  onClick={() => window.location.href = `/checkout?plan=F3nQw8ZkT1hR5cJmV9yP2sLxA7gD0bWfE4uKqS6vNjHtGpCz`}
                   className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition text-sm sm:text-base"
                 >
                   Choose ₹99
@@ -1285,7 +1285,7 @@ const exportResume = async (format: "pdf" | "png") => {
                 </ul>
 
                 <button
-                  onClick={() => window.location.href = `/checkout?plan=premium`}
+                  onClick={() => window.location.href = `/checkout?plan=mT8qR2cW7yH0pLzS4nV1bJxF9gK5uD3aE6tPjCwNQvGsrBf`}
                   className="w-full py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition text-sm sm:text-base"
                 >
                   Choose ₹129
@@ -1336,7 +1336,7 @@ const exportResume = async (format: "pdf" | "png") => {
 
               {/* Upgrade to Advanced */}
               <button
-                onClick={() => window.location.href = "/checkout?plan=basicToAdvanced"}
+                onClick={() => window.location.href = "/checkout?plan=Z4hW9kA1tS6qJ0nG7vD3pF8mR2yL5uCxQeBfTjKcVwNsHrP"}
                 className="flex-1 py-3 bg-green-600 text-white rounded-xl font-semibold 
              hover:bg-green-700 transition"
               >
@@ -1345,7 +1345,7 @@ const exportResume = async (format: "pdf" | "png") => {
 
               {/* Upgrade to Premium */}
               <button
-                onClick={() => window.location.href = "/checkout?plan=basicToPremium"}
+                onClick={() => window.location.href = "/checkout?plan=pN6dV1bQ8tK3wG9hS0rJ5zL2yF7mCqR4uAeTnHcWfPjDgXs"}
                 className="flex-1 py-3 bg-purple-600 text-white rounded-xl font-semibold 
              hover:bg-purple-700 transition"
               >

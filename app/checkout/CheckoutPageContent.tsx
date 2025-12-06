@@ -4,12 +4,20 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 const PLAN_PRICING: Record<string, number> = {
-  basic: 49,
-  advanced: 99,
-  premium: 129,
-  basicToAdvanced: 59,
-  basicToPremium: 69
+  qZ7mP1xA9tL4sVwE2cN8rGfH0bJkT5yU3dQpR6hWnSgCjKvM: 49,
+  F3nQw8ZkT1hR5cJmV9yP2sLxA7gD0bWfE4uKqS6vNjHtGpCz: 99,
+  mT8qR2cW7yH0pLzS4nV1bJxF9gK5uD3aE6tPjCwNQvGsrBf: 129,
+  Z4hW9kA1tS6qJ0nG7vD3pF8mR2yL5uCxQeBfTjKcVwNsHrP: 59,
+  pN6dV1bQ8tK3wG9hS0rJ5zL2yF7mCqR4uAeTnHcWfPjDgXs: 69
 };
+
+const planMap = {
+  qZ7mP1xA9tL4sVwE2cN8rGfH0bJkT5yU3dQpR6hWnSgCjKvM: "Basic",
+  F3nQw8ZkT1hR5cJmV9yP2sLxA7gD0bWfE4uKqS6vNjHtGpCz: "Advanced",
+  mT8qR2cW7yH0pLzS4nV1bJxF9gK5uD3aE6tPjCwNQvGsrBf: "Premium",
+  Z4hW9kA1tS6qJ0nG7vD3pF8mR2yL5uCxQeBfTjKcVwNsHrP: "Basic To Advanced",
+  pN6dV1bQ8tK3wG9hS0rJ5zL2yF7mCqR4uAeTnHcWfPjDgXs: "Basic To Premium"
+}
 
 export default function CheckoutPageContent() {
   const params = useSearchParams();
@@ -83,8 +91,8 @@ export default function CheckoutPageContent() {
     setErrors(newErrors);
     return valid;
   };
-  if(plan === "basicToAdvanced") plan = "advanced";
-  if(plan === "basicToPreimum") plan = "premium";
+  if(plan === "Z4hW9kA1tS6qJ0nG7vD3pF8mR2yL5uCxQeBfTjKcVwNsHrP") plan = "F3nQw8ZkT1hR5cJmV9yP2sLxA7gD0bWfE4uKqS6vNjHtGpCz";
+  if(plan === "pN6dV1bQ8tK3wG9hS0rJ5zL2yF7mCqR4uAeTnHcWfPjDgXs") plan = "mT8qR2cW7yH0pLzS4nV1bJxF9gK5uD3aE6tPjCwNQvGsrBf";
 
   const startPayment = async () => {
     if (!validateForm()) return;
@@ -110,7 +118,7 @@ export default function CheckoutPageContent() {
       amount: order.amount,
       currency: "INR",
       name: "Resume Builder",
-      description: `${plan} Plan Purchase (incl. tax)`,
+      description: `${planMap[plan]} Plan Purchase (incl. tax)`,
       order_id: order.id,
 
       prefill: {
