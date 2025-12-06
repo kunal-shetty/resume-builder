@@ -28,6 +28,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { TemplatePreview } from "@/components/template-preview"
+import type { MutableRefObject } from "react";
 import GeneralToast from "@/components/Toast"
 
 interface ResumeData {
@@ -384,58 +385,95 @@ export default function EditorPage() {
     });
   };
 
- 
-const exportResume = async (format: "pdf" | "png") => {
-  const exportEl = document.getElementById("export-area");
-  if (!exportEl) return;
 
-  // Get the full HTML including styles
-  const htmlContent = `
-    <html>
-      <head>
-        <meta charset="utf-8" />
-        <style>
-          /* Include Tailwind CDN or your full CSS */
-          @import url("https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css");
-
-          /* OPTIONAL: inject your custom classes */
-        </style>
-      </head>
-      <body style="margin:0;padding:0;">
-        ${exportEl.outerHTML}
-      </body>
-    </html>
-  `;
-
-  const API_URL = `https://api.apify.com/v2/actor-tasks/YOUR_TASK_ID/run-sync?token=YOUR_TOKEN`;
-
-  const response = await fetch(API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      body: htmlContent,
-      format: format === "png" ? "PNG" : "PDF"
-    })
-  });
-
-  if (!response.ok) {
-    console.error("Screenshot failed:", await response.text());
-    alert("Failed to export resume.");
+const exportResume = async (format: "png" | "pdf") => {
+  // The element that wraps your resume preview
+  const element = document.getElementById("export-area");
+  if (!element) {
+    console.error("export-area not found");
     return;
   }
 
-  const blob = await response.blob();
-  const url = URL.createObjectURL(blob);
+  // Lazy import to avoid SSR issues in Next.js
+  const html2canvasModule = await import("html2canvas");
+  const html2canvas = html2canvasModule.default;
 
-  // Download file
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `resume.${format}`;
-  a.click();
+  // Higher scale → sharper export
+  const scale = window.devicePixelRatio > 1 ? window.devicePixelRatio : 2;
 
-  URL.revokeObjectURL(url);
+  // Make sure element is fully visible (just in case)
+  element.scrollIntoView({ block: "center", behavior: "instant" as ScrollBehavior });
+
+  const canvas = await html2canvas(element, {
+    scale,
+    useCORS: true,
+    backgroundColor: "#ffffff",
+    logging: false,
+    removeContainer: true,
+    windowWidth: element.scrollWidth,
+    windowHeight: element.scrollHeight,
+  });
+
+  const pngDataUrl = canvas.toDataURL("image/png");
+
+  // ---- PNG EXPORT ----
+  if (format === "png") {
+    const link = document.createElement("a");
+    link.href = pngDataUrl;
+    link.download = "resume.png";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    return;
+  }
+
+  // ---- PDF EXPORT (no jsPDF) ----
+  if (format === "pdf") {
+    // Open a new tab with only the image, then call print()
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      alert("Popup blocked. Please allow popups to download the PDF.");
+      return;
+    }
+
+    const html = `
+      <!doctype html>
+      <html>
+        <head>
+          <title>Resume</title>
+          <style>
+            @page { margin: 0; }
+            body {
+              margin: 0;
+              padding: 0;
+              background: #ffffff;
+            }
+            img {
+              width: 100%;
+              height: auto;
+              display: block;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+          </style>
+        </head>
+        <body>
+          <img src="${pngDataUrl}" />
+          <script>
+            window.onload = function () {
+              window.focus();
+              window.print();
+              setTimeout(function () { window.close(); }, 1000);
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+  }
 };
 
 
