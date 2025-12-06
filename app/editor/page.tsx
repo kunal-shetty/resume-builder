@@ -177,6 +177,8 @@ export default function EditorPage() {
 
 
   const [showModal, setShowModal] = useState(false);
+  const [showTemplateLockModal, setShowTemplateLockModal] = useState(false);
+
 
   const [resumeStyle, setResumeStyle] = useState<ResumeStyle>({
     template: "modern-minimal",
@@ -391,7 +393,6 @@ export default function EditorPage() {
     });
   };
 
-
   const exportResume = async (format: "pdf" | "png") => {
     const element = document.getElementById("export-area");
     if (!element) return;
@@ -462,7 +463,7 @@ export default function EditorPage() {
 
     return new Blob([pdfData], { type: "application/pdf" });
   }
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-accent/10">
       {/* Header */}
@@ -858,20 +859,55 @@ export default function EditorPage() {
 
                 <TabsContent value="design" className="space-y-6">
                   {/* Template Selection */}
-                  <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50">
-                    <h3 className="text-lg font-semibold mb-0">Template</h3>
-                    <Select value={resumeStyle.template} onValueChange={(value) => updateStyle("template", "", value)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="modern-minimal">Modern Minimal</SelectItem>
-                        <SelectItem value="creative-photo">Creative Photo</SelectItem>
-                        <SelectItem value="executive-pro">Executive Pro</SelectItem>
-                        <SelectItem value="tech-focused">Tech Focused</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </Card>
+{plan && (
+  <Card
+    className="p-6 bg-card/60 backdrop-blur-sm border-border/50 relative"
+    onClick={() => {
+      if (plan === "basic") {
+        setShowTemplateLockModal(true);
+      }
+    }}
+  >
+
+    <h3 className="text-lg font-semibold mb-0">Template</h3>
+
+    {/* 🟡 BASIC PLAN → LOCKED UI */}
+    {plan === "basic" && (
+      <>
+        {/* Overlay to block interaction */}
+        <div className="absolute inset-0 bg-black/10 rounded-lg cursor-pointer z-10"></div>
+
+        {/* Disabled Select */}
+        <Select disabled>
+          <SelectTrigger>
+            <SelectValue placeholder="Locked • Upgrade to use" />
+          </SelectTrigger>
+        </Select>
+      </>
+    )}
+
+    {/* 🟢 ADVANCED / PREMIUM → UNLOCKED UI */}
+    {(plan === "advanced" || plan === "premium") && (
+      <Select
+        value={resumeStyle.template}
+        onValueChange={(value) => updateStyle("template", "", value)}
+      >
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+
+        <SelectContent>
+          <SelectItem value="modern-minimal">Modern Minimal</SelectItem>
+          <SelectItem value="creative-photo">Creative Photo</SelectItem>
+          <SelectItem value="executive-pro">Executive Pro</SelectItem>
+          <SelectItem value="tech-focused">Tech Focused</SelectItem>
+        </SelectContent>
+      </Select>
+    )}
+  </Card>
+)}
+
+
 
                   {/* Colors */}
                   <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50">
@@ -1274,6 +1310,53 @@ export default function EditorPage() {
           </div>
         </div>
       )}
+
+      {showTemplateLockModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-6">
+          <div className="bg-white w-full max-w-md p-8 rounded-2xl shadow-2xl text-center">
+
+            <h2 className="text-2xl font-bold mb-2">Upgrade Required 🔒</h2>
+
+            <p className="text-gray-600 mb-6">
+              This feature is only available for Advanced & Premium users.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-3 w-full mt-6">
+
+              {/* Upgrade to Advanced */}
+              <button
+                onClick={() => window.location.href = "/checkout?plan=basicToAdvanced"}
+                className="flex-1 py-3 bg-green-600 text-white rounded-xl font-semibold 
+             hover:bg-green-700 transition"
+              >
+                Upgrade to Advanced <span className="font-bold">₹59</span>
+              </button>
+
+              {/* Upgrade to Premium */}
+              <button
+                onClick={() => window.location.href = "/checkout?plan=basicToPremium"}
+                className="flex-1 py-3 bg-purple-600 text-white rounded-xl font-semibold 
+             hover:bg-purple-700 transition"
+              >
+                Upgrade to Premium <span className="font-bold">₹69</span>
+              </button>
+
+            </div>
+
+            {/* Close Button */}
+            <button
+              onClick={() => setShowTemplateLockModal(false)}
+              className="w-full py-3 mt-4 bg-gray-100 text-gray-800 rounded-xl 
+             hover:bg-gray-200 transition font-medium"
+            >
+              Close
+            </button>
+
+          </div>
+        </div>
+      )}
+
+
     </div>
   )
 }

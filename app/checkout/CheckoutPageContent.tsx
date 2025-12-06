@@ -6,23 +6,49 @@ import { useState } from "react";
 const PLAN_PRICING: Record<string, number> = {
   basic: 49,
   advanced: 99,
-  premium: 149,
+  premium: 129,
+  basicToAdvanced: 59,
+  basicToPremium: 69
 };
 
 export default function CheckoutPageContent() {
   const params = useSearchParams();
-  const plan = params.get("plan") || "";
+  let plan = params.get("plan") || "";
 
   // Securely validate plan
   const baseAmount = PLAN_PRICING[plan] ?? null;
 
   if (!baseAmount) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-red-600 text-xl">
-        Invalid or corrupted checkout link.
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center bg-gray-50">
+      <div className="bg-white shadow-lg rounded-2xl p-10 max-w-lg w-full">
+        
+        <div className="flex justify-center mb-4">
+          <div className="w-14 h-14 bg-red-100 text-red-600 flex items-center justify-center rounded-full">
+            ⚠️
+          </div>
+        </div>
+
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          Invalid Checkout Link
+        </h2>
+
+        <p className="text-gray-600 mb-6 text-lg">
+          We couldn’t verify your plan details.  
+          This link may have expired or been modified.
+        </p>
+
+        <button
+          onClick={() => window.location.href = "/editor"}
+          className="w-full py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition"
+        >
+          Return to Resume Builder
+        </button>
       </div>
-    );
-  }
+    </div>
+  );
+}
+
 
   // TAX
   const taxRate = 0.05;
@@ -57,6 +83,8 @@ export default function CheckoutPageContent() {
     setErrors(newErrors);
     return valid;
   };
+  if(plan === "basicToAdvanced") plan = "advanced";
+  if(plan === "basicToPreimum") plan = "premium";
 
   const startPayment = async () => {
     if (!validateForm()) return;
@@ -76,7 +104,7 @@ export default function CheckoutPageContent() {
       alert("Failed to create payment order");
       return;
     }
-
+    
     const options = {
       key: process.env.NEXT_PUBLIC_RZP_ID,
       amount: order.amount,
@@ -90,7 +118,6 @@ export default function CheckoutPageContent() {
         email: form.email,
         contact: form.phone,
       },
-
       handler: () => {
         localStorage.setItem("resume_unlocked", plan);
         window.location.href = "/success";
