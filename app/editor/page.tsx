@@ -1210,17 +1210,6 @@ export default function EditorPage() {
                   MOST POPULAR
                 </span>
 
-                {/* Star icon */}
-                <div className="absolute top-2 right-2 sm:top-4 sm:right-4">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-4 h-4 sm:w-6 sm:h-6 fill-yellow-300 drop-shadow-md"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0..." />
-                  </svg>
-                </div>
-
                 <h3 className="text-lg sm:text-xl font-semibold text-blue-700 text-center">₹99</h3>
                 <p className="text-xs sm:text-sm text-blue-600 text-center mb-3 sm:mb-4">Unlimited Exports</p>
 
