@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { 
-  ArrowRight, Sparkles, Zap, Palette, Download, Globe, 
-  AppWindow, FileDown, Brain, CloudUpload, ShieldCheck, Trophy, LineChart 
+import {
+  ArrowRight, Sparkles, Zap, Palette, Download, Globe,
+  AppWindow, FileDown, Brain, CloudUpload, ShieldCheck, Trophy, LineChart
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -28,47 +28,47 @@ export default function HomePage() {
   }, [])
 
   const features = [
-  {
-    icon: <Palette className="w-8 h-8" />,
-    title: "Premium Templates",
-    description: "Choose from sleek, recruiter-approved designs and tailor them with fonts, colors, and layouts that fit your style.",
-  },
-  {
-    icon: <FileDown className="w-8 h-8" />,
-    title: "Instant Export",
-    description: "Download high-quality PDF or DOCX versions of your resume instantly with one click.",
-  },
-  {
-    icon: <Globe className="w-8 h-8" />,
-    title: "Access Anywhere",
-    description: "Your resume builder works seamlessly across devices, anytime, anywhere with auto-sync.",
-  },
-  {
-    icon: <Zap className="w-8 h-8" />,
-    title: "ATS Optimized",
-    description: "Smart formatting ensures your resume beats Applicant Tracking Systems with ease.",
-  },
-  {
-    icon: <Brain className="w-8 h-8" />,
-    title: "Smart Sections",
-    description: "Easily add projects, certifications, and custom sections that highlight your strengths.",
-  },
-  {
-    icon: <ShieldCheck className="w-8 h-8" />,
-    title: "Secure & Private",
-    description: "Your data is encrypted, auto-saved, and protected with enterprise-grade security.",
-  },
-  {
-    icon: <Trophy className="w-8 h-8" />,
-    title: "Career Boost",
-    description: "Stand out with polished, professional resumes that give you the competitive edge.",
-  },
-  {
-    icon: <LineChart className="w-8 h-8" />,
-    title: "Insights & Analytics",
-    description: "Track performance, get insights, and optimize your resumes for better opportunities.",
-  },
-]
+    {
+      icon: <Palette className="w-8 h-8" />,
+      title: "Premium Templates",
+      description: "Choose from sleek, recruiter-approved designs and tailor them with fonts, colors, and layouts that fit your style.",
+    },
+    {
+      icon: <FileDown className="w-8 h-8" />,
+      title: "Instant Export",
+      description: "Download high-quality PDF or DOCX versions of your resume instantly with one click.",
+    },
+    {
+      icon: <Globe className="w-8 h-8" />,
+      title: "Access Anywhere",
+      description: "Your resume builder works seamlessly across devices, anytime, anywhere with auto-sync.",
+    },
+    {
+      icon: <Zap className="w-8 h-8" />,
+      title: "ATS Optimized",
+      description: "Smart formatting ensures your resume beats Applicant Tracking Systems with ease.",
+    },
+    {
+      icon: <Brain className="w-8 h-8" />,
+      title: "Smart Sections",
+      description: "Easily add projects, certifications, and custom sections that highlight your strengths.",
+    },
+    {
+      icon: <ShieldCheck className="w-8 h-8" />,
+      title: "Secure & Private",
+      description: "Your data is encrypted, auto-saved, and protected with enterprise-grade security.",
+    },
+    {
+      icon: <Trophy className="w-8 h-8" />,
+      title: "Career Boost",
+      description: "Stand out with polished, professional resumes that give you the competitive edge.",
+    },
+    {
+      icon: <LineChart className="w-8 h-8" />,
+      title: "Insights & Analytics",
+      description: "Track performance, get insights, and optimize your resumes for better opportunities.",
+    },
+  ]
 
 
   return (
@@ -119,7 +119,7 @@ export default function HomePage() {
             transition={{ delay: 1.5 }}
             className="text-lg sm:text-xl md:text-2xl text-gray-300 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed"
           >
-            Build world-class resumes with modern designs, real-time editing, and recruiter-approved layouts. 
+            Build world-class resumes with modern designs, real-time editing, and recruiter-approved layouts.
             Land interviews faster with a tool designed for professionals.
           </motion.p>
 
@@ -145,7 +145,7 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-       {/* Features */}
+      {/* Features */}
       <section className="mt-6 py-2 px-6 relative">
         <AnimatedBlob />
 
@@ -212,7 +212,8 @@ export default function HomePage() {
             Ready to Land Your Dream Job?
           </h2>
           <p className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto">
-            Join thousands of professionals using our premium builder to create resumes that grab attention and get results.
+            Craft a resume that speaks louder than words — designed to impress recruiters,
+            stand out instantly, and unlock better opportunities.
           </p>
           <Link href="/builder">
             <Button
