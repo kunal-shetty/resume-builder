@@ -1222,7 +1222,7 @@ export default function EditorPage() {
         />
       )}
       {showModal && (
-        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[200000] px-3 py-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[200000] px-3 py-8 overflow-y-auto">
 
           <div
             className="
@@ -1253,7 +1253,7 @@ export default function EditorPage() {
               <div className="border rounded-2xl p-4 sm:p-6 bg-gray-50 hover:shadow-xl transition cursor-pointer">
                 <h3 className="text-lg sm:text-xl font-semibold text-gray-900 text-center">₹49</h3>
                 <p className="text-xs sm:text-sm text-gray-600 text-center mb-3">
-                  One-Time Unlock
+                  Basic Pack
                 </p>
 
                 <ul className="text-[13px] sm:text-[15px] text-gray-700 space-y-1.5 mb-4">
@@ -1279,7 +1279,7 @@ export default function EditorPage() {
                 </span>
 
                 <h3 className="text-lg sm:text-xl font-semibold text-blue-700 text-center">₹99</h3>
-                <p className="text-xs sm:text-sm text-blue-600 text-center mb-3">Unlimited Exports</p>
+                <p className="text-xs sm:text-sm text-blue-600 text-center mb-3">Advanced Pack</p>
 
                 <ul className="text-[13px] sm:text-[15px] text-gray-700 space-y-1.5 mb-4">
                   <li>✔ Unlimited Downloads</li>
