@@ -1163,116 +1163,126 @@ const canvasToPDF = (canvas: HTMLCanvasElement) => {
           description={toastPayload.description}
         />
       )}
-      {showModal && (
-  <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[200000] px-6 py-10">
-  <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-10 relative">
+      {!showModal && (
+  <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[200000] px-3 py-4 overflow-y-auto">
 
-    {/* Title */}
-    <h2 className="text-3xl font-bold text-gray-900 text-center mb-3">
-      Unlock Full Resume Access
-    </h2>
-    <p className="text-lg text-gray-600 text-center mb-10">
-      Choose a plan to preview your resume in HD & export without any limits.
-    </p>
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-4 sm:p-10 relative">
 
-    {/* Pricing Options */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      {/* Title */}
+      <h2 className="text-xl sm:text-3xl font-bold text-gray-900 text-center mb-1 sm:mb-3">
+        Unlock Full Resume Access
+      </h2>
 
-      {/* OPTION 1 */}
-      <div className="border rounded-2xl p-7 bg-gray-50 hover:shadow-xl transition cursor-pointer">
-        <h3 className="text-xl font-semibold text-gray-900 text-center">₹49</h3>
-        <p className="text-sm text-gray-600 text-center mb-4">One-Time Unlock</p>
+      <p className="text-sm sm:text-lg text-gray-600 text-center mb-5 sm:mb-10">
+        Choose a plan to preview in HD & export without limits.
+      </p>
 
-        <ul className="text-[15px] text-gray-700 space-y-2 mb-6">
-          <li>✔ Full HD Preview</li>
-          <li>✔ Export PDF & PNG</li>
-          <li>✔ Remove Watermark</li>
-        </ul>
+      {/* Pricing Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
 
-        <button
-  onClick={() => window.location.href = `/checkout?plan=basic`}
-  className="w-full py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition"
->
-  Choose ₹49
-</button>
+        {/* OPTION 1 */}
+        <div className="border rounded-2xl p-4 sm:p-7 bg-gray-50 hover:shadow-xl transition cursor-pointer">
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 text-center">₹49</h3>
+          <p className="text-xs sm:text-sm text-gray-600 text-center mb-3 sm:mb-4">
+            One-Time Unlock
+          </p>
+
+          <ul className="text-[13px] sm:text-[15px] text-gray-700 space-y-1.5 mb-4 sm:mb-6">
+            <li>✔ Full HD Preview</li>
+            <li>✔ Export PDF & PNG</li>
+            <li>✔ Remove Watermark</li>
+          </ul>
+
+          <button
+            onClick={() => window.location.href = `/checkout?plan=basic`}
+            className="w-full py-2.5 sm:py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition text-sm sm:text-base"
+          >
+            Choose ₹49
+          </button>
+        </div>
+
+        {/* OPTION 2 | MOST POPULAR */}
+        <div className="relative border-2 border-blue-600 rounded-2xl p-4 sm:p-7 bg-blue-50 hover:shadow-xl transition cursor-pointer">
+
+          {/* Ribbon */}
+          <span className="absolute -top-3 sm:-top-5 left-1/2 -translate-x-1/2 rotate-[5deg] bg-blue-600 text-white px-3 sm:px-6 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold shadow-md">
+            MOST POPULAR
+          </span>
+
+          {/* Star icon */}
+          <div className="absolute top-2 right-2 sm:top-4 sm:right-4">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-4 h-4 sm:w-6 sm:h-6 fill-yellow-300 drop-shadow-md"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0..." />
+            </svg>
+          </div>
+
+          <h3 className="text-lg sm:text-xl font-semibold text-blue-700 text-center">₹99</h3>
+          <p className="text-xs sm:text-sm text-blue-600 text-center mb-3 sm:mb-4">Unlimited Exports</p>
+
+          <ul className="text-[13px] sm:text-[15px] text-gray-700 space-y-1.5 mb-4 sm:mb-6">
+            <li>✔ Unlimited Downloads</li>
+            <li>✔ HD Preview Forever</li>
+            <li>✔ Access All Templates</li>
+          </ul>
+
+          <button
+            onClick={() => window.location.href = `/checkout?plan=advanced`}
+            className="w-full py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition text-sm sm:text-base"
+          >
+            Choose ₹99
+          </button>
+        </div>
+
+        {/* OPTION 3 */}
+        <div className="border rounded-2xl p-4 sm:p-7 bg-gray-50 hover:shadow-xl transition cursor-pointer">
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 text-center">₹129</h3>
+          <p className="text-xs sm:text-sm text-gray-600 text-center mb-3 sm:mb-4">
+            Premium Pack
+          </p>
+
+          <ul className="text-[13px] sm:text-[15px] text-gray-700 space-y-1.5 mb-4 sm:mb-6">
+            <li>✔ Unlimited Everything</li>
+            <li>✔ All Future Templates</li>
+            <li>✔ Priority Support</li>
+          </ul>
+
+          <button
+            onClick={() => window.location.href = `/checkout?plan=premium`}
+            className="w-full py-2.5 sm:py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition text-sm sm:text-base"
+          >
+            Choose ₹129
+          </button>
+        </div>
+
       </div>
 
-      {/* OPTION 2 (MOST POPULAR) */}
-<div className="relative border-2 border-blue-600 rounded-2xl p-7 bg-blue-50 hover:shadow-xl transition cursor-pointer">
-  <div className="absolute top-4 left-4">
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-6 h-6 fill-yellow-300 drop-shadow-md"
-      viewBox="0 0 20 20"
-    >
-      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.2 3.674a1 1 0 00.95.69h3.862c.969 0 1.371 1.24.588 1.81l-3.125 2.27a1 1 0 00-.364 1.118l1.2 3.674c.3.921-.755 1.688-1.54 1.118l-3.125-2.27a1 1 0 00-1.176 0l-3.125 2.27c-.784.57-1.838-.197-1.539-1.118l1.2-3.674a1 1 0 00-.364-1.118L2.45 9.1c-.783-.57-.38-1.81.588-1.81H6.9a1 1 0 00.95-.69l1.2-3.674z" />
-    </svg>
-  </div>
-        {/* Tilted Ribbon */}
-  <span className="absolute -top-5 left-1/2 -translate-x-1/2 rotate-[5deg] bg-blue-600 text-white px-6 py-1 rounded-full text-xs font-semibold shadow-md">
-    MOST POPULAR
-  </span>
-
-  {/* Floating Star Icon */}
-  <div className="absolute top-4 right-4">
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="w-6 h-6 fill-yellow-300 drop-shadow-md"
-      viewBox="0 0 20 20"
-    >
-      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.2 3.674a1 1 0 00.95.69h3.862c.969 0 1.371 1.24.588 1.81l-3.125 2.27a1 1 0 00-.364 1.118l1.2 3.674c.3.921-.755 1.688-1.54 1.118l-3.125-2.27a1 1 0 00-1.176 0l-3.125 2.27c-.784.57-1.838-.197-1.539-1.118l1.2-3.674a1 1 0 00-.364-1.118L2.45 9.1c-.783-.57-.38-1.81.588-1.81H6.9a1 1 0 00.95-.69l1.2-3.674z" />
-    </svg>
-  </div>
-
-        <h3 className="text-xl font-semibold text-blue-700 text-center">₹99</h3>
-        <p className="text-sm text-blue-600 text-center mb-4">Unlimited Exports</p>
-
-        <ul className="text-[15px] text-gray-700 space-y-2 mb-6">
-          <li>✔ Unlimited Downloads</li>
-          <li>✔ HD Preview Forever</li>
-          <li>✔ Access All Templates</li>
-        </ul>
-
-        <button
-  onClick={() => window.location.href = `/checkout?plan=advanced`}
-          className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
->
-  Choose ₹99
-</button>
-      </div>
-
-      {/* OPTION 3 */}
-      <div className="border rounded-2xl p-7 bg-gray-50 hover:shadow-xl transition cursor-pointer">
-        <h3 className="text-xl font-semibold text-gray-900 text-center">₹129</h3>
-        <p className="text-sm text-gray-600 text-center mb-4">Premium Pack</p>
-
-        <ul className="text-[15px] text-gray-700 space-y-2 mb-6">
-          <li>✔ Unlimited Everything</li>
-          <li>✔ All Future Templates</li>
-          <li>✔ Priority Support</li>
-        </ul>
-
-        <button
-  onClick={() => window.location.href = `/checkout?plan=premium`}
-  className="w-full py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition"
->
-  Choose ₹129
-</button>
-      </div>
-    </div>
-
-    {/* Close Button */}
-    <div className="flex justify-center mt-10">
-      <button
-        onClick={() => setShowModal(false)}
-        className="px-6 py-3 rounded-lg bg-gray-200 text-gray-800 font-medium hover:bg-gray-300 transition"
-      >
-        Close
-      </button>
-    </div>
-  </div>
+      {/* BIG CLOSE BUTTON */}
+      <div className="flex justify-center mt-6 sm:mt-10">
+  <button
+    onClick={() => setShowModal(false)}
+    className="
+      w-full sm:w-auto        // ✅ FULL WIDTH ON MOBILE, AUTO ON DESKTOP
+      px-8 sm:px-10 
+      py-4 sm:py-3 
+      rounded-xl 
+      bg-gray-200 text-gray-800 font-semibold 
+      hover:bg-gray-300 
+      transition 
+      text-base sm:text-lg 
+      shadow-md 
+      active:scale-95
+    "
+  >
+    Close
+  </button>
 </div>
 
+    </div>
+  </div>
 )}
 
 
