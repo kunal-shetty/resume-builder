@@ -120,7 +120,7 @@ export default function CheckoutPageContent() {
       },
       handler: () => {
         localStorage.setItem("resume_unlocked", plan);
-        window.location.href = "/success";
+        window.location.href = `/success?plan=${plan}`;
       },
     };
 

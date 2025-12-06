@@ -1,12 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { CheckCircle } from "lucide-react";
 
 export default function SuccessPage() {
+  const params = useSearchParams();
+    let plan = params.get("plan") || "";
+  
   useEffect(() => {
     // Mark the resume as unlocked
-    localStorage.setItem("resume_unlocked", "true");
+    localStorage.setItem("resume_unlocked", plan);
   }, []);
 
   return (

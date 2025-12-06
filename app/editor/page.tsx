@@ -12,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import {
-  ArrowLeft,
   Download,
   Eye,
   EyeOff,
@@ -23,17 +22,13 @@ import {
   Trash2,
   GripVertical,
   Save,
-  Share,
   Undo,
   Redo,
   Zap,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { TemplatePreview } from "@/components/template-preview"
-import html2canvas from "html2canvas"
-import jsPDF from "jspdf"
 import GeneralToast from "@/components/Toast"
-import ExportPayButton from "@/components/PayButton"
 
 interface ResumeData {
   personal: {
@@ -146,11 +141,7 @@ export default function EditorPage() {
     localStorage.setItem("resume-data", JSON.stringify(resumeData))
   }, [resumeData])
 
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-  });
+
 
   const [isBlurred, setIsBlurred] = useState(true);
   const [plan, setPlan] = useState("");
@@ -393,76 +384,61 @@ export default function EditorPage() {
     });
   };
 
-  const exportResume = async (format: "pdf" | "png") => {
-    const element = document.getElementById("export-area");
-    if (!element) return;
+ 
+const exportResume = async (format: "pdf" | "png") => {
+  const exportEl = document.getElementById("export-area");
+  if (!exportEl) return;
 
-    // Clone HTML into SVG wrapper
-    const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="${element.offsetWidth}" height="${element.offsetHeight}">
-      <foreignObject width="100%" height="100%">
-        ${new XMLSerializer().serializeToString(element)}
-      </foreignObject>
-    </svg>
+  // Get the full HTML including styles
+  const htmlContent = `
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <style>
+          /* Include Tailwind CDN or your full CSS */
+          @import url("https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css");
+
+          /* OPTIONAL: inject your custom classes */
+        </style>
+      </head>
+      <body style="margin:0;padding:0;">
+        ${exportEl.outerHTML}
+      </body>
+    </html>
   `;
 
-    // Convert SVG → Blob
-    const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
+  const API_URL = `https://api.apify.com/v2/actor-tasks/YOUR_TASK_ID/run-sync?token=YOUR_TOKEN`;
 
-    // Convert Blob → URL
-    const blobURL = URL.createObjectURL(blob);
+  const response = await fetch(API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      body: htmlContent,
+      format: format === "png" ? "PNG" : "PDF"
+    })
+  });
 
-    // Create an image from the blob URL
-    const img = new Image();
-    img.src = blobURL;
-
-    img.onload = () => {
-      // Draw image onto canvas
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width * 2;
-      canvas.height = img.height * 2;
-
-      const ctx = canvas.getContext("2d")!;
-      ctx.scale(2, 2);
-      ctx.drawImage(img, 0, 0);
-
-      const pngData = canvas.toDataURL("image/png");
-
-      // PNG EXPORT
-      if (format === "png") {
-        const link = document.createElement("a");
-        link.href = pngData;
-        link.download = "resume.png";
-        link.click();
-      }
-
-      // PDF EXPORT (using browser-native print-to-pdf style)
-      if (format === "pdf") {
-        const pdfBlob = canvasToPDF(canvas);
-        const pdfURL = URL.createObjectURL(pdfBlob);
-
-        const link = document.createElement("a");
-        link.href = pdfURL;
-        link.download = "resume.pdf";
-        link.click();
-      }
-
-      URL.revokeObjectURL(blobURL);
-    };
-  };
-
-  const canvasToPDF = (canvas: HTMLCanvasElement) => {
-    const pdfCanvas = document.createElement("canvas");
-    pdfCanvas.width = canvas.width;
-    pdfCanvas.height = canvas.height;
-
-    const pdfCtx = pdfCanvas.getContext("2d")!;
-    pdfCtx.drawImage(canvas, 0, 0);
-
-    const pdfData = pdfCanvas.toDataURL("image/png");
-
-    return new Blob([pdfData], { type: "application/pdf" });
+  if (!response.ok) {
+    console.error("Screenshot failed:", await response.text());
+    alert("Failed to export resume.");
+    return;
   }
+
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+
+  // Download file
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `resume.${format}`;
+  a.click();
+
+  URL.revokeObjectURL(url);
+};
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-accent/10">
