@@ -1345,8 +1345,7 @@ const exportResume = async (format: "pdf" | "png") => {
 
               {/* Upgrade to Premium */}
               <button
-                onClick={() => window.location.href = "/checkout?plan=tF6wE1pH8lM3qG9uJ5rA2vK7cD0yS4bN8mR1xL6gP3nC9jT5hW2sQ7kU4V9kP4cM7xR2dT8bS1yG6nL0hF5uQ3mJ9rC4tW8pA1eH6sD2jN7gY5
-"}
+                onClick={() => window.location.href = "/checkout?plan=tF6wE1pH8lM3qG9uJ5rA2vK7cD0yS4bN8mR1xL6gP3nC9jT5hW2sQ7kU4V9kP4cM7xR2dT8bS1yG6nL0hF5uQ3mJ9rC4tW8pA1eH6sD2jN7gY5"}
                 className="flex-1 py-3 bg-purple-600 text-white rounded-xl font-semibold 
              hover:bg-purple-700 transition"
               >
