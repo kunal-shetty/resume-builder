@@ -153,9 +153,9 @@ export default function EditorPage() {
 
     // Set the plan based on stored value
     switch (unlocked) {
-      case "basic":
-      case "advanced":
-      case "premium":
+      case "qZ7mP1xA9tL4sVwE2cN8rGfH0bJkT5yU3dQpR6hWnSgCjKvM":
+      case "F3nQw8ZkT1hR5cJmV9yP2sLxA7gD0bWfE4uKqS6vNjHtGpCz":
+      case "mT8qR2cW7yH0pLzS4nV1bJxF9gK5uD3aE6tPjCwNQvGsrBf":
         setPlan(unlocked);
         break;
       default:
@@ -862,8 +862,8 @@ const exportResume = async (format: "pdf" | "png") => {
                         </>
                       )}
 
-                      {/* 🟢 ADVANCED / PREMIUM → UNLOCKED UI */}
-                      {(plan === "advanced" || plan === "premium") && (
+                      {/*  ADVANCED / PREMIUM → UNLOCKED UI */}
+                      {(plan === "F3nQw8ZkT1hR5cJmV9yP2sLxA7gD0bWfE4uKqS6vNjHtGpCz" || plan === "mT8qR2cW7yH0pLzS4nV1bJxF9gK5uD3aE6tPjCwNQvGsrBf") && (
                         <Select
                           value={resumeStyle.template}
                           onValueChange={(value) => updateStyle("template", "", value)}
