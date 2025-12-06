@@ -78,7 +78,7 @@ export default function CheckoutPageContent() {
     }
 
     const options = {
-      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      key: process.env.NEXT_PUBLIC_RZP_ID,
       amount: order.amount,
       currency: "INR",
       name: "Resume Builder",
