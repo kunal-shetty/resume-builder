@@ -194,7 +194,6 @@ const [showModal, setShowModal] = useState(false);
     spacing: 16,
     borderRadius: 8,
     showPhoto: false,
-    layout: "single",
   })
 
   const [activeTab, setActiveTab] = useState("content")

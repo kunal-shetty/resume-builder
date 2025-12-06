@@ -186,7 +186,7 @@ export default function ResumeBuilderPage() {
         return (
           <PersonalInfoStep
             data={resumeData.personal}
-            onChange={(field, value) =>
+            onChange={(field :any, value :any) =>
               setResumeData((prev) => ({
                 ...prev,
                 personal: { ...prev.personal, [field]: value },
@@ -218,7 +218,7 @@ export default function ResumeBuilderPage() {
         return (
           <SummaryStep
             data={resumeData}
-            onSummaryChange={(value) =>
+            onSummaryChange={(value :any) =>
               setResumeData((prev) => ({
                 ...prev,
                 personal: { ...prev.personal, summary: value },
