@@ -153,9 +153,9 @@ export default function EditorPage() {
 
     // Set the plan based on stored value
     switch (unlocked) {
-      case "qZ7mP1xA9tL4sVwE2cN8rGfH0bJkT5yU3dQpR6hWnSgCjKvM":
-      case "F3nQw8ZkT1hR5cJmV9yP2sLxA7gD0bWfE4uKqS6vNjHtGpCz":
-      case "mT8qR2cW7yH0pLzS4nV1bJxF9gK5uD3aE6tPjCwNQvGsrBf":
+      case "qT9mF3xL7vB2nP8kS1hD6wR0gC4tY9jM5uA2eZ7rV1cN8pH3lK6fW0dQ4sX9bT5yG2aU7mJ1Z8rK1pV6xT3gM9hS4lC2nW7fB0uJ5yD8qA1cL6tR3mH9vP4kF2wN7jE0sQ5gY8bU1xT6mC3":
+      case "mP4tS9vB2qH7cL1xN6fD0wY5kR8pA3gT9uJ2eV6rC1hM7nF0dX4sW8jQ3yK5aG2bU9tL6paW7fC3gN9tM6yV1sK4pQ8lB2jT5hR0xD7uE3nF9vJ6cL1kS8mA4wP2rG5dH0qX9bU7tY3":
+      case "xC1tL6pN8rJ3yH9bS5kW2uA7fQ4gM0nV6dR1cT8mP3jE9hF5lK2wB7sD4aY0qG8vX1nB5yF2uG8hK1vQ7pD3mT9aL4sP0cW6xE2rJ8tM1kS7gH3lC9wN5qA0jV4dU6bY8":
         setPlan(unlocked);
         break;
       default:
@@ -839,7 +839,7 @@ const exportResume = async (format: "pdf" | "png") => {
                     <Card
                       className="p-6 bg-card/60 backdrop-blur-sm border-border/50 relative"
                       onClick={() => {
-                        if (plan === "qZ7mP1xA9tL4sVwE2cN8rGfH0bJkT5yU3dQpR6hWnSgCjKvM") {
+                        if (plan === "qT9mF3xL7vB2nP8kS1hD6wR0gC4tY9jM5uA2eZ7rV1cN8pH3lK6fW0dQ4sX9bT5yG2aU7mJ1Z8rK1pV6xT3gM9hS4lC2nW7fB0uJ5yD8qA1cL6tR3mH9vP4kF2wN7jE0sQ5gY8bU1xT6mC3") {
                           setShowTemplateLockModal(true);
                         }
                       }}
@@ -848,7 +848,7 @@ const exportResume = async (format: "pdf" | "png") => {
                       <h3 className="text-lg font-semibold mb-0">Template</h3>
 
                       {/* 🟡 BASIC PLAN → LOCKED UI */}
-                      {plan === "qZ7mP1xA9tL4sVwE2cN8rGfH0bJkT5yU3dQpR6hWnSgCjKvM" && (
+                      {plan === "qT9mF3xL7vB2nP8kS1hD6wR0gC4tY9jM5uA2eZ7rV1cN8pH3lK6fW0dQ4sX9bT5yG2aU7mJ1Z8rK1pV6xT3gM9hS4lC2nW7fB0uJ5yD8qA1cL6tR3mH9vP4kF2wN7jE0sQ5gY8bU1xT6mC3" && (
                         <>
                           {/* Overlay to block interaction */}
                           <div className="absolute inset-0 bg-black/10 rounded-lg cursor-pointer z-10"></div>
@@ -863,7 +863,7 @@ const exportResume = async (format: "pdf" | "png") => {
                       )}
 
                       {/*  ADVANCED / PREMIUM → UNLOCKED UI */}
-                      {(plan === "F3nQw8ZkT1hR5cJmV9yP2sLxA7gD0bWfE4uKqS6vNjHtGpCz" || plan === "mT8qR2cW7yH0pLzS4nV1bJxF9gK5uD3aE6tPjCwNQvGsrBf") && (
+                      {(plan === "mP4tS9vB2qH7cL1xN6fD0wY5kR8pA3gT9uJ2eV6rC1hM7nF0dX4sW8jQ3yK5aG2bU9tL6paW7fC3gN9tM6yV1sK4pQ8lB2jT5hR0xD7uE3nF9vJ6cL1kS8mA4wP2rG5dH0qX9bU7tY3" || plan === "xC1tL6pN8rJ3yH9bS5kW2uA7fQ4gM0nV6dR1cT8mP3jE9hF5lK2wB7sD4aY0qG8vX1nB5yF2uG8hK1vQ7pD3mT9aL4sP0cW6xE2rJ8tM1kS7gH3lC9wN5qA0jV4dU6bY8") && (
                         <Select
                           value={resumeStyle.template}
                           onValueChange={(value) => updateStyle("template", "", value)}
@@ -1239,7 +1239,7 @@ const exportResume = async (format: "pdf" | "png") => {
                 </ul>
 
                 <button
-                  onClick={() => window.location.href = `/checkout?plan=qZ7mP1xA9tL4sVwE2cN8rGfH0bJkT5yU3dQpR6hWnSgCjKvM`}
+                  onClick={() => window.location.href = `/checkout?plan=qT9mF3xL7vB2nP8kS1hD6wR0gC4tY9jM5uA2eZ7rV1cN8pH3lK6fW0dQ4sX9bT5yG2aU7mJ1Z8rK1pV6xT3gM9hS4lC2nW7fB0uJ5yD8qA1cL6tR3mH9vP4kF2wN7jE0sQ5gY8bU1xT6mC3`}
                   className="w-full py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition text-sm sm:text-base"
                 >
                   Choose ₹49
@@ -1264,7 +1264,7 @@ const exportResume = async (format: "pdf" | "png") => {
                 </ul>
 
                 <button
-                  onClick={() => window.location.href = `/checkout?plan=F3nQw8ZkT1hR5cJmV9yP2sLxA7gD0bWfE4uKqS6vNjHtGpCz`}
+                  onClick={() => window.location.href = `/checkout?plan=mP4tS9vB2qH7cL1xN6fD0wY5kR8pA3gT9uJ2eV6rC1hM7nF0dX4sW8jQ3yK5aG2bU9tL6paW7fC3gN9tM6yV1sK4pQ8lB2jT5hR0xD7uE3nF9vJ6cL1kS8mA4wP2rG5dH0qX9bU7tY3`}
                   className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition text-sm sm:text-base"
                 >
                   Choose ₹99
@@ -1285,7 +1285,7 @@ const exportResume = async (format: "pdf" | "png") => {
                 </ul>
 
                 <button
-                  onClick={() => window.location.href = `/checkout?plan=mT8qR2cW7yH0pLzS4nV1bJxF9gK5uD3aE6tPjCwNQvGsrBf`}
+                  onClick={() => window.location.href = `/checkout?plan=xC1tL6pN8rJ3yH9bS5kW2uA7fQ4gM0nV6dR1cT8mP3jE9hF5lK2wB7sD4aY0qG8vX1nB5yF2uG8hK1vQ7pD3mT9aL4sP0cW6xE2rJ8tM1kS7gH3lC9wN5qA0jV4dU6bY8`}
                   className="w-full py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition text-sm sm:text-base"
                 >
                   Choose ₹129
@@ -1336,7 +1336,7 @@ const exportResume = async (format: "pdf" | "png") => {
 
               {/* Upgrade to Advanced */}
               <button
-                onClick={() => window.location.href = "/checkout?plan=Z4hW9kA1tS6qJ0nG7vD3pF8mR2yL5uCxQeBfTjKcVwNsHrP"}
+                onClick={() => window.location.href = "/checkout?plan=R3vH9tP4mS1xL8uJ2cK6qG0yD5bN7gF3pT9lM1hC8wA2rV6eQ4nW0jU5sY7kX9kM2jS7aT4yC9nV5gP1bU8wR3xD6fH0pQ7lE2tJ9cN4mA8hG5rW1dY3sK6vX0"}
                 className="flex-1 py-3 bg-green-600 text-white rounded-xl font-semibold 
              hover:bg-green-700 transition"
               >
@@ -1345,7 +1345,8 @@ const exportResume = async (format: "pdf" | "png") => {
 
               {/* Upgrade to Premium */}
               <button
-                onClick={() => window.location.href = "/checkout?plan=pN6dV1bQ8tK3wG9hS0rJ5zL2yF7mCqR4uAeTnHcWfPjDgXs"}
+                onClick={() => window.location.href = "/checkout?plan=tF6wE1pH8lM3qG9uJ5rA2vK7cD0yS4bN8mR1xL6gP3nC9jT5hW2sQ7kU4V9kP4cM7xR2dT8bS1yG6nL0hF5uQ3mJ9rC4tW8pA1eH6sD2jN7gY5
+"}
                 className="flex-1 py-3 bg-purple-600 text-white rounded-xl font-semibold 
              hover:bg-purple-700 transition"
               >
