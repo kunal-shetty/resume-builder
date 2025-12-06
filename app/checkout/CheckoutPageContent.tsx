@@ -205,7 +205,7 @@ export default function CheckoutPageContent() {
 
             <div className="flex justify-between text-gray-700">
               <span>Plan</span>
-              <span className="capitalize">{plan}</span>
+              <span className="capitalize">{planMap[plan]}</span>
             </div>
 
             <div className="flex justify-between text-gray-700">
