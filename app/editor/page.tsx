@@ -147,36 +147,36 @@ export default function EditorPage() {
   }, [resumeData])
 
   const [formData, setFormData] = useState({
-  name: "",
-  email: "",
-  phone: "",
-});
-  
-const [isBlurred, setIsBlurred] = useState(true);
-const [plan, setPlan] = useState("");
+    name: "",
+    email: "",
+    phone: "",
+  });
 
-useEffect(() => {
-  const unlocked = localStorage.getItem("resume_unlocked");
+  const [isBlurred, setIsBlurred] = useState(true);
+  const [plan, setPlan] = useState("");
 
-  if (!unlocked) return; // nothing unlocked → skip
+  useEffect(() => {
+    const unlocked = localStorage.getItem("resume_unlocked");
 
-  // Set the plan based on stored value
-  switch (unlocked) {
-    case "basic":
-    case "advanced":
-    case "premium":
-      setPlan(unlocked);
-      break;
-    default:
-      setPlan(""); // fallback
-  }
+    if (!unlocked) return; // nothing unlocked → skip
 
-  setIsBlurred(false);
-  setShowModal(false);
-}, []);
+    // Set the plan based on stored value
+    switch (unlocked) {
+      case "basic":
+      case "advanced":
+      case "premium":
+        setPlan(unlocked);
+        break;
+      default:
+        setPlan(""); // fallback
+    }
+
+    setIsBlurred(false);
+    setShowModal(false);
+  }, []);
 
 
-const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   const [resumeStyle, setResumeStyle] = useState<ResumeStyle>({
     template: "modern-minimal",
@@ -362,42 +362,42 @@ const [showModal, setShowModal] = useState(false);
     }))
   }
 
-    const updateStyle = (
-  category: keyof ResumeStyle,
-  field: string | null,
-  value: any
-) => {
-  saveToHistory();
+  const updateStyle = (
+    category: keyof ResumeStyle,
+    field: string | null,
+    value: any
+  ) => {
+    saveToHistory();
 
-  setResumeStyle((prev) => {
-    const current = prev[category];
+    setResumeStyle((prev) => {
+      const current = prev[category];
 
-    // Nested object update
-    if (field && typeof current === "object" && current !== null) {
+      // Nested object update
+      if (field && typeof current === "object" && current !== null) {
+        return {
+          ...prev,
+          [category]: {
+            ...current,
+            [field]: value,
+          },
+        };
+      }
+
+      // Primitive value update
       return {
         ...prev,
-        [category]: {
-          ...current,
-          [field]: value,
-        },
+        [category]: value,
       };
-    }
-
-    // Primitive value update
-    return {
-      ...prev,
-      [category]: value,
-    };
-  });
-};
+    });
+  };
 
 
   const exportResume = async (format: "pdf" | "png") => {
-  const element = document.getElementById("export-area");
-  if (!element) return;
+    const element = document.getElementById("export-area");
+    if (!element) return;
 
-  // Clone HTML into SVG wrapper
-  const svg = `
+    // Clone HTML into SVG wrapper
+    const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="${element.offsetWidth}" height="${element.offsetHeight}">
       <foreignObject width="100%" height="100%">
         ${new XMLSerializer().serializeToString(element)}
@@ -405,124 +405,125 @@ const [showModal, setShowModal] = useState(false);
     </svg>
   `;
 
-  // Convert SVG → Blob
-  const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
+    // Convert SVG → Blob
+    const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
 
-  // Convert Blob → URL
-  const blobURL = URL.createObjectURL(blob);
+    // Convert Blob → URL
+    const blobURL = URL.createObjectURL(blob);
 
-  // Create an image from the blob URL
-  const img = new Image();
-  img.src = blobURL;
+    // Create an image from the blob URL
+    const img = new Image();
+    img.src = blobURL;
 
-  img.onload = () => {
-    // Draw image onto canvas
-    const canvas = document.createElement("canvas");
-    canvas.width = img.width * 2;
-    canvas.height = img.height * 2;
+    img.onload = () => {
+      // Draw image onto canvas
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width * 2;
+      canvas.height = img.height * 2;
 
-    const ctx = canvas.getContext("2d")!;
-    ctx.scale(2, 2);
-    ctx.drawImage(img, 0, 0);
+      const ctx = canvas.getContext("2d")!;
+      ctx.scale(2, 2);
+      ctx.drawImage(img, 0, 0);
 
-    const pngData = canvas.toDataURL("image/png");
+      const pngData = canvas.toDataURL("image/png");
 
-    // PNG EXPORT
-    if (format === "png") {
-      const link = document.createElement("a");
-      link.href = pngData;
-      link.download = "resume.png";
-      link.click();
-    }
+      // PNG EXPORT
+      if (format === "png") {
+        const link = document.createElement("a");
+        link.href = pngData;
+        link.download = "resume.png";
+        link.click();
+      }
 
-    // PDF EXPORT (using browser-native print-to-pdf style)
-    if (format === "pdf") {
-      const pdfBlob = canvasToPDF(canvas);
-      const pdfURL = URL.createObjectURL(pdfBlob);
+      // PDF EXPORT (using browser-native print-to-pdf style)
+      if (format === "pdf") {
+        const pdfBlob = canvasToPDF(canvas);
+        const pdfURL = URL.createObjectURL(pdfBlob);
 
-      const link = document.createElement("a");
-      link.href = pdfURL;
-      link.download = "resume.pdf";
-      link.click();
-    }
+        const link = document.createElement("a");
+        link.href = pdfURL;
+        link.download = "resume.pdf";
+        link.click();
+      }
 
-    URL.revokeObjectURL(blobURL);
+      URL.revokeObjectURL(blobURL);
+    };
   };
-};
 
-const canvasToPDF = (canvas: HTMLCanvasElement) => {
-  const pdfCanvas = document.createElement("canvas");
-  pdfCanvas.width = canvas.width;
-  pdfCanvas.height = canvas.height;
+  const canvasToPDF = (canvas: HTMLCanvasElement) => {
+    const pdfCanvas = document.createElement("canvas");
+    pdfCanvas.width = canvas.width;
+    pdfCanvas.height = canvas.height;
 
-  const pdfCtx = pdfCanvas.getContext("2d")!;
-  pdfCtx.drawImage(canvas, 0, 0);
+    const pdfCtx = pdfCanvas.getContext("2d")!;
+    pdfCtx.drawImage(canvas, 0, 0);
 
-  const pdfData = pdfCanvas.toDataURL("image/png");
+    const pdfData = pdfCanvas.toDataURL("image/png");
 
-  return new Blob([pdfData], { type: "application/pdf" });
-}
+    return new Blob([pdfData], { type: "application/pdf" });
+  }
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-accent/10">
       {/* Header */}
       <div className="bg-card/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-50">
-  <div className="max-w-7xl mx-auto px-4 py-3">
-    <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
 
-      {/* LEFT SIDE — Title */}
-      <div className="flex items-center space-x-4">
-        <div>
-          <h1 className="text-xl font-bold">Resume Editor</h1>
-          <p className="text-sm text-muted-foreground hidden sm:block">
-            Customize your resume
-          </p>
+            {/* LEFT SIDE — Title */}
+            <div className="flex items-center space-x-4">
+              <div>
+                <h1 className="text-xl font-bold">Resume Editor</h1>
+                <p className="text-sm text-muted-foreground hidden sm:block">
+                  Customize your resume
+                </p>
+              </div>
+            </div>
+
+            {/* RIGHT SIDE — Actions */}
+            <div className="flex items-center space-x-2">
+
+              {/* UNDO */}
+              <Button variant="ghost" size="sm" onClick={undo} disabled={historyIndex <= 0}>
+                <Undo className="w-4 h-4" />
+                <span className="hidden md:inline ml-1">Undo</span>
+              </Button>
+
+              {/* REDO */}
+              <Button variant="ghost" size="sm" onClick={redo} disabled={historyIndex >= history.length - 1}>
+                <Redo className="w-4 h-4" />
+                <span className="hidden md:inline ml-1">Redo</span>
+              </Button>
+
+              {/* PREVIEW TOGGLE */}
+              <Button variant="ghost" size="sm" onClick={() => setPreviewMode(!previewMode)}>
+                {previewMode ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+                <span className="hidden md:inline ml-1">
+                  {previewMode ? "Edit" : "Preview"}
+                </span>
+              </Button>
+
+              {/* SAVE */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  saveToHistory();
+                  triggerToast("success", "Progress Saved", "Your resume has been updated successfully.");
+                }}
+              >
+                <Save className="w-4 h-4" />
+                <span className="hidden md:inline ml-2">Save</span>
+              </Button>
+
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* RIGHT SIDE — Actions */}
-      <div className="flex items-center space-x-2">
-        
-        {/* UNDO */}
-        <Button variant="ghost" size="sm" onClick={undo} disabled={historyIndex <= 0}>
-          <Undo className="w-4 h-4" />
-          <span className="hidden md:inline ml-1">Undo</span>
-        </Button>
-
-        {/* REDO */}
-        <Button variant="ghost" size="sm" onClick={redo} disabled={historyIndex >= history.length - 1}>
-          <Redo className="w-4 h-4" />
-          <span className="hidden md:inline ml-1">Redo</span>
-        </Button>
-
-        {/* PREVIEW TOGGLE */}
-        <Button variant="ghost" size="sm" onClick={() => setPreviewMode(!previewMode)}>
-          {previewMode ? (
-            <EyeOff className="w-4 h-4" />
-          ) : (
-            <Eye className="w-4 h-4" />
-          )}
-          <span className="hidden md:inline ml-1">
-            {previewMode ? "Edit" : "Preview"}
-          </span>
-        </Button>
-
-        {/* SAVE */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            saveToHistory();
-            triggerToast("success", "Progress Saved", "Your resume has been updated successfully.");
-          }}
-        >
-          <Save className="w-4 h-4" />
-          <span className="hidden md:inline ml-2">Save</span>
-        </Button>
-
-      </div>
-    </div>
-  </div>
-</div>
 
       <div className="max-w-7xl mx-auto p-4">
         <div className={cn("grid gap-6 transition-all duration-300", previewMode ? "grid-cols-1" : "lg:grid-cols-2")}>
@@ -999,7 +1000,7 @@ const canvasToPDF = (canvas: HTMLCanvasElement) => {
                           onCheckedChange={(checked) => updateStyle("showPhoto", "", checked)}
                         />
                       </div>
-                     
+
                       <div className="space-y-2">
                         <Label>Spacing: {resumeStyle.spacing}px</Label>
                         <Slider
@@ -1055,102 +1056,102 @@ const canvasToPDF = (canvas: HTMLCanvasElement) => {
                 </div>
               </div>
               <div
-    id="export-area"
-    style={{
-      position: "relative",
-      background: "white",
-      padding: 0,
-      margin: 0,
-      userSelect: "none",
-      WebkitUserSelect: "none",
-      MozUserSelect: "none",
-      overflow: "hidden",
-    }}
-  >
-    {/* BLUR OVERLAY */}
-    {/* BLUR OVERLAY */}
-{isBlurred && (
-  <div
-    style={{
-      position: "absolute",
-      inset: 0,
-      backdropFilter: "blur(12px)",
-      WebkitBackdropFilter: "blur(12px)",
-      background: "rgba(255, 255, 255, 0.45)",
-      pointerEvents: "none",
-      zIndex: 99999,
-    }}
-  ></div>
-)}
+                id="export-area"
+                style={{
+                  position: "relative",
+                  background: "white",
+                  padding: 0,
+                  margin: 0,
+                  userSelect: "none",
+                  WebkitUserSelect: "none",
+                  MozUserSelect: "none",
+                  overflow: "hidden",
+                }}
+              >
+                {/* BLUR OVERLAY */}
+                {/* BLUR OVERLAY */}
+                {isBlurred && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      backdropFilter: "blur(12px)",
+                      WebkitBackdropFilter: "blur(12px)",
+                      background: "rgba(255, 255, 255, 0.45)",
+                      pointerEvents: "none",
+                      zIndex: 99999,
+                    }}
+                  ></div>
+                )}
 
-{/* PREVIEW BUTTON */}
-{isBlurred && (
-  <button
-    onClick={() => setShowModal(true)}
-    style={{
-      position: "absolute",
-      top: "50%",
-      left: "50%",
-      transform: "translate(-50%, -50%)",
-      padding: "14px 28px",
-      fontSize: "16px",
-      fontWeight: "600",
-      background: "#111827",
-      color: "white",
-      borderRadius: "8px",
-      border: "none",
-      cursor: "pointer",
-      zIndex: 100000,
-      boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
-    }}
-  >
-    Preview Resume
-  </button>
-)}
-{/* BLUR OVERLAY */}
-{isBlurred && (
-  <div
-    style={{
-      position: "absolute",
-      inset: 0,
-      backdropFilter: "blur(12px)",
-      WebkitBackdropFilter: "blur(12px)",
-      background: "rgba(255, 255, 255, 0.45)",
-      pointerEvents: "none",
-      zIndex: 99999,
-    }}
-  ></div>
-)}
+                {/* PREVIEW BUTTON */}
+                {isBlurred && (
+                  <button
+                    onClick={() => setShowModal(true)}
+                    style={{
+                      position: "absolute",
+                      top: "50%",
+                      left: "50%",
+                      transform: "translate(-50%, -50%)",
+                      padding: "14px 28px",
+                      fontSize: "16px",
+                      fontWeight: "600",
+                      background: "#111827",
+                      color: "white",
+                      borderRadius: "8px",
+                      border: "none",
+                      cursor: "pointer",
+                      zIndex: 100000,
+                      boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
+                    }}
+                  >
+                    Preview Resume
+                  </button>
+                )}
+                {/* BLUR OVERLAY */}
+                {isBlurred && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      backdropFilter: "blur(12px)",
+                      WebkitBackdropFilter: "blur(12px)",
+                      background: "rgba(255, 255, 255, 0.45)",
+                      pointerEvents: "none",
+                      zIndex: 99999,
+                    }}
+                  ></div>
+                )}
 
-{/* PREVIEW BUTTON */}
-{isBlurred && (
-  <button
-    onClick={() => setShowModal(true)}
-    style={{
-      position: "absolute",
-      top: "50%",
-      left: "50%",
-      transform: "translate(-50%, -50%)",
-      padding: "14px 28px",
-      fontSize: "16px",
-      fontWeight: "600",
-      background: "#111827",
-      color: "white",
-      borderRadius: "8px",
-      border: "none",
-      cursor: "pointer",
-      zIndex: 100000,
-      boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
-    }}
-  >
-    Preview Resume
-  </button>
-)}
+                {/* PREVIEW BUTTON */}
+                {isBlurred && (
+                  <button
+                    onClick={() => setShowModal(true)}
+                    style={{
+                      position: "absolute",
+                      top: "50%",
+                      left: "50%",
+                      transform: "translate(-50%, -50%)",
+                      padding: "14px 28px",
+                      fontSize: "16px",
+                      fontWeight: "600",
+                      background: "#111827",
+                      color: "white",
+                      borderRadius: "8px",
+                      border: "none",
+                      cursor: "pointer",
+                      zIndex: 100000,
+                      boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
+                    }}
+                  >
+                    Preview Resume
+                  </button>
+                )}
 
 
 
-    <TemplatePreview templateId={resumeStyle.template} data={resumeData} styleConfig={resumeStyle} />
-  </div>
+                <TemplatePreview templateId={resumeStyle.template} data={resumeData} styleConfig={resumeStyle} />
+              </div>
 
             </Card>
           </div>
@@ -1163,109 +1164,109 @@ const canvasToPDF = (canvas: HTMLCanvasElement) => {
           description={toastPayload.description}
         />
       )}
-      {!showModal && (
-  <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[200000] px-3 py-4 overflow-y-auto">
+      {showModal && (
+        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[200000] px-3 py-4 overflow-y-auto">
 
-    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-4 sm:p-10 relative">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-4 sm:p-10 relative">
 
-      {/* Title */}
-      <h2 className="text-xl sm:text-3xl font-bold text-gray-900 text-center mb-1 sm:mb-3">
-        Unlock Full Resume Access
-      </h2>
+            {/* Title */}
+            <h2 className="text-xl sm:text-3xl font-bold text-gray-900 text-center mb-1 sm:mb-3">
+              Unlock Full Resume Access
+            </h2>
 
-      <p className="text-sm sm:text-lg text-gray-600 text-center mb-5 sm:mb-10">
-        Choose a plan to preview in HD & export without limits.
-      </p>
+            <p className="text-sm sm:text-lg text-gray-600 text-center mb-5 sm:mb-10">
+              Choose a plan to preview in HD & export without limits.
+            </p>
 
-      {/* Pricing Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
+            {/* Pricing Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
 
-        {/* OPTION 1 */}
-        <div className="border rounded-2xl p-4 sm:p-7 bg-gray-50 hover:shadow-xl transition cursor-pointer">
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 text-center">₹49</h3>
-          <p className="text-xs sm:text-sm text-gray-600 text-center mb-3 sm:mb-4">
-            One-Time Unlock
-          </p>
+              {/* OPTION 1 */}
+              <div className="border rounded-2xl p-4 sm:p-7 bg-gray-50 hover:shadow-xl transition cursor-pointer">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 text-center">₹49</h3>
+                <p className="text-xs sm:text-sm text-gray-600 text-center mb-3 sm:mb-4">
+                  One-Time Unlock
+                </p>
 
-          <ul className="text-[13px] sm:text-[15px] text-gray-700 space-y-1.5 mb-4 sm:mb-6">
-            <li>✔ Full HD Preview</li>
-            <li>✔ Export PDF & PNG</li>
-            <li>✔ Remove Watermark</li>
-          </ul>
+                <ul className="text-[13px] sm:text-[15px] text-gray-700 space-y-1.5 mb-4 sm:mb-6">
+                  <li>✔ Full HD Preview</li>
+                  <li>✔ Export PDF & PNG</li>
+                  <li>✔ Remove Watermark</li>
+                </ul>
 
-          <button
-            onClick={() => window.location.href = `/checkout?plan=basic`}
-            className="w-full py-2.5 sm:py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition text-sm sm:text-base"
-          >
-            Choose ₹49
-          </button>
-        </div>
+                <button
+                  onClick={() => window.location.href = `/checkout?plan=basic`}
+                  className="w-full py-2.5 sm:py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition text-sm sm:text-base"
+                >
+                  Choose ₹49
+                </button>
+              </div>
 
-        {/* OPTION 2 | MOST POPULAR */}
-        <div className="relative border-2 border-blue-600 rounded-2xl p-4 sm:p-7 bg-blue-50 hover:shadow-xl transition cursor-pointer">
+              {/* OPTION 2 | MOST POPULAR */}
+              <div className="relative border-2 border-blue-600 rounded-2xl p-4 sm:p-7 bg-blue-50 hover:shadow-xl transition cursor-pointer">
 
-          {/* Ribbon */}
-          <span className="absolute -top-3 sm:-top-5 left-1/2 -translate-x-1/2 rotate-[5deg] bg-blue-600 text-white px-3 sm:px-6 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold shadow-md">
-            MOST POPULAR
-          </span>
+                {/* Ribbon */}
+                <span className="absolute -top-3 sm:-top-5 left-1/2 -translate-x-1/2 rotate-[5deg] bg-blue-600 text-white px-3 sm:px-6 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold shadow-md">
+                  MOST POPULAR
+                </span>
 
-          {/* Star icon */}
-          <div className="absolute top-2 right-2 sm:top-4 sm:right-4">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-4 h-4 sm:w-6 sm:h-6 fill-yellow-300 drop-shadow-md"
-              viewBox="0 0 20 20"
-            >
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0..." />
-            </svg>
-          </div>
+                {/* Star icon */}
+                <div className="absolute top-2 right-2 sm:top-4 sm:right-4">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-4 h-4 sm:w-6 sm:h-6 fill-yellow-300 drop-shadow-md"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0..." />
+                  </svg>
+                </div>
 
-          <h3 className="text-lg sm:text-xl font-semibold text-blue-700 text-center">₹99</h3>
-          <p className="text-xs sm:text-sm text-blue-600 text-center mb-3 sm:mb-4">Unlimited Exports</p>
+                <h3 className="text-lg sm:text-xl font-semibold text-blue-700 text-center">₹99</h3>
+                <p className="text-xs sm:text-sm text-blue-600 text-center mb-3 sm:mb-4">Unlimited Exports</p>
 
-          <ul className="text-[13px] sm:text-[15px] text-gray-700 space-y-1.5 mb-4 sm:mb-6">
-            <li>✔ Unlimited Downloads</li>
-            <li>✔ HD Preview Forever</li>
-            <li>✔ Access All Templates</li>
-          </ul>
+                <ul className="text-[13px] sm:text-[15px] text-gray-700 space-y-1.5 mb-4 sm:mb-6">
+                  <li>✔ Unlimited Downloads</li>
+                  <li>✔ HD Preview Forever</li>
+                  <li>✔ Access All Templates</li>
+                </ul>
 
-          <button
-            onClick={() => window.location.href = `/checkout?plan=advanced`}
-            className="w-full py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition text-sm sm:text-base"
-          >
-            Choose ₹99
-          </button>
-        </div>
+                <button
+                  onClick={() => window.location.href = `/checkout?plan=advanced`}
+                  className="w-full py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition text-sm sm:text-base"
+                >
+                  Choose ₹99
+                </button>
+              </div>
 
-        {/* OPTION 3 */}
-        <div className="border rounded-2xl p-4 sm:p-7 bg-gray-50 hover:shadow-xl transition cursor-pointer">
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 text-center">₹129</h3>
-          <p className="text-xs sm:text-sm text-gray-600 text-center mb-3 sm:mb-4">
-            Premium Pack
-          </p>
+              {/* OPTION 3 */}
+              <div className="border rounded-2xl p-4 sm:p-7 bg-gray-50 hover:shadow-xl transition cursor-pointer">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 text-center">₹129</h3>
+                <p className="text-xs sm:text-sm text-gray-600 text-center mb-3 sm:mb-4">
+                  Premium Pack
+                </p>
 
-          <ul className="text-[13px] sm:text-[15px] text-gray-700 space-y-1.5 mb-4 sm:mb-6">
-            <li>✔ Unlimited Everything</li>
-            <li>✔ All Future Templates</li>
-            <li>✔ Priority Support</li>
-          </ul>
+                <ul className="text-[13px] sm:text-[15px] text-gray-700 space-y-1.5 mb-4 sm:mb-6">
+                  <li>✔ Unlimited Everything</li>
+                  <li>✔ All Future Templates</li>
+                  <li>✔ Priority Support</li>
+                </ul>
 
-          <button
-            onClick={() => window.location.href = `/checkout?plan=premium`}
-            className="w-full py-2.5 sm:py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition text-sm sm:text-base"
-          >
-            Choose ₹129
-          </button>
-        </div>
+                <button
+                  onClick={() => window.location.href = `/checkout?plan=premium`}
+                  className="w-full py-2.5 sm:py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition text-sm sm:text-base"
+                >
+                  Choose ₹129
+                </button>
+              </div>
 
-      </div>
+            </div>
 
-      {/* BIG CLOSE BUTTON */}
-      <div className="flex justify-center mt-6 sm:mt-10">
-  <button
-    onClick={() => setShowModal(false)}
-    className="
-      w-full sm:w-auto        // ✅ FULL WIDTH ON MOBILE, AUTO ON DESKTOP
+            {/* BIG CLOSE BUTTON */}
+            <div className="flex justify-center mt-6 sm:mt-10">
+              <button
+                onClick={() => setShowModal(false)}
+                className="
+      w-full sm:w-auto        
       px-8 sm:px-10 
       py-4 sm:py-3 
       rounded-xl 
@@ -1276,17 +1277,14 @@ const canvasToPDF = (canvas: HTMLCanvasElement) => {
       shadow-md 
       active:scale-95
     "
-  >
-    Close
-  </button>
-</div>
+              >
+                Close
+              </button>
+            </div>
 
+          </div>
+        </div>
+      )}
     </div>
-  </div>
-)}
-
-
-    </div>
-    
   )
 }

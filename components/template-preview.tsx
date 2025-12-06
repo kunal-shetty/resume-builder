@@ -44,7 +44,6 @@ export function formatDate(date: string): string {
   return `${monthNames[monthIndex]} ${year}`;
 }
 
-
 export function TemplatePreview({ templateId, data, styleConfig, className }: TemplatePreviewProps) {
   const sampleData = {
     personal: {
