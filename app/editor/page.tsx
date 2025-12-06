@@ -87,7 +87,6 @@ interface ResumeStyle {
   spacing: number
   borderRadius: number
   showPhoto: boolean
-  layout: "single" | "two-column"
 }
 
 export default function EditorPage() {
@@ -364,16 +363,35 @@ const [showModal, setShowModal] = useState(false);
     }))
   }
 
-  const updateStyle = (category: string, field: string, value: any) => {
-    saveToHistory()
-    setResumeStyle((prev) => ({
+    const updateStyle = (
+  category: keyof ResumeStyle,
+  field: string | null,
+  value: any
+) => {
+  saveToHistory();
+
+  setResumeStyle((prev) => {
+    const current = prev[category];
+
+    // Nested object update
+    if (field && typeof current === "object" && current !== null) {
+      return {
+        ...prev,
+        [category]: {
+          ...current,
+          [field]: value,
+        },
+      };
+    }
+
+    // Primitive value update
+    return {
       ...prev,
-      [category]:
-        typeof prev[category as keyof ResumeStyle] === "object"
-          ? { ...prev[category as keyof ResumeStyle], [field]: value }
-          : value,
-    }))
-  }
+      [category]: value,
+    };
+  });
+};
+
 
   const exportResume = async (format: "pdf" | "png") => {
   const element = document.getElementById("export-area");
@@ -449,46 +467,63 @@ const canvasToPDF = (canvas: HTMLCanvasElement) => {
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-accent/10">
       {/* Header */}
       <div className="bg-card/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              
-              <div>
-                <h1 className="text-xl font-bold">Resume Editor</h1>
-                <p className="text-sm text-muted-foreground">Customize your resume</p>
-              </div>
-            </div>
+  <div className="max-w-7xl mx-auto px-4 py-3">
+    <div className="flex items-center justify-between">
 
-            <div className="flex items-center space-x-2">
-              {/* <ThemeToggle /> */}
-              <Button variant="ghost" size="sm" onClick={undo} disabled={historyIndex <= 0}>
-                <Undo className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="sm" onClick={redo} disabled={historyIndex >= history.length - 1}>
-                <Redo className="w-4 h-4" />
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setPreviewMode(!previewMode)}>
-                {previewMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                {previewMode ? "Edit" : "Preview"}
-              </Button>
-              <Button variant="outline" size="sm"
-                onClick={() => {
-                  saveToHistory()
-                  triggerToast("success", "Progress Saved", "Your resume has been updated successfully.")
-                }}
-              >
-                <Save className="w-4 h-4 mr-2" />
-                Save
-              </Button>
-              <Button variant="outline" size="sm">
-                <Share className="w-4 h-4 mr-2" />
-                Share
-              </Button>
-              <ExportPayButton />
-            </div>
-          </div>
+      {/* LEFT SIDE — Title */}
+      <div className="flex items-center space-x-4">
+        <div>
+          <h1 className="text-xl font-bold">Resume Editor</h1>
+          <p className="text-sm text-muted-foreground hidden sm:block">
+            Customize your resume
+          </p>
         </div>
       </div>
+
+      {/* RIGHT SIDE — Actions */}
+      <div className="flex items-center space-x-2">
+        
+        {/* UNDO */}
+        <Button variant="ghost" size="sm" onClick={undo} disabled={historyIndex <= 0}>
+          <Undo className="w-4 h-4" />
+          <span className="hidden md:inline ml-1">Undo</span>
+        </Button>
+
+        {/* REDO */}
+        <Button variant="ghost" size="sm" onClick={redo} disabled={historyIndex >= history.length - 1}>
+          <Redo className="w-4 h-4" />
+          <span className="hidden md:inline ml-1">Redo</span>
+        </Button>
+
+        {/* PREVIEW TOGGLE */}
+        <Button variant="ghost" size="sm" onClick={() => setPreviewMode(!previewMode)}>
+          {previewMode ? (
+            <EyeOff className="w-4 h-4" />
+          ) : (
+            <Eye className="w-4 h-4" />
+          )}
+          <span className="hidden md:inline ml-1">
+            {previewMode ? "Edit" : "Preview"}
+          </span>
+        </Button>
+
+        {/* SAVE */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            saveToHistory();
+            triggerToast("success", "Progress Saved", "Your resume has been updated successfully.");
+          }}
+        >
+          <Save className="w-4 h-4" />
+          <span className="hidden md:inline ml-2">Save</span>
+        </Button>
+
+      </div>
+    </div>
+  </div>
+</div>
 
       <div className="max-w-7xl mx-auto p-4">
         <div className={cn("grid gap-6 transition-all duration-300", previewMode ? "grid-cols-1" : "lg:grid-cols-2")}>
@@ -824,7 +859,7 @@ const canvasToPDF = (canvas: HTMLCanvasElement) => {
                 <TabsContent value="design" className="space-y-6">
                   {/* Template Selection */}
                   <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50">
-                    <h3 className="text-lg font-semibold mb-4">Template</h3>
+                    <h3 className="text-lg font-semibold mb-0">Template</h3>
                     <Select value={resumeStyle.template} onValueChange={(value) => updateStyle("template", "", value)}>
                       <SelectTrigger>
                         <SelectValue />
@@ -840,7 +875,7 @@ const canvasToPDF = (canvas: HTMLCanvasElement) => {
 
                   {/* Colors */}
                   <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50">
-                    <h3 className="text-lg font-semibold mb-4">Colors</h3>
+                    <h3 className="text-lg font-semibold mb-0">Colors</h3>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Primary Color</Label>
@@ -911,7 +946,7 @@ const canvasToPDF = (canvas: HTMLCanvasElement) => {
 
                   {/* Typography */}
                   <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50">
-                    <h3 className="text-lg font-semibold mb-4">Typography</h3>
+                    <h3 className="text-lg font-semibold mb-0">Typography</h3>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Heading Font</Label>
@@ -957,7 +992,7 @@ const canvasToPDF = (canvas: HTMLCanvasElement) => {
                   {/* Layout Options */}
                   <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50">
                     <h3 className="text-lg font-semibold mb-4">Layout Options</h3>
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       <div className="flex items-center justify-between">
                         <Label>Show Photo</Label>
                         <Switch
@@ -965,18 +1000,7 @@ const canvasToPDF = (canvas: HTMLCanvasElement) => {
                           onCheckedChange={(checked) => updateStyle("showPhoto", "", checked)}
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label>Layout Style</Label>
-                        <Select value={resumeStyle.layout} onValueChange={(value) => updateStyle("layout", "", value)}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="single">Single Column</SelectItem>
-                            <SelectItem value="two-column">Two Column</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                     
                       <div className="space-y-2">
                         <Label>Spacing: {resumeStyle.spacing}px</Label>
                         <Slider
@@ -1126,7 +1150,7 @@ const canvasToPDF = (canvas: HTMLCanvasElement) => {
 
 
 
-    <TemplatePreview templateId={resumeStyle.template} data={resumeData} />
+    <TemplatePreview templateId={resumeStyle.template} data={resumeData} styleConfig={resumeStyle} />
   </div>
 
             </Card>

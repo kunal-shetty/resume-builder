@@ -103,7 +103,7 @@ export default function CheckoutPageContent() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4">
-      <div className="bg-white w-full max-w-3xl rounded-2xl shadow-xl p-10">
+      <div className="bg-white w-full max-w-3xl rounded-2xl shadow-xl p-4">
 
         <h1 className="text-3xl font-bold mb-2 text-gray-900 text-center">
           Checkout

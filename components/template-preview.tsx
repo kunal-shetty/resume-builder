@@ -7,10 +7,45 @@ import { User, Mail, Phone, MapPin, Building } from "lucide-react"
 interface TemplatePreviewProps {
   templateId: string
   data?: any
+  styleConfig: any;  
   className?: string
 }
+export function formatDate(date: string): string {
+  if (!date) return "";
 
-export function TemplatePreview({ templateId, data, className }: TemplatePreviewProps) {
+  // Handle "present" in any casing
+  if (date.toLowerCase() === "present") return "Present";
+
+  const parts = date.split("-");
+
+  // If only year is given: "2025"
+  if (parts.length === 1) {
+    return parts[0];
+  }
+
+  const [year, month] = parts;
+
+  // If month is missing or invalid
+  if (!month || isNaN(Number(month))) {
+    return year;
+  }
+
+  const monthNames = [
+    "January", "February", "March",
+    "April", "May", "June",
+    "July", "August", "September",
+    "October", "November", "December",
+  ];
+
+  const monthIndex = Number(month) - 1;
+
+  if (monthIndex < 0 || monthIndex > 11) return year;
+
+  return `${monthNames[monthIndex]} ${year}`;
+}
+
+
+export function TemplatePreview({ templateId, data, styleConfig, className }: TemplatePreviewProps) {
   const sampleData = {
     personal: {
       firstName: "John",
@@ -54,40 +89,91 @@ export function TemplatePreview({ templateId, data, className }: TemplatePreview
   const renderTemplate = () => {
     switch (templateId) {
       case "modern-minimal":
-        return <ModernMinimalTemplate data={resumeData} />
+        return styleConfig.showPhoto ? (
+          <ModernMinimalPhotoTemplate data={resumeData} styleConfig={styleConfig} />
+        ) : (
+          <ModernMinimalTemplate data={resumeData} styleConfig={styleConfig} />
+        );
+
       case "creative-photo":
-        return <CreativePhotoTemplate data={resumeData} />
+        return <CreativePhotoTemplate data={resumeData} styleConfig={styleConfig} />;
+
       case "executive-pro":
-        return <ExecutiveProTemplate data={resumeData} />
+        return <ExecutiveProTemplate data={resumeData} styleConfig={styleConfig} />;
+
       case "tech-focused":
-        return <TechFocusedTemplate data={resumeData} />
+        return <TechFocusedTemplate data={resumeData} styleConfig={styleConfig} />;
+
       default:
-        return <ModernMinimalTemplate data={resumeData} />
+        return (
+          <ModernMinimalTemplate data={resumeData} styleConfig={styleConfig} />
+        );
     }
+
   }
 
   return <div className={className}>{renderTemplate()}</div>
 }
 
-function ModernMinimalTemplate({ data }: { data: any }) {
+function ModernMinimalTemplate({
+  data,
+  styleConfig,
+}: {
+  data: any
+  styleConfig: any
+}) {
   return (
-    <Card className="p-8 bg-white text-gray-900 shadow-lg">
+    <Card
+      className="shadow-lg py-0"
+      style={{
+        padding: styleConfig.spacing,
+        background: styleConfig.colors.background,
+        color: styleConfig.colors.text,
+        borderRadius: styleConfig.borderRadius,
+        fontFamily: styleConfig.fonts.body,
+      }}
+    >
       {/* Header */}
-      <div className="border-b border-gray-200 pb-6 mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+      <div
+        style={{
+          borderBottom: `1px solid ${styleConfig.colors.secondary}`,
+          paddingBottom: styleConfig.spacing / 1.5,
+          marginBottom: styleConfig.spacing,
+        }}
+      >
+        <h1
+          style={{
+            fontSize: "32px",
+            fontWeight: 700,
+            marginBottom: 8,
+            color: styleConfig.colors.primary,
+            fontFamily: styleConfig.fonts.heading,
+          }}
+        >
           {data.personal.firstName} {data.personal.lastName}
         </h1>
-        <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-          <div className="flex items-center gap-1">
-            <Mail className="w-4 h-4" />
+
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 12,
+            fontSize: 14,
+            color: styleConfig.colors.text,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <Mail className="w-4 h-4" color={styleConfig.colors.primary} />
             {data.personal.email}
           </div>
-          <div className="flex items-center gap-1">
-            <Phone className="w-4 h-4" />
+
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <Phone className="w-4 h-4" color={styleConfig.colors.primary} />
             {data.personal.phone}
           </div>
-          <div className="flex items-center gap-1">
-            <MapPin className="w-4 h-4" />
+
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <MapPin className="w-4 h-4" color={styleConfig.colors.primary} />
             {data.personal.location}
           </div>
         </div>
@@ -95,30 +181,78 @@ function ModernMinimalTemplate({ data }: { data: any }) {
 
       {/* Summary */}
       {data.personal.summary && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">Professional Summary</h2>
-          <p className="text-gray-700 leading-relaxed">{data.personal.summary}</p>
+        <div style={{ marginBottom: styleConfig.spacing }}>
+          <h2
+            style={{
+              fontSize: "20px",
+              fontWeight: 600,
+              marginBottom: 8,
+              color: styleConfig.colors.primary,
+              fontFamily: styleConfig.fonts.heading,
+            }}
+          >
+            Professional Summary
+          </h2>
+          <p style={{ color: styleConfig.colors.text, lineHeight: 1.6 }}>
+            {data.personal.summary}
+          </p>
         </div>
       )}
 
       {/* Experience */}
       {data.experience.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">Experience</h2>
-          <div className="space-y-4">
+        <div style={{ marginBottom: styleConfig.spacing }}>
+          <h2
+            style={{
+              fontSize: "20px",
+              fontWeight: 600,
+              marginBottom: 12,
+              color: styleConfig.colors.primary,
+              fontFamily: styleConfig.fonts.heading,
+            }}
+          >
+            Experience
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {data.experience.map((exp: any, index: number) => (
               <div key={index}>
-                <div className="flex justify-between items-start mb-1">
-                  <h3 className="font-medium text-gray-900">{exp.position}</h3>
-                  <span className="text-sm text-gray-600">
-                    {exp.startDate} - {exp.current ? "Present" : exp.endDate}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginBottom: 4,
+                  }}
+                >
+                  <h3
+                    style={{
+                      fontWeight: 600,
+                      color: styleConfig.colors.primary,
+                    }}
+                  >
+                    {exp.position}
+                  </h3>
+                  <span style={{ fontSize: 13, color: styleConfig.colors.text }}>
+                    {formatDate(exp.startDate)} - {exp.current ? "Present" : formatDate(exp.endDate)}
                   </span>
                 </div>
-                <div className="flex items-center gap-1 text-sm text-gray-600 mb-2">
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    fontSize: 13,
+                    gap: 4,
+                    marginBottom: 6,
+                    color: styleConfig.colors.secondary,
+                  }}
+                >
                   <Building className="w-4 h-4" />
                   {exp.company}
                 </div>
-                <p className="text-gray-700 text-sm">{exp.description}</p>
+
+                <p style={{ fontSize: 14, color: styleConfig.colors.text }}>
+                  {exp.description}
+                </p>
               </div>
             ))}
           </div>
@@ -127,19 +261,40 @@ function ModernMinimalTemplate({ data }: { data: any }) {
 
       {/* Education */}
       {data.education.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">Education</h2>
-          <div className="space-y-2">
+        <div style={{ marginBottom: styleConfig.spacing }}>
+          <h2
+            style={{
+              fontSize: "20px",
+              fontWeight: 600,
+              marginBottom: 12,
+              color: styleConfig.colors.primary,
+              fontFamily: styleConfig.fonts.heading,
+            }}
+          >
+            Education
+          </h2>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {data.education.map((edu: any, index: number) => (
               <div key={index}>
-                <div className="flex justify-between items-start">
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
                   <div>
-                    <h3 className="font-medium text-gray-900">
+                    <h3
+                      style={{
+                        fontWeight: 600,
+                        color: styleConfig.colors.primary,
+                      }}
+                    >
                       {edu.degree} in {edu.field}
                     </h3>
-                    <p className="text-sm text-gray-600">{edu.school}</p>
+                    <p style={{ fontSize: 14, color: styleConfig.colors.text }}>
+                      {edu.school}
+                    </p>
                   </div>
-                  <span className="text-sm text-gray-600">{edu.graduationDate}</span>
+
+                  <span style={{ fontSize: 13, color: styleConfig.colors.text }}>
+                    {formatDate(edu.graduationDate)}
+                  </span>
                 </div>
               </div>
             ))}
@@ -150,12 +305,33 @@ function ModernMinimalTemplate({ data }: { data: any }) {
       {/* Skills */}
       {data.skills.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">Skills</h2>
-          <div className="flex flex-wrap gap-2">
+          <h2
+            style={{
+              fontSize: "20px",
+              fontWeight: 600,
+              marginBottom: 12,
+              color: styleConfig.colors.primary,
+              fontFamily: styleConfig.fonts.heading,
+            }}
+          >
+            Skills
+          </h2>
+
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {data.skills.map((skill: string, index: number) => (
-              <Badge key={index} variant="secondary" className="bg-gray-100 text-gray-800">
+              <span
+                key={index}
+                style={{
+                  padding: "6px 10px",
+                  borderRadius: 6,
+                  background: styleConfig.colors.accent + "22",
+                  color: styleConfig.colors.primary,
+                  fontSize: 14,
+                  fontWeight: 500,
+                }}
+              >
                 {skill}
-              </Badge>
+              </span>
             ))}
           </div>
         </div>
@@ -164,41 +340,351 @@ function ModernMinimalTemplate({ data }: { data: any }) {
   )
 }
 
-function CreativePhotoTemplate({ data }: { data: any }) {
+function ModernMinimalPhotoTemplate({
+  data,
+  styleConfig,
+}: {
+  data: any;
+  styleConfig: any;
+}) {
+
+  // Placeholder image (simple avatar)
+  const placeholder =
+    "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+
   return (
-    <Card className="w-full max-w-2xl mx-auto bg-white shadow-lg overflow-hidden">
-      <div className="flex">
-        {/* Left Sidebar with Photo */}
-        <div className="w-1/3 bg-gradient-to-b from-purple-600 to-pink-600 p-6 text-white">
-          <div className="w-24 h-24 bg-white/20 rounded-full mx-auto mb-4 flex items-center justify-center">
-            <User className="w-12 h-12" />
-          </div>
-          <h1 className="text-xl font-bold text-center mb-6">
+    <Card
+      className="shadow-lg py-0"
+      style={{
+        padding: styleConfig.spacing,
+        background: styleConfig.colors.background,
+        color: styleConfig.colors.text,
+        borderRadius: styleConfig.borderRadius,
+        fontFamily: styleConfig.fonts.body,
+      }}
+    >
+      {/* HEADER WITH PHOTO */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: styleConfig.spacing,
+          borderBottom: `1px solid ${styleConfig.colors.secondary}`,
+          paddingBottom: styleConfig.spacing / 1.2,
+          marginBottom: styleConfig.spacing,
+        }}
+      >
+        {/* PHOTO OR PLACEHOLDER */}
+        {styleConfig.showPhoto && (
+          <img
+            src={data.personal.photo || placeholder}
+            alt="Profile"
+            style={{
+              width: 90,
+              height: 90,
+              borderRadius: "50%",
+              objectFit: "cover",
+              border: `3px solid ${styleConfig.colors.primary}`,
+              opacity: data.personal.photo ? 1 : 0.6,
+            }}
+          />
+        )}
+
+        {/* USER DETAILS */}
+        <div style={{ flex: 1 }}>
+          <h1
+            style={{
+              fontSize: "32px",
+              fontWeight: 700,
+              marginBottom: 6,
+              color: styleConfig.colors.primary,
+              fontFamily: styleConfig.fonts.heading,
+            }}
+          >
             {data.personal.firstName} {data.personal.lastName}
           </h1>
 
-          <div className="space-y-3 text-sm">
-            <div className="flex items-center gap-2">
-              <Mail className="w-4 h-4" />
-              <span className="text-xs">{data.personal.email}</span>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 12,
+              fontSize: 14,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <Mail className="w-4 h-4" color={styleConfig.colors.primary} />
+              {data.personal.email}
             </div>
-            <div className="flex items-center gap-2">
-              <Phone className="w-4 h-4" />
-              <span className="text-xs">{data.personal.phone}</span>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <Phone className="w-4 h-4" color={styleConfig.colors.primary} />
+              {data.personal.phone}
             </div>
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4" />
-              <span className="text-xs">{data.personal.location}</span>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <MapPin className="w-4 h-4" color={styleConfig.colors.primary} />
+              {data.personal.location}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* SUMMARY */}
+      {data.personal.summary && (
+        <div style={{ marginBottom: styleConfig.spacing }}>
+          <h2
+            style={{
+              fontSize: "20px",
+              fontWeight: 600,
+              marginBottom: 8,
+              color: styleConfig.colors.primary,
+              fontFamily: styleConfig.fonts.heading,
+            }}
+          >
+            Professional Summary
+          </h2>
+          <p style={{ lineHeight: 1.6 }}>{data.personal.summary}</p>
+        </div>
+      )}
+
+      {/* EXPERIENCE */}
+      {data.experience.length > 0 && (
+        <div style={{ marginBottom: styleConfig.spacing }}>
+          <h2
+            style={{
+              fontSize: "20px",
+              fontWeight: 600,
+              marginBottom: 12,
+              color: styleConfig.colors.primary,
+              fontFamily: styleConfig.fonts.heading,
+            }}
+          >
+            Experience
+          </h2>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {data.experience.map((exp: any, i: number) => (
+              <div key={i}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginBottom: 4,
+                  }}
+                >
+                  <strong style={{ color: styleConfig.colors.primary }}>
+                    {exp.position}
+                  </strong>
+                  <span style={{ fontSize: 13 }}>
+                    {formatDate(exp.startDate)} - {exp.current ? "Present" : formatDate(exp.endDate)}
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontSize: 13,
+                    color: styleConfig.colors.secondary,
+                    marginBottom: 6,
+                  }}
+                >
+                  <Building className="w-4 h-4" /> {exp.company}
+                </div>
+
+                <p style={{ fontSize: 14 }}>{exp.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* EDUCATION */}
+      {data.education.length > 0 && (
+        <div style={{ marginBottom: styleConfig.spacing }}>
+          <h2
+            style={{
+              fontSize: "20px",
+              fontWeight: 600,
+              marginBottom: 12,
+              color: styleConfig.colors.primary,
+              fontFamily: styleConfig.fonts.heading,
+            }}
+          >
+            Education
+          </h2>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {data.education.map((edu: any, idx: number) => (
+              <div key={idx} style={{ display: "flex", justifyContent: "space-between" }}>
+                <div>
+                  <strong style={{ color: styleConfig.colors.primary }}>
+                    {edu.degree} in {edu.field}
+                  </strong>
+                  <p style={{ fontSize: 14 }}>{edu.school}</p>
+                </div>
+
+                <span style={{ fontSize: 13 }}>{formatDate(edu.graduationDate)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* SKILLS */}
+      {data.skills.length > 0 && (
+        <div>
+          <h2
+            style={{
+              fontSize: "20px",
+              fontWeight: 600,
+              marginBottom: 12,
+              color: styleConfig.colors.primary,
+              fontFamily: styleConfig.fonts.heading,
+            }}
+          >
+            Skills
+          </h2>
+
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {data.skills.map((skill: string, i: number) => (
+              <span
+                key={i}
+                style={{
+                  padding: "6px 12px",
+                  background: styleConfig.colors.accent + "22",
+                  borderRadius: 6,
+                  fontSize: 14,
+                  fontWeight: 500,
+                  color: styleConfig.colors.primary,
+                }}
+              >
+                {skill}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+
+function CreativePhotoTemplate({
+  data,
+  styleConfig,
+}: {
+  data: any;
+  styleConfig: any;
+}) {
+  // Placeholder avatar
+  const placeholder =
+    "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+
+  return (
+    <Card
+      className="w-full max-w-2xl mx-auto shadow-lg overflow-hidden py-0"
+      style={{
+        background: styleConfig.colors.background,
+        borderRadius: styleConfig.borderRadius,
+        fontFamily: styleConfig.fonts.body,
+      }}
+    >
+      <div style={{ display: "flex" }}>
+        {/* LEFT SIDEBAR */}
+        <div
+          style={{
+            width: "33%",
+            padding: styleConfig.spacing,
+            color: "white",
+            background: `linear-gradient(to bottom, ${styleConfig.colors.primary}, ${styleConfig.colors.secondary})`,
+          }}
+        >
+          {/* PHOTO AREA */}
+          {styleConfig.showPhoto && (
+            <div
+              style={{
+                width: 96,
+                height: 96,
+                borderRadius: "50%",
+                background: "rgba(255,255,255,0.25)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 16px auto",
+                overflow: "hidden",
+              }}
+            >
+              <img
+                src={data.personal.photo || placeholder}
+                alt="Profile"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  opacity: data.personal.photo ? 1 : 0.6,
+                }}
+              />
+            </div>
+          )}
+
+          {/* NAME */}
+          <h1
+            style={{
+              textAlign: "center",
+              fontSize: 20,
+              fontWeight: 700,
+              marginBottom: 20,
+              fontFamily: styleConfig.fonts.heading,
+            }}
+          >
+            {data.personal.firstName} {data.personal.lastName}
+          </h1>
+
+          {/* CONTACT INFO */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <Mail className="w-4 h-4" color="white" />
+              <span style={{ fontSize: 12 }}>{data.personal.email}</span>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <Phone className="w-4 h-4" color="white" />
+              <span style={{ fontSize: 12 }}>{data.personal.phone}</span>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <MapPin className="w-4 h-4" color="white" />
+              <span style={{ fontSize: 12 }}>{data.personal.location}</span>
             </div>
           </div>
 
-          {/* Skills */}
+          {/* SKILLS */}
           {data.skills.length > 0 && (
-            <div className="mt-6">
-              <h3 className="font-semibold mb-3">Skills</h3>
-              <div className="space-y-2">
-                {data.skills.slice(0, 6).map((skill: string, index: number) => (
-                  <div key={index} className="text-xs bg-white/20 rounded px-2 py-1">
+            <div style={{ marginTop: 24 }}>
+              <h3
+                style={{
+                  fontWeight: 600,
+                  marginBottom: 12,
+                  fontFamily: styleConfig.fonts.heading,
+                }}
+              >
+                Skills
+              </h3>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {data.skills.slice(0, 6).map((skill: string, i: number) => (
+                  <div
+                    key={i}
+                    style={{
+                      fontSize: 12,
+                      background: "rgba(255,255,255,0.22)",
+                      padding: "4px 8px",
+                      borderRadius: 6,
+                    }}
+                  >
                     {skill}
                   </div>
                 ))}
@@ -207,131 +693,440 @@ function CreativePhotoTemplate({ data }: { data: any }) {
           )}
         </div>
 
-        {/* Right Content */}
-        <div className="w-2/3 p-6">
-          {/* Summary */}
+        {/* RIGHT CONTENT */}
+        <div
+          style={{
+            width: "67%",
+            padding: styleConfig.spacing,
+            color: styleConfig.colors.text,
+            fontFamily: styleConfig.fonts.body,
+          }}
+        >
+          {/* SUMMARY */}
           {data.personal.summary && (
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">About Me</h2>
-              <p className="text-gray-700 text-sm leading-relaxed">{data.personal.summary}</p>
+            <div style={{ marginBottom: 20 }}>
+              <h2
+                style={{
+                  fontSize: 18,
+                  fontWeight: 600,
+                  marginBottom: 8,
+                  color: styleConfig.colors.primary,
+                  fontFamily: styleConfig.fonts.heading,
+                }}
+              >
+                About Me
+              </h2>
+              <p style={{ fontSize: 14, lineHeight: 1.6 }}>
+                {data.personal.summary}
+              </p>
             </div>
           )}
 
-          {/* Experience */}
+          {/* EXPERIENCE */}
           {data.experience.length > 0 && (
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-3">Experience</h2>
-              <div className="space-y-3">
+            <div style={{ marginBottom: 20 }}>
+              <h2
+                style={{
+                  fontSize: 18,
+                  fontWeight: 600,
+                  marginBottom: 12,
+                  color: styleConfig.colors.primary,
+                  fontFamily: styleConfig.fonts.heading,
+                }}
+              >
+                Experience
+              </h2>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {data.experience.map((exp: any, index: number) => (
                   <div key={index}>
-                    <h3 className="font-medium text-gray-900 text-sm">{exp.position}</h3>
-                    <p className="text-purple-600 text-sm font-medium">{exp.company}</p>
-                    <p className="text-xs text-gray-600 mb-1">
-                      {exp.startDate} - {exp.current ? "Present" : exp.endDate}
+                    <h3
+                      style={{
+                        fontWeight: 600,
+                        color: styleConfig.colors.primary,
+                        fontSize: 14,
+                      }}
+                    >
+                      {exp.position}
+                    </h3>
+                    <p
+                      style={{
+                        color: styleConfig.colors.secondary,
+                        fontSize: 13,
+                        fontWeight: 500,
+                      }}
+                    >
+                      {exp.company}
                     </p>
-                    <p className="text-gray-700 text-xs">{exp.description}</p>
+                    <p style={{ fontSize: 12, color: "#555", marginBottom: 4 }}>
+                      {formatDate(exp.startDate)} - {exp.current ? "Present" : formatDate(exp.endDate)}
+                    </p>
+                    <p style={{ fontSize: 13 }}>{exp.description}</p>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Education */}
+          {/* EDUCATION */}
           {data.education.length > 0 && (
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-3">Education</h2>
-              <div className="space-y-2">
+              <h2
+                style={{
+                  fontSize: 18,
+                  fontWeight: 600,
+                  marginBottom: 12,
+                  color: styleConfig.colors.primary,
+                  fontFamily: styleConfig.fonts.heading,
+                }}
+              >
+                Education
+              </h2>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {data.education.map((edu: any, index: number) => (
                   <div key={index}>
-                    <h3 className="font-medium text-gray-900 text-sm">
+                    <h3
+                      style={{
+                        fontWeight: 600,
+                        fontSize: 14,
+                        color: styleConfig.colors.primary,
+                      }}
+                    >
                       {edu.degree} in {edu.field}
                     </h3>
-                    <p className="text-purple-600 text-sm">{edu.school}</p>
-                    <p className="text-xs text-gray-600">{edu.graduationDate}</p>
+                    <p
+                      style={{
+                        color: styleConfig.colors.secondary,
+                        fontSize: 13,
+                      }}
+                    >
+                      {edu.school}
+                    </p>
+                    <p style={{ fontSize: 12, color: "#555" }}>
+                      {formatDate(edu.graduationDate)}
+                    </p>
                   </div>
                 ))}
               </div>
             </div>
           )}
+
+          {data.customSections &&
+  data.customSections.length > 0 &&
+  data.customSections.map((section: any) => (
+    <div
+      key={section.id}
+      style={{ marginBottom: styleConfig.spacing }}
+    >
+      <h2
+        style={{
+          fontSize: 18,
+          fontWeight: 600,
+          marginBottom: 12,
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          color: styleConfig.colors.primary,
+          fontFamily: styleConfig.fonts.heading,
+        }}
+      >
+        <div
+          style={{
+            width: 4,
+            height: 24,
+            background: styleConfig.colors.accent,
+            borderRadius: 4,
+          }}
+        ></div>
+
+        {section.title}
+      </h2>
+
+      {/* TEXT SECTION */}
+      {section.type === "text" && (
+        <p
+          style={{
+            fontSize: 14,
+            lineHeight: 1.6,
+            color: styleConfig.colors.text,
+            whiteSpace: "pre-line", // preserve line breaks
+          }}
+        >
+          {section.content}
+        </p>
+      )}
+
+      {/* LIST SECTION */}
+      {section.type === "list" && (
+        <ul
+          style={{
+            paddingLeft: 20,
+            lineHeight: 1.6,
+            color: styleConfig.colors.text,
+            fontSize: 14,
+          }}
+        >
+          {section.content
+            .split("\n")
+            .filter((i: string) => i.trim() !== "")
+            .map((item: string, idx: number) => (
+              <li key={idx} style={{ marginBottom: 6 }}>
+                {item}
+              </li>
+            ))}
+        </ul>
+      )}
+    </div>
+  ))}
         </div>
       </div>
     </Card>
-  )
+  );
 }
 
-function ExecutiveProTemplate({ data }: { data: any }) {
+
+function ExecutiveProTemplate({
+  data,
+  styleConfig,
+}: {
+  data: any;
+  styleConfig: any;
+}) {
+  const placeholder =
+    "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+
   return (
-    <Card className="w-full max-w-2xl mx-auto bg-white shadow-lg">
-      {/* Header with Photo */}
-      <div className="px-4 py-2">
-        <div className="flex items-center gap-6">
-          <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center">
-            <User className="w-10 h-10" />
+    <Card
+      className="w-full max-w-2xl mx-auto shadow-lg overflow-hidden"
+      style={{
+        background: styleConfig.colors.background,
+        borderRadius: styleConfig.borderRadius,
+        fontFamily: styleConfig.fonts.body,
+      }}
+    >
+      {/* HEADER */}
+      <div
+        style={{
+          padding: styleConfig.spacing,
+          paddingBottom: styleConfig.spacing / 1.5,
+          borderBottom: `1px solid ${styleConfig.colors.secondary}33`,
+          display: "flex",
+          alignItems: "center",
+          gap: styleConfig.spacing,
+        }}
+      >
+        {/* PHOTO AREA */}
+        {styleConfig.showPhoto && (
+          <div
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: "50%",
+              background: `${styleConfig.colors.secondary}22`,
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              overflow: "hidden",
+            }}
+          >
+            <img
+              src={data.personal.photo || placeholder}
+              alt="Profile"
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                opacity: data.personal.photo ? 1 : 0.65,
+              }}
+            />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold mb-2">
-              {data.personal.firstName} {data.personal.lastName}
-            </h1>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="flex items-center gap-1">
-                <Mail className="w-4 h-4" />
-                {data.personal.email}
-              </div>
-              <div className="flex items-center gap-1">
-                <Phone className="w-4 h-4" />
-                {data.personal.phone}
-              </div>
+        )}
+
+        <div>
+          <h1
+            style={{
+              fontSize: 24,
+              fontWeight: 700,
+              marginBottom: 6,
+              color: styleConfig.colors.primary,
+              fontFamily: styleConfig.fonts.heading,
+            }}
+          >
+            {data.personal.firstName} {data.personal.lastName}
+          </h1>
+
+          {/* CONTACT GRID */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 8,
+              fontSize: 14,
+              color: styleConfig.colors.text,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <Mail className="w-4 h-4" color={styleConfig.colors.primary} />
+              {data.personal.email}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <Phone className="w-4 h-4" color={styleConfig.colors.primary} />
+              {data.personal.phone}
             </div>
           </div>
         </div>
       </div>
 
-      <div className="p-6">
-        {/* Executive Summary */}
+      {/* MAIN CONTENT */}
+      <div style={{ padding: styleConfig.spacing }}>
+        {/* SUMMARY */}
         {data.personal.summary && (
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3 border-b border-green-200 pb-1">
+          <div style={{ marginBottom: styleConfig.spacing }}>
+            <h2
+              style={{
+                fontSize: 18,
+                fontWeight: 600,
+                marginBottom: 8,
+                color: styleConfig.colors.primary,
+                borderBottom: `2px solid ${styleConfig.colors.secondary}55`,
+                paddingBottom: 4,
+                fontFamily: styleConfig.fonts.heading,
+              }}
+            >
               Executive Summary
             </h2>
-            <p className="text-gray-700 leading-relaxed">{data.personal.summary}</p>
+            <p style={{ lineHeight: 1.6, color: styleConfig.colors.text }}>
+              {data.personal.summary}
+            </p>
           </div>
         )}
 
-        {/* Professional Experience */}
+        {/* EXPERIENCE */}
         {data.experience.length > 0 && (
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3 border-b border-green-200 pb-1">
+          <div style={{ marginBottom: styleConfig.spacing }}>
+            <h2
+              style={{
+                fontSize: 18,
+                fontWeight: 600,
+                marginBottom: 12,
+                color: styleConfig.colors.primary,
+                borderBottom: `2px solid ${styleConfig.colors.secondary}55`,
+                paddingBottom: 4,
+                fontFamily: styleConfig.fonts.heading,
+              }}
+            >
               Professional Experience
             </h2>
-            <div className="space-y-4">
-              {data.experience.map((exp: any, index: number) => (
-                <div key={index} className="border-l-2 border-green-600 pl-4">
-                  <div className="flex justify-between items-start mb-1">
-                    <h3 className="font-semibold text-gray-900">{exp.position}</h3>
-                    <span className="text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded">
-                      {exp.startDate} - {exp.current ? "Present" : exp.endDate}
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {data.experience.map((exp: any, i: number) => (
+                <div
+                  key={i}
+                  style={{
+                    borderLeft: `3px solid ${styleConfig.colors.primary}`,
+                    paddingLeft: 12,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      marginBottom: 4,
+                    }}
+                  >
+                    <h3
+                      style={{
+                        fontWeight: 600,
+                        color: styleConfig.colors.primary,
+                      }}
+                    >
+                      {exp.position}
+                    </h3>
+
+                    <span
+                      style={{
+                        fontSize: 12,
+                        background: `${styleConfig.colors.secondary}22`,
+                        padding: "2px 6px",
+                        borderRadius: 4,
+                        color: styleConfig.colors.primary,
+                        fontWeight: 500,
+                      }}
+                    >
+                      {formatDate(exp.startDate)} - {exp.current ? "Present" : formatDate(exp.endDate)}
                     </span>
                   </div>
-                  <p className="text-green-600 font-medium mb-2">{exp.company}</p>
-                  <p className="text-gray-700 text-sm">{exp.description}</p>
+
+                  <p
+                    style={{
+                      fontWeight: 600,
+                      color: styleConfig.colors.secondary,
+                      marginBottom: 6,
+                      fontSize: 14,
+                    }}
+                  >
+                    {exp.company}
+                  </p>
+
+                  <p style={{ fontSize: 14, color: styleConfig.colors.text }}>
+                    {exp.description}
+                  </p>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Education */}
+        {/* TWO COLUMN SECTION */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: styleConfig.spacing,
+          }}
+        >
+          {/* EDUCATION */}
           {data.education.length > 0 && (
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-3 border-b border-green-200 pb-1">Education</h2>
-              <div className="space-y-3">
-                {data.education.map((edu: any, index: number) => (
-                  <div key={index}>
-                    <h3 className="font-medium text-gray-900">{edu.degree}</h3>
-                    <p className="text-green-600 text-sm">{edu.field}</p>
-                    <p className="text-gray-600 text-sm">
-                      {edu.school} • {edu.graduationDate}
+              <h2
+                style={{
+                  fontSize: 18,
+                  fontWeight: 600,
+                  marginBottom: 12,
+                  color: styleConfig.colors.primary,
+                  borderBottom: `2px solid ${styleConfig.colors.secondary}55`,
+                  paddingBottom: 4,
+                  fontFamily: styleConfig.fonts.heading,
+                }}
+              >
+                Education
+              </h2>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {data.education.map((edu: any, i: number) => (
+                  <div key={i}>
+                    <h3
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: styleConfig.colors.primary,
+                      }}
+                    >
+                      {edu.degree}
+                    </h3>
+                    <p
+                      style={{
+                        color: styleConfig.colors.secondary,
+                        fontSize: 13,
+                      }}
+                    >
+                      {edu.field}
+                    </p>
+                    <p
+                      style={{ fontSize: 12, color: styleConfig.colors.text }}
+                    >
+                      {edu.school} • {formatDate(edu.graduationDate)}
                     </p>
                   </div>
                 ))}
@@ -339,120 +1134,498 @@ function ExecutiveProTemplate({ data }: { data: any }) {
             </div>
           )}
 
-          {/* Core Competencies */}
+          {/* SKILLS */}
           {data.skills.length > 0 && (
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-3 border-b border-green-200 pb-1">
+              <h2
+                style={{
+                  fontSize: 18,
+                  fontWeight: 600,
+                  marginBottom: 12,
+                  color: styleConfig.colors.primary,
+                  borderBottom: `2px solid ${styleConfig.colors.secondary}55`,
+                  paddingBottom: 4,
+                  fontFamily: styleConfig.fonts.heading,
+                }}
+              >
                 Core Competencies
               </h2>
-              <div className="grid grid-cols-2 gap-2">
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
                 {data.skills.map((skill: string, index: number) => (
-                  <div key={index} className="text-sm text-gray-700 flex items-center">
-                    <div className="w-2 h-2 bg-green-600 rounded-full mr-2"></div>
+                  <div
+                    key={index}
+                    style={{
+                      fontSize: 14,
+                      color: styleConfig.colors.text,
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 8,
+                        height: 8,
+                        background: styleConfig.colors.primary,
+                        borderRadius: "50%",
+                        marginRight: 8,
+                      }}
+                    ></div>
                     {skill}
                   </div>
                 ))}
               </div>
             </div>
           )}
+
+          {data.customSections &&
+  data.customSections.length > 0 &&
+  data.customSections.map((section: any) => (
+    <div
+      key={section.id}
+      style={{ marginBottom: styleConfig.spacing }}
+    >
+      <h2
+        style={{
+          fontSize: 18,
+          fontWeight: 600,
+          marginBottom: 12,
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          color: styleConfig.colors.primary,
+          fontFamily: styleConfig.fonts.heading,
+        }}
+      >
+        <div
+          style={{
+            width: 4,
+            height: 24,
+            background: styleConfig.colors.accent,
+            borderRadius: 4,
+          }}
+        ></div>
+
+        {section.title}
+      </h2>
+
+      {/* TEXT SECTION */}
+      {section.type === "text" && (
+        <p
+          style={{
+            fontSize: 14,
+            lineHeight: 1.6,
+            color: styleConfig.colors.text,
+            whiteSpace: "pre-line", // preserve line breaks
+          }}
+        >
+          {section.content}
+        </p>
+      )}
+
+      {/* LIST SECTION */}
+      {section.type === "list" && (
+        <ul
+          style={{
+            paddingLeft: 20,
+            lineHeight: 1.6,
+            color: styleConfig.colors.text,
+            fontSize: 14,
+          }}
+        >
+          {section.content
+            .split("\n")
+            .filter((i: string) => i.trim() !== "")
+            .map((item: string, idx: number) => (
+              <li key={idx} style={{ marginBottom: 6 }}>
+                {item}
+              </li>
+            ))}
+        </ul>
+      )}
+    </div>
+  ))}
         </div>
       </div>
     </Card>
-  )
+  );
 }
 
-function TechFocusedTemplate({ data }: { data: any }) {
+
+function TechFocusedTemplate({
+  data,
+  styleConfig,
+}: {
+  data: any;
+  styleConfig: any;
+}) {
+  const placeholder =
+    "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+
   return (
-    <Card className="p-8 bg-white text-gray-900 shadow-lg">
-      {/* Header */}
-      <div className="px-6 py-0">
-        <h1 className="text-2xl font-bold mb-2">
-          {data.personal.firstName} {data.personal.lastName}
-        </h1>
-        <p className="mb-4">{data.personal.summary}</p>
-        <div className="flex flex-wrap gap-4 text-sm">
-          <div className="flex items-center gap-1">
-            <Mail className="w-4 h-4" />
-            {data.personal.email}
-          </div>
-          <div className="flex items-center gap-1">
-            <Phone className="w-4 h-4" />
-            {data.personal.phone}
-          </div>
-          <div className="flex items-center gap-1">
-            <MapPin className="w-4 h-4" />
-            {data.personal.location}
+    <Card
+      className="shadow-lg"
+      style={{
+        padding: styleConfig.spacing,
+        background: styleConfig.colors.background,
+        color: styleConfig.colors.text,
+        borderRadius: styleConfig.borderRadius,
+        fontFamily: styleConfig.fonts.body,
+      }}
+    >
+      {/* HEADER */}
+      <div
+        style={{
+          paddingBottom: styleConfig.spacing,
+          borderBottom: `2px solid ${styleConfig.colors.accent}`,
+          marginBottom: styleConfig.spacing,
+        }}
+      >
+        {/* Name + Photo Row */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: styleConfig.spacing,
+          }}
+        >
+          {styleConfig.showPhoto && (
+            <div
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: "50%",
+                overflow: "hidden",
+                background: styleConfig.colors.accent + "33",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <img
+                src={data.personal.photo || placeholder}
+                alt="Profile"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  opacity: data.personal.photo ? 1 : 0.7,
+                }}
+              />
+            </div>
+          )}
+
+          <div style={{ flex: 1 }}>
+            <h1
+              style={{
+                fontSize: 26,
+                fontWeight: 700,
+                marginBottom: 4,
+                fontFamily: styleConfig.fonts.heading,
+                color: styleConfig.colors.primary,
+              }}
+            >
+              {data.personal.firstName} {data.personal.lastName}
+            </h1>
+
+            <p
+              style={{
+                fontSize: 14,
+                opacity: 0.9,
+                marginBottom: 8,
+              }}
+            >
+              {data.personal.summary}
+            </p>
+
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 12,
+                fontSize: 13,
+              }}
+            >
+              <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                <Mail className="w-4 h-4" color={styleConfig.colors.primary} />
+                {data.personal.email}
+              </div>
+              <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                <Phone className="w-4 h-4" color={styleConfig.colors.primary} />
+                {data.personal.phone}
+              </div>
+              <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                <MapPin className="w-4 h-4" color={styleConfig.colors.primary} />
+                {data.personal.location}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="p-6">
-        {/* Technical Skills */}
-        {data.skills.length > 0 && (
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-              <div className="w-1 h-6 bg-blue-600 mr-3"></div>
-              Technical Skills
-            </h2>
-            <div className="grid grid-cols-3 gap-2">
-              {data.skills.map((skill: string, index: number) => (
-                <Badge key={index} className="bg-blue-100 text-blue-800 justify-center">
-                  {skill}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
+      {/* TECHNICAL SKILLS */}
+      {data.skills.length > 0 && (
+        <div style={{ marginBottom: styleConfig.spacing }}>
+          <h2
+            style={{
+              fontSize: 18,
+              fontWeight: 600,
+              marginBottom: 12,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              color: styleConfig.colors.primary,
+              fontFamily: styleConfig.fonts.heading,
+            }}
+          >
+            <div
+              style={{
+                width: 4,
+                height: 24,
+                background: styleConfig.colors.accent,
+                borderRadius: 4,
+              }}
+            ></div>
+            Technical Skills
+          </h2>
 
-        {/* Experience */}
-        {data.experience.length > 0 && (
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-              <div className="w-1 h-6 bg-blue-600 mr-3"></div>
-              Professional Experience
-            </h2>
-            <div className="space-y-4">
-              {data.experience.map((exp: any, index: number) => (
-                <div key={index} className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{exp.position}</h3>
-                      <p className="text-blue-600 font-medium">{exp.company}</p>
-                    </div>
-                    <Badge variant="outline" className="text-xs">
-                      {exp.startDate} - {exp.current ? "Present" : exp.endDate}
-                    </Badge>
-                  </div>
-                  <p className="text-gray-700 text-sm">{exp.description}</p>
-                </div>
-              ))}
-            </div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: 8,
+            }}
+          >
+            {data.skills.map((skill: string, i: number) => (
+              <span
+                key={i}
+                style={{
+                  background: styleConfig.colors.accent + "22",
+                  color: styleConfig.colors.primary,
+                  borderRadius: 6,
+                  padding: "6px 8px",
+                  fontSize: 13,
+                  textAlign: "center",
+                  fontWeight: 500,
+                }}
+              >
+                {skill}
+              </span>
+            ))}
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Education */}
-        {data.education.length > 0 && (
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-              <div className="w-1 h-6 bg-blue-600 mr-3"></div>
-              Education
-            </h2>
-            <div className="space-y-3">
-              {data.education.map((edu: any, index: number) => (
-                <div key={index} className="flex justify-between items-center">
+      {/* EXPERIENCE */}
+      {data.experience.length > 0 && (
+        <div style={{ marginBottom: styleConfig.spacing }}>
+          <h2
+            style={{
+              fontSize: 18,
+              fontWeight: 600,
+              marginBottom: 12,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              color: styleConfig.colors.primary,
+              fontFamily: styleConfig.fonts.heading,
+            }}
+          >
+            <div
+              style={{
+                width: 4,
+                height: 24,
+                background: styleConfig.colors.accent,
+                borderRadius: 4,
+              }}
+            ></div>
+            Professional Experience
+          </h2>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {data.experience.map((exp: any, i: number) => (
+              <div
+                key={i}
+                style={{
+                  background: styleConfig.colors.accent + "10",
+                  padding: styleConfig.spacing / 1.5,
+                  borderRadius: 8,
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginBottom: 6,
+                  }}
+                >
                   <div>
-                    <h3 className="font-medium text-gray-900">
-                      {edu.degree} in {edu.field}
+                    <h3
+                      style={{
+                        fontWeight: 600,
+                        color: styleConfig.colors.primary,
+                      }}
+                    >
+                      {exp.position}
                     </h3>
-                    <p className="text-gray-600 text-sm">{edu.school}</p>
+                    <p
+                      style={{
+                        color: styleConfig.colors.secondary,
+                        fontWeight: 500,
+                      }}
+                    >
+                      {exp.company}
+                    </p>
                   </div>
-                  <Badge variant="secondary">{edu.graduationDate}</Badge>
+
+                  <span
+                    style={{
+                      fontSize: 12,
+                      padding: "2px 8px",
+                      borderRadius: 4,
+                      border: `1px solid ${styleConfig.colors.primary}55`,
+                      color: styleConfig.colors.primary,
+                    }}
+                  >
+                    {formatDate(exp.startDate)} - {exp.current ? "Present" : formatDate(exp.endDate)}
+                  </span>
                 </div>
-              ))}
-            </div>
+
+                <p style={{ fontSize: 14 }}>{exp.description}</p>
+              </div>
+            ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* EDUCATION */}
+      {data.education.length > 0 && (
+        <div style={{ marginBottom: styleConfig.spacing }}>
+          <h2
+            style={{
+              fontSize: 18,
+              fontWeight: 600,
+              marginBottom: 12,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              color: styleConfig.colors.primary,
+              fontFamily: styleConfig.fonts.heading,
+            }}
+          >
+            <div
+              style={{
+                width: 4,
+                height: 24,
+                background: styleConfig.colors.accent,
+                borderRadius: 4,
+              }}
+            ></div>
+            Education
+          </h2>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {data.education.map((edu: any, idx: number) => (
+              <div
+                key={idx}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                }}
+              >
+                <div>
+                  <strong style={{ color: styleConfig.colors.primary }}>
+                    {edu.degree} in {edu.field}
+                  </strong>
+                  <p style={{ fontSize: 14 }}>{edu.school}</p>
+                </div>
+
+                <span
+                  style={{
+                    fontSize: 13,
+                    background: styleConfig.colors.accent + "22",
+                    padding: "4px 8px",
+                    borderRadius: 6,
+                    color: styleConfig.colors.primary,
+                  }}
+                >
+                  {formatDate(edu.graduationDate)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ⭐ CUSTOM SECTIONS */}
+      {data.customSections &&
+        data.customSections.length > 0 &&
+        data.customSections.map((section: any) => (
+          <div
+            key={section.id}
+            style={{ marginBottom: styleConfig.spacing }}
+          >
+            <h2
+              style={{
+                fontSize: 18,
+                fontWeight: 600,
+                marginBottom: 12,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                color: styleConfig.colors.primary,
+                fontFamily: styleConfig.fonts.heading,
+              }}
+            >
+              <div
+                style={{
+                  width: 4,
+                  height: 24,
+                  background: styleConfig.colors.accent,
+                  borderRadius: 4,
+                }}
+              ></div>
+
+              {section.title}
+            </h2>
+
+            {/* TEXT SECTION */}
+            {section.type === "text" && (
+              <p
+                style={{
+                  fontSize: 14,
+                  lineHeight: 1.6,
+                  color: styleConfig.colors.text,
+                  whiteSpace: "pre-line", // preserve line breaks
+                }}
+              >
+                {section.content}
+              </p>
+            )}
+
+            {/* LIST SECTION */}
+            {section.type === "list" && (
+              <ul
+                style={{
+                  paddingLeft: 20,
+                  lineHeight: 1.6,
+                  color: styleConfig.colors.text,
+                  fontSize: 14,
+                }}
+              >
+                {section.content
+                  .split("\n")
+                  .filter((i: string) => i.trim() !== "")
+                  .map((item: string, idx: number) => (
+                    <li key={idx} style={{ marginBottom: 6 }}>
+                      {item}
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </div>
+        ))}
+
     </Card>
-  )
+  );
 }
