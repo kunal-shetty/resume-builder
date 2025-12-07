@@ -4,9 +4,9 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 const PLAN_PRICING: Record<string, number> = {
-  qT9mF3xL7vB2nP8kS1hD6wR0gC4tY9jM5uA2eZ7rV1cN8pH3lK6fW0dQ4sX9bT5yG2aU7mJ1Z8rK1pV6xT3gM9hS4lC2nW7fB0uJ5yD8qA1cL6tR3mH9vP4kF2wN7jE0sQ5gY8bU1xT6mC3: 1,
-  mP4tS9vB2qH7cL1xN6fD0wY5kR8pA3gT9uJ2eV6rC1hM7nF0dX4sW8jQ3yK5aG2bU9tL6paW7fC3gN9tM6yV1sK4pQ8lB2jT5hR0xD7uE3nF9vJ6cL1kS8mA4wP2rG5dH0qX9bU7tY3: 1,
-  xC1tL6pN8rJ3yH9bS5kW2uA7fQ4gM0nV6dR1cT8mP3jE9hF5lK2wB7sD4aY0qG8vX1nB5yF2uG8hK1vQ7pD3mT9aL4sP0cW6xE2rJ8tM1kS7gH3lC9wN5qA0jV4dU6bY8: 1,
+  qT9mF3xL7vB2nP8kS1hD6wR0gC4tY9jM5uA2eZ7rV1cN8pH3lK6fW0dQ4sX9bT5yG2aU7mJ1Z8rK1pV6xT3gM9hS4lC2nW7fB0uJ5yD8qA1cL6tR3mH9vP4kF2wN7jE0sQ5gY8bU1xT6mC3: 49,
+  mP4tS9vB2qH7cL1xN6fD0wY5kR8pA3gT9uJ2eV6rC1hM7nF0dX4sW8jQ3yK5aG2bU9tL6paW7fC3gN9tM6yV1sK4pQ8lB2jT5hR0xD7uE3nF9vJ6cL1kS8mA4wP2rG5dH0qX9bU7tY3: 99,
+  xC1tL6pN8rJ3yH9bS5kW2uA7fQ4gM0nV6dR1cT8mP3jE9hF5lK2wB7sD4aY0qG8vX1nB5yF2uG8hK1vQ7pD3mT9aL4sP0cW6xE2rJ8tM1kS7gH3lC9wN5qA0jV4dU6bY8: 129,
   R3vH9tP4mS1xL8uJ2cK6qG0yD5bN7gF3pT9lM1hC8wA2rV6eQ4nW0jU5sY7kX9kM2jS7aT4yC9nV5gP1bU8wR3xD6fH0pQ7lE2tJ9cN4mA8hG5rW1dY3sK6vX0: 59,
   tF6wE1pH8lM3qG9uJ5rA2vK7cD0yS4bN8mR1xL6gP3nC9jT5hW2sQ7kU4V9kP4cM7xR2dT8bS1yG6nL0hF5uQ3mJ9rC4tW8pA1eH6sD2jN7gY5
 : 69
@@ -128,32 +128,10 @@ export default function CheckoutPageContent() {
         email: form.email,
         contact: form.phone,
       },
-      handler: async (response) => {
-  const deviceId = localStorage.getItem("razorpay_device_id");
-
-  const paymentData = {
-    order_id: response.razorpay_order_id,
-    payment_id: response.razorpay_payment_id,
-    signature: response.razorpay_signature,
-    name: form.name,
-    email: form.email,
-    phone: form.phone,
-    plan,
-    amount: total,
-    device_id: deviceId
-  };
-
-  await fetch("/api/save-payment", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(paymentData),
-  });
-
-  localStorage.setItem("resume_unlocked", plan);
-  window.location.href = `/success?plan=${plan}`;
-}
-
-
+      handler: () => {
+        localStorage.setItem("resume_unlocked", plan);
+        window.location.href = `/success?plan=${plan}`;
+      },
     };
 
     const razorpay = new (window as any).Razorpay(options);
