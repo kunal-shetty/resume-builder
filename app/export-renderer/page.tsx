@@ -211,6 +211,7 @@ button {
 
         // create PDF via browser print pipeline
         const pdfWindow = window.open("", "_blank");
+        if(!pdfWindow) return;
         pdfWindow.document.write(`
           <html><body style="margin:0;">
             <img src="${imgData}" style="width:100%">

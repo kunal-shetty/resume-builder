@@ -476,6 +476,33 @@ const exportResume = async (format: "png" | "pdf") => {
   }
 };
 
+const exportPDF = async () => {
+  const element = document.getElementById("export-area");
+  if (!element) return alert("Resume preview not found");
+
+  const html2pdf = (await import("html2pdf.js")).default;
+
+  const fileName = "resume.pdf";
+
+  const options = {
+    margin: [0, 0, 0, 0],
+    filename: fileName,
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: {
+      scale: 2,
+      scrollY: 0,
+      useCORS: true,
+      backgroundColor: null,
+    },
+    jsPDF: {
+      unit: "mm",
+      format: "a4",
+      orientation: "portrait",
+    },
+  };
+
+  html2pdf().set(options).from(element).save();
+};
 
 
   return (
@@ -1084,7 +1111,7 @@ const exportResume = async (format: "png" | "pdf") => {
                             setShowModal(true);
                             return;
                           }
-                          exportResume("pdf");
+                          exportPDF();
                         }}
                         className="flex-col h-auto py-4"
                       >
