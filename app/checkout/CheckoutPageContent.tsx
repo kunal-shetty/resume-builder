@@ -4,10 +4,10 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 const PLAN_PRICING: Record<string, number> = {
-  BASIC: 1,
-  ADVANCED: 1,
-  PREMIUM: 129,
-  BASICTOADVANCED: 1,
+  BASIC: 49,
+  ADVANCED: 69,
+  PREMIUM: 119,
+  BASICTOADVANCED: 59,
   BASICTOPREMIUM
     : 69
 };

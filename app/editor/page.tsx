@@ -1331,7 +1331,7 @@ const exportPDF = async () => {
                   MOST POPULAR
                 </span>
 
-                <h3 className="text-lg sm:text-xl font-semibold text-blue-700 text-center">₹99</h3>
+                <h3 className="text-lg sm:text-xl font-semibold text-blue-700 text-center">₹69</h3>
                 <p className="text-xs sm:text-sm text-blue-600 text-center mb-3">Advanced Pack</p>
 
                 <ul className="text-[13px] sm:text-[15px] text-gray-700 space-y-1.5 mb-4">
@@ -1344,13 +1344,13 @@ const exportPDF = async () => {
                   onClick={() => window.location.href = `/checkout?plan=ADVANCED`}
                   className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition text-sm sm:text-base"
                 >
-                  Choose ₹99
+                  Choose ₹69
                 </button>
               </div>
 
               {/* OPTION 3 */}
               <div className="border rounded-2xl p-4 sm:p-6 bg-gray-50 hover:shadow-xl transition cursor-pointer">
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 text-center">₹129</h3>
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 text-center">₹119</h3>
                 <p className="text-xs sm:text-sm text-gray-600 text-center mb-3">
                   Premium Pack
                 </p>
@@ -1365,7 +1365,7 @@ const exportPDF = async () => {
                   onClick={() => window.location.href = `/checkout?plan=PREMIUM`}
                   className="w-full py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition text-sm sm:text-base"
                 >
-                  Choose ₹129
+                  Choose ₹119
                 </button>
               </div>
 
