@@ -129,7 +129,7 @@ export default function HomePage() {
             transition={{ delay: 2 }}
             className="flex justify-center items-center"
           >
-            <Link href="/builder">
+            <Link href="/auth">
               <Button
                 size="lg"
                 className="relative group bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-8 py-4 text-lg font-semibold rounded-full overflow-hidden"
@@ -215,7 +215,7 @@ export default function HomePage() {
             Craft a resume that speaks louder than words — designed to impress recruiters,
             stand out instantly, and unlock better opportunities.
           </p>
-          <Link href="/builder">
+          <Link href="/auth">
             <Button
               size="lg"
               className="relative group px-12 py-6 text-xl font-bold rounded-full bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-white overflow-hidden"

@@ -4,21 +4,21 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 const PLAN_PRICING: Record<string, number> = {
-  qT9mF3xL7vB2nP8kS1hD6wR0gC4tY9jM5uA2eZ7rV1cN8pH3lK6fW0dQ4sX9bT5yG2aU7mJ1Z8rK1pV6xT3gM9hS4lC2nW7fB0uJ5yD8qA1cL6tR3mH9vP4kF2wN7jE0sQ5gY8bU1xT6mC3: 49,
-  mP4tS9vB2qH7cL1xN6fD0wY5kR8pA3gT9uJ2eV6rC1hM7nF0dX4sW8jQ3yK5aG2bU9tL6paW7fC3gN9tM6yV1sK4pQ8lB2jT5hR0xD7uE3nF9vJ6cL1kS8mA4wP2rG5dH0qX9bU7tY3: 99,
-  xC1tL6pN8rJ3yH9bS5kW2uA7fQ4gM0nV6dR1cT8mP3jE9hF5lK2wB7sD4aY0qG8vX1nB5yF2uG8hK1vQ7pD3mT9aL4sP0cW6xE2rJ8tM1kS7gH3lC9wN5qA0jV4dU6bY8: 129,
-  R3vH9tP4mS1xL8uJ2cK6qG0yD5bN7gF3pT9lM1hC8wA2rV6eQ4nW0jU5sY7kX9kM2jS7aT4yC9nV5gP1bU8wR3xD6fH0pQ7lE2tJ9cN4mA8hG5rW1dY3sK6vX0: 59,
-  tF6wE1pH8lM3qG9uJ5rA2vK7cD0yS4bN8mR1xL6gP3nC9jT5hW2sQ7kU4V9kP4cM7xR2dT8bS1yG6nL0hF5uQ3mJ9rC4tW8pA1eH6sD2jN7gY5
-: 69
+  BASIC: 1,
+  ADVANCED: 1,
+  PREMIUM: 129,
+  BASICTOADVANCED: 1,
+  BASICTOPREMIUM
+    : 69
 };
 
 const planMap = {
-  qT9mF3xL7vB2nP8kS1hD6wR0gC4tY9jM5uA2eZ7rV1cN8pH3lK6fW0dQ4sX9bT5yG2aU7mJ1Z8rK1pV6xT3gM9hS4lC2nW7fB0uJ5yD8qA1cL6tR3mH9vP4kF2wN7jE0sQ5gY8bU1xT6mC3: "Basic",
-  mP4tS9vB2qH7cL1xN6fD0wY5kR8pA3gT9uJ2eV6rC1hM7nF0dX4sW8jQ3yK5aG2bU9tL6paW7fC3gN9tM6yV1sK4pQ8lB2jT5hR0xD7uE3nF9vJ6cL1kS8mA4wP2rG5dH0qX9bU7tY3: "Advanced",
-  xC1tL6pN8rJ3yH9bS5kW2uA7fQ4gM0nV6dR1cT8mP3jE9hF5lK2wB7sD4aY0qG8vX1nB5yF2uG8hK1vQ7pD3mT9aL4sP0cW6xE2rJ8tM1kS7gH3lC9wN5qA0jV4dU6bY8: "Premium",
-  R3vH9tP4mS1xL8uJ2cK6qG0yD5bN7gF3pT9lM1hC8wA2rV6eQ4nW0jU5sY7kX9kM2jS7aT4yC9nV5gP1bU8wR3xD6fH0pQ7lE2tJ9cN4mA8hG5rW1dY3sK6vX0: "Basic To Advanced",
-  tF6wE1pH8lM3qG9uJ5rA2vK7cD0yS4bN8mR1xL6gP3nC9jT5hW2sQ7kU4V9kP4cM7xR2dT8bS1yG6nL0hF5uQ3mJ9rC4tW8pA1eH6sD2jN7gY5
-: "Basic To Premium"
+  BASIC: "Basic",
+  ADVANCED: "Advanced",
+  PREMIUM: "Premium",
+  BASICTOADVANCED: "Basic To Advanced",
+  BASICTOPREMIUM
+    : "Basic To Premium"
 } as any
 
 export default function CheckoutPageContent() {
@@ -29,35 +29,35 @@ export default function CheckoutPageContent() {
   const baseAmount = PLAN_PRICING[plan] ?? null;
 
   if (!baseAmount) {
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center bg-gray-50">
-      <div className="bg-white shadow-lg rounded-2xl p-10 max-w-lg w-full">
-        
-        <div className="flex justify-center mb-4">
-          <div className="w-14 h-14 bg-red-100 text-red-600 flex items-center justify-center rounded-full">
-            ⚠️
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center bg-gray-50">
+        <div className="bg-white shadow-lg rounded-2xl p-10 max-w-lg w-full">
+
+          <div className="flex justify-center mb-4">
+            <div className="w-14 h-14 bg-red-100 text-red-600 flex items-center justify-center rounded-full">
+              ⚠️
+            </div>
           </div>
+
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Invalid Checkout Link
+          </h2>
+
+          <p className="text-gray-600 mb-6 text-lg">
+            We couldn’t verify your plan details.
+            This link may have expired or been modified.
+          </p>
+
+          <button
+            onClick={() => window.location.href = "/editor"}
+            className="w-full py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition"
+          >
+            Return to Resume Builder
+          </button>
         </div>
-
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Invalid Checkout Link
-        </h2>
-
-        <p className="text-gray-600 mb-6 text-lg">
-          We couldn’t verify your plan details.  
-          This link may have expired or been modified.
-        </p>
-
-        <button
-          onClick={() => window.location.href = "/editor"}
-          className="w-full py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition"
-        >
-          Return to Resume Builder
-        </button>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
 
   // TAX
@@ -93,8 +93,8 @@ export default function CheckoutPageContent() {
     setErrors(newErrors);
     return valid;
   };
-  if(plan === "R3vH9tP4mS1xL8uJ2cK6qG0yD5bN7gF3pT9lM1hC8wA2rV6eQ4nW0jU5sY7kX9kM2jS7aT4yC9nV5gP1bU8wR3xD6fH0pQ7lE2tJ9cN4mA8hG5rW1dY3sK6vX0") plan = "mP4tS9vB2qH7cL1xN6fD0wY5kR8pA3gT9uJ2eV6rC1hM7nF0dX4sW8jQ3yK5aG2bU9tL6paW7fC3gN9tM6yV1sK4pQ8lB2jT5hR0xD7uE3nF9vJ6cL1kS8mA4wP2rG5dH0qX9bU7tY3";
-  if(plan === "tF6wE1pH8lM3qG9uJ5rA2vK7cD0yS4bN8mR1xL6gP3nC9jT5hW2sQ7kU4V9kP4cM7xR2dT8bS1yG6nL0hF5uQ3mJ9rC4tW8pA1eH6sD2jN7gY5") plan = "xC1tL6pN8rJ3yH9bS5kW2uA7fQ4gM0nV6dR1cT8mP3jE9hF5lK2wB7sD4aY0qG8vX1nB5yF2uG8hK1vQ7pD3mT9aL4sP0cW6xE2rJ8tM1kS7gH3lC9wN5qA0jV4dU6bY8";
+  if (plan === "BASICTOADVANCED") plan = "ADVANCED";
+  if (plan === "BASICTOPREMIUM") plan = "PREMIUM";
 
   const startPayment = async () => {
     if (!validateForm()) return;
@@ -114,7 +114,7 @@ export default function CheckoutPageContent() {
       alert("Failed to create payment order");
       return;
     }
-    
+
     const options = {
       key: process.env.NEXT_PUBLIC_RZP_ID,
       amount: order.amount,
@@ -128,10 +128,41 @@ export default function CheckoutPageContent() {
         email: form.email,
         contact: form.phone,
       },
-      handler: () => {
-        localStorage.setItem("resume_unlocked", plan);
-        window.location.href = `/success?plan=${plan}`;
+      handler: async function (response: any) {
+        console.log("Razorpay success:", response);
+
+        if(plan === "BASICTOADVANCED") plan = "ADVANCED";
+        if(plan === "BASICTOPREMIUM") plan = "PREMIUM";
+
+        const res = await fetch("/api/save-payment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            order_id: response.razorpay_order_id,
+            payment_id: response.razorpay_payment_id,
+            signature: response.razorpay_signature,
+            plan,
+            amount: total,
+          }),
+        });
+
+        const data = await res.json();
+        console.log("Save payment response:", data);
+
+        if (!data.success) {
+          alert("Payment verification failed. Please contact support.");
+          return;
+        }
+
+        // optional UI cache (NOT source of truth)
+        localStorage.setItem(
+          "rb_payment",
+          JSON.stringify({ hasPaid: true, plan })
+        );
+
+        window.location.href = "/success";
       },
+
     };
 
     const razorpay = new (window as any).Razorpay(options);
@@ -161,9 +192,8 @@ export default function CheckoutPageContent() {
                 placeholder="Full Name"
                 value={form.name}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-lg ${
-                  errors.name ? "border-red-500 bg-red-50" : ""
-                }`}
+                className={`w-full px-4 py-3 border rounded-lg ${errors.name ? "border-red-500 bg-red-50" : ""
+                  }`}
               />
               {errors.name && (
                 <p className="text-red-500 text-sm">{errors.name}</p>
@@ -176,9 +206,8 @@ export default function CheckoutPageContent() {
                 placeholder="Email Address"
                 value={form.email}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-lg ${
-                  errors.email ? "border-red-500 bg-red-50" : ""
-                }`}
+                className={`w-full px-4 py-3 border rounded-lg ${errors.email ? "border-red-500 bg-red-50" : ""
+                  }`}
               />
               {errors.email && (
                 <p className="text-red-500 text-sm">{errors.email}</p>
@@ -191,9 +220,8 @@ export default function CheckoutPageContent() {
                 placeholder="Phone Number"
                 value={form.phone}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-lg ${
-                  errors.phone ? "border-red-500 bg-red-50" : ""
-                }`}
+                className={`w-full px-4 py-3 border rounded-lg ${errors.phone ? "border-red-500 bg-red-50" : ""
+                  }`}
               />
               {errors.phone && (
                 <p className="text-red-500 text-sm">{errors.phone}</p>

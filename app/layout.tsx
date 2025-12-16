@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
+import Providers from "@/app/providers"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
       "Build amazing animated Resumes with crazy effects, real-time customization, and one-click deployment.",
     type: "website",
   },
-    generator: 'v0.dev'
+  generator: "v0.dev",
 }
 
 export default function RootLayout({
@@ -29,8 +30,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        {children}
-        <script src="https://checkout.razorpay.com/v1/checkout.js" defer></script>
+        <Providers>
+          {children}
+        </Providers>
+
+        <script
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          defer
+        ></script>
+
         <Toaster />
       </body>
     </html>
