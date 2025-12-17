@@ -942,7 +942,6 @@ export default function EditorPage() {
                           </p>
 
                           <Select
-                            disabled={plan === "FREE"}
                             value={basicTemplate}
                             onValueChange={(value) => {
                               // Reset ATS
@@ -954,11 +953,7 @@ export default function EditorPage() {
                           >
                             <SelectTrigger>
                               <SelectValue
-                                placeholder={
-                                  plan === "FREE"
-                                    ? "Locked • Upgrade to use"
-                                    : "Choose basic template"
-                                }
+                                placeholder={"Choose basic template"}
                               />
                             </SelectTrigger>
 
@@ -970,12 +965,6 @@ export default function EditorPage() {
                             </SelectContent>
                           </Select>
 
-                          {plan === "FREE" && (
-                            <div
-                              className="absolute inset-0 cursor-pointer"
-                              onClick={() => setShowTemplateLockModal(true)}
-                            />
-                          )}
                         </div>
 
                         {/* ================= ATS TEMPLATES ================= */}
