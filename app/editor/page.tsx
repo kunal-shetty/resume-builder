@@ -146,43 +146,61 @@ export default function EditorPage() {
 
 
 
+
   const [isBlurred, setIsBlurred] = useState(true)
-const [plan, setPlan] = useState<"FREE" | "BASIC" | "ADVANCED" | "PREMIUM">("FREE")
+  const [plan, setPlan] = useState<"FREE" | "BASIC" | "ADVANCED" | "PREMIUM">("FREE")
 
-useEffect(() => {
-  const raw = localStorage.getItem("rb_user")
-  if (!raw) return
+  useEffect(() => {
+    const raw = localStorage.getItem("rb_user")
+    if (!raw) return
 
-  try {
-    const user = JSON.parse(raw)
+    try {
+      const user = JSON.parse(raw)
 
-    // Default state
-    setIsBlurred(true)
-    setPlan("FREE")
-
-    // User never paid
-    if (!user.hasPaid || user.plan === "FREE") {
+      // Default state
       setIsBlurred(true)
       setPlan("FREE")
-      return
+
+      // User never paid
+      if (!user.hasPaid || user.plan === "FREE") {
+        setIsBlurred(true)
+        setPlan("FREE")
+        return
+      }
+
+      // Paid user → unlock based on plan
+      setIsBlurred(false)
+      setPlan(user.plan) // BASIC | ADVANCED | PREMIUM
+      setShowModal(false)
+
+    } catch (err) {
+      console.error("Failed to parse rb_user", err)
     }
-
-    // Paid user → unlock based on plan
-    setIsBlurred(false)
-    setPlan(user.plan) // BASIC | ADVANCED | PREMIUM
-    setShowModal(false)
-
-  } catch (err) {
-    console.error("Failed to parse rb_user", err)
-  }
-}, [])
-
-
-
+  }, [])
 
   const [showModal, setShowModal] = useState(false);
   const [showTemplateLockModal, setShowTemplateLockModal] = useState(false);
 
+  const [basicTemplate, setBasicTemplate] = useState("")
+  const [atsTemplate, setAtsTemplate] = useState("")
+
+  const BASIC_TEMPLATES = [
+    { id: "modern-minimal", label: "Modern Minimal" },
+    { id: "creative-photo", label: "Creative Photo" },
+    { id: "timeline", label: "Timeline Resume" },
+    { id: "creative-card", label: "Creative Card" },
+  ]
+
+  const ATS_TEMPLATES = [
+    { id: "executive-pro", label: "Executive Pro (ATS)" },
+    { id: "tech-focused", label: "Tech Focused (ATS)" },
+    { id: "centered-elegant", label: "Centered Elegant (ATS)" },
+    { id: "two-column-modern", label: "Two Column Modern (ATS)" },
+    { id: "modern-sidebar", label: "Modern Sidebar (ATS)" },
+    { id: "classic-highlight", label: "Classic Highlight (ATS)" },
+  ]
+
+  const hasAtsAccess = plan === "ADVANCED" || plan === "PREMIUM"
 
   const [resumeStyle, setResumeStyle] = useState<ResumeStyle>({
     template: "modern-minimal",
@@ -398,57 +416,57 @@ useEffect(() => {
   };
 
 
-const exportResume = async (format: "png" | "pdf") => {
-  // The element that wraps your resume preview
-  const element = document.getElementById("export-area");
-  if (!element) {
-    console.error("export-area not found");
-    return;
-  }
-
-  // Lazy import to avoid SSR issues in Next.js
-  const html2canvasModule = await import("html2canvas");
-  const html2canvas = html2canvasModule.default;
-
-  // Higher scale → sharper export
-  const scale = window.devicePixelRatio > 1 ? window.devicePixelRatio : 2;
-
-  // Make sure element is fully visible (just in case)
-  element.scrollIntoView({ block: "center", behavior: "instant" as ScrollBehavior });
-
-  const canvas = await html2canvas(element, {
-    scale,
-    useCORS: true,
-    backgroundColor: "#ffffff",
-    logging: false,
-    removeContainer: true,
-    windowWidth: element.scrollWidth,
-    windowHeight: element.scrollHeight,
-  });
-
-  const pngDataUrl = canvas.toDataURL("image/png");
-
-  // ---- PNG EXPORT ----
-  if (format === "png") {
-    const link = document.createElement("a");
-    link.href = pngDataUrl;
-    link.download = "resume.png";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    return;
-  }
-
-  // ---- PDF EXPORT (no jsPDF) ----
-  if (format === "pdf") {
-    // Open a new tab with only the image, then call print()
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      alert("Popup blocked. Please allow popups to download the PDF.");
+  const exportResume = async (format: "png" | "pdf") => {
+    // The element that wraps your resume preview
+    const element = document.getElementById("export-area");
+    if (!element) {
+      console.error("export-area not found");
       return;
     }
 
-    const html = `
+    // Lazy import to avoid SSR issues in Next.js
+    const html2canvasModule = await import("html2canvas");
+    const html2canvas = html2canvasModule.default;
+
+    // Higher scale → sharper export
+    const scale = window.devicePixelRatio > 1 ? window.devicePixelRatio : 2;
+
+    // Make sure element is fully visible (just in case)
+    element.scrollIntoView({ block: "center", behavior: "instant" as ScrollBehavior });
+
+    const canvas = await html2canvas(element, {
+      scale,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      logging: false,
+      removeContainer: true,
+      windowWidth: element.scrollWidth,
+      windowHeight: element.scrollHeight,
+    });
+
+    const pngDataUrl = canvas.toDataURL("image/png");
+
+    // ---- PNG EXPORT ----
+    if (format === "png") {
+      const link = document.createElement("a");
+      link.href = pngDataUrl;
+      link.download = "resume.png";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    }
+
+    // ---- PDF EXPORT (no jsPDF) ----
+    if (format === "pdf") {
+      // Open a new tab with only the image, then call print()
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) {
+        alert("Popup blocked. Please allow popups to download the PDF.");
+        return;
+      }
+
+      const html = `
       <!doctype html>
       <html>
         <head>
@@ -482,39 +500,39 @@ const exportResume = async (format: "png" | "pdf") => {
       </html>
     `;
 
-    printWindow.document.open();
-    printWindow.document.write(html);
-    printWindow.document.close();
-  }
-};
-
-const exportPDF = async () => {
-  const element = document.getElementById("export-area");
-  if (!element) return alert("Resume preview not found");
-
-  const html2pdf = (await import("html2pdf.js")).default;
-
-  const fileName = "resume.pdf";
-
-  const options = {
-    margin: [0, 0, 0, 0],
-    filename: fileName,
-    image: { type: "jpeg", quality: 0.98 },
-    html2canvas: {
-      scale: 2,
-      scrollY: 0,
-      useCORS: true,
-      backgroundColor: null,
-    },
-    jsPDF: {
-      unit: "mm",
-      format: "a4",
-      orientation: "portrait",
-    },
+      printWindow.document.open();
+      printWindow.document.write(html);
+      printWindow.document.close();
+    }
   };
 
-  html2pdf().set(options).from(element).save();
-};
+  const exportPDF = async () => {
+    const element = document.getElementById("export-area");
+    if (!element) return alert("Resume preview not found");
+
+    const html2pdf = (await import("html2pdf.js")).default;
+
+    const fileName = "resume.pdf";
+
+    const options = {
+      margin: [0, 0, 0, 0],
+      filename: fileName,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        scrollY: 0,
+        useCORS: true,
+        backgroundColor: null,
+      },
+      jsPDF: {
+        unit: "mm",
+        format: "a4",
+        orientation: "portrait",
+      },
+    };
+
+    html2pdf().set(options).from(element).save();
+  };
 
 
   return (
@@ -913,54 +931,98 @@ const exportPDF = async () => {
                 <TabsContent value="design" className="space-y-6">
                   {/* Template Selection */}
                   {plan && (
-                    <Card
-                      className="p-6 bg-card/60 backdrop-blur-sm border-border/50 relative"
-                      onClick={() => {
-                        if (plan === "BASIC") {
-                          setShowTemplateLockModal(true);
-                        }
-                      }}
-                    >
+                    <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50">
+                      <h3 className="text-lg font-semibold mb-4">Template</h3>
 
-                      <h3 className="text-lg font-semibold mb-0">Template</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* ================= BASIC TEMPLATES ================= */}
+                        <div>
+                          <p className="text-sm font-medium mb-2 text-muted-foreground">
+                            Basic Templates
+                          </p>
 
-                      {/* 🟡 BASIC PLAN → LOCKED UI */}
-                      {plan === "BASIC" && (
-                        <>
-                          {/* Overlay to block interaction */}
-                          <div className="absolute inset-0 bg-black/10 rounded-lg cursor-pointer z-10"></div>
+                          <Select
+                            disabled={plan === "FREE"}
+                            value={basicTemplate}
+                            onValueChange={(value) => {
+                              // Reset ATS
+                              setAtsTemplate("")
+                              setBasicTemplate(value)
 
-                          {/* Disabled Select */}
-                          <Select disabled>
+                              updateStyle("template", "", value)
+                            }}
+                          >
                             <SelectTrigger>
-                              <SelectValue placeholder="Locked • Upgrade to use" />
+                              <SelectValue
+                                placeholder={
+                                  plan === "FREE"
+                                    ? "Locked • Upgrade to use"
+                                    : "Choose basic template"
+                                }
+                              />
                             </SelectTrigger>
+
+                            <SelectContent>
+                              <SelectItem value="modern-minimal">Modern Minimal</SelectItem>
+                              <SelectItem value="creative-photo">Creative Photo</SelectItem>
+                              <SelectItem value="timeline">Timeline Resume</SelectItem>
+                              <SelectItem value="creative-card">Creative Card</SelectItem>
+                            </SelectContent>
                           </Select>
-                        </>
-                      )}
 
-                      {/*  ADVANCED / PREMIUM → UNLOCKED UI */}
-                      {(plan === "ADVANCED" || plan === "PREMIUM") && (
-                        <Select
-                          value={resumeStyle.template}
-                          onValueChange={(value) => updateStyle("template", "", value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
+                          {plan === "FREE" && (
+                            <div
+                              className="absolute inset-0 cursor-pointer"
+                              onClick={() => setShowTemplateLockModal(true)}
+                            />
+                          )}
+                        </div>
 
-                          <SelectContent>
-                            <SelectItem value="modern-minimal">Modern Minimal</SelectItem>
-                            <SelectItem value="creative-photo">Creative Photo</SelectItem>
-                            <SelectItem value="executive-pro">Executive Pro</SelectItem>
-                            <SelectItem value="tech-focused">Tech Focused</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
+                        {/* ================= ATS TEMPLATES ================= */}
+                        <div>
+                          <p className="text-sm font-medium mb-2 text-muted-foreground">
+                            ATS-Friendly Templates
+                          </p>
+
+                          <Select
+                            disabled={plan === "FREE" || plan === "BASIC"}
+                            value={atsTemplate}
+                            onValueChange={(value) => {
+                              if (plan === "FREE" || plan === "BASIC") {
+                                setShowTemplateLockModal(true)
+                                return
+                              }
+
+                              // Reset Basic
+                              setBasicTemplate("")
+                              setAtsTemplate(value)
+
+                              updateStyle("template", "", value)
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue
+                                placeholder={
+                                  plan === "FREE" || plan === "BASIC"
+                                    ? "Upgrade for ATS templates"
+                                    : "Choose ATS template"
+                                }
+                              />
+                            </SelectTrigger>
+
+                            <SelectContent>
+                              <SelectItem value="executive-pro">Executive Pro</SelectItem>
+                              <SelectItem value="tech-focused">Tech Focused</SelectItem>
+                              <SelectItem value="centered-elegant">Centered Elegant</SelectItem>
+                              <SelectItem value="two-column-modern">Two Column Modern</SelectItem>
+                              <SelectItem value="modern-sidebar">Modern Sidebar</SelectItem>
+                              <SelectItem value="classic-highlight">Classic Highlight</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                     </Card>
                   )}
-
-
 
                   {/* Colors */}
                   <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50">
