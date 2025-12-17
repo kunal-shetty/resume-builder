@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -202,23 +203,36 @@ export default function EditorPage() {
 
   const hasAtsAccess = plan === "ADVANCED" || plan === "PREMIUM"
 
-  const [resumeStyle, setResumeStyle] = useState<ResumeStyle>({
-    template: "modern-minimal",
-    colors: {
-      primary: "#1f2937",
-      secondary: "#8b5cf6",
-      accent: "#3b82f6",
-      text: "#374151",
-      background: "#ffffff",
-    },
-    fonts: {
-      heading: "Inter",
-      body: "Inter",
-    },
-    spacing: 16,
-    borderRadius: 8,
-    showPhoto: false,
-  })
+  const searchParams = useSearchParams()
+const templateFromQuery = searchParams.get("template")
+
+const [resumeStyle, setResumeStyle] = useState<ResumeStyle>({
+  template: "modern-minimal", // fallback
+  colors: {
+    primary: "#1f2937",
+    secondary: "#8b5cf6",
+    accent: "#3b82f6",
+    text: "#374151",
+    background: "#ffffff",
+  },
+  fonts: {
+    heading: "Inter",
+    body: "Inter",
+  },
+  spacing: 16,
+  borderRadius: 8,
+  showPhoto: false,
+})
+
+useEffect(() => {
+  if (!templateFromQuery) return
+
+  setResumeStyle((prev) => ({
+    ...prev,
+    template: templateFromQuery,
+  }))
+}, [templateFromQuery])
+
 
   const [activeTab, setActiveTab] = useState("content")
   const [previewMode, setPreviewMode] = useState(false)
