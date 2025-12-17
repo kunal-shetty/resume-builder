@@ -111,13 +111,13 @@ export default function EditorClient() {
     customSections: [],
   })
 
-  // Load on first render
+  const [hydrated, setHydrated] = useState(false)
+
   useEffect(() => {
     const saved = localStorage.getItem("resume-data")
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
-
         setResumeData({
           personal: {
             firstName: parsed.personal?.firstName || "",
@@ -137,14 +137,15 @@ export default function EditorClient() {
         console.error("Error loading saved data:", e)
       }
     }
+
+    setHydrated(true) // ✅ mark hydration complete
   }, [])
 
-
-  // SAVE anytime resumeData updates (customSections or anything else)
   useEffect(() => {
-    localStorage.setItem("resume-data", JSON.stringify(resumeData))
-  }, [resumeData])
+    if (!hydrated) return // 🚨 critical guard
 
+    localStorage.setItem("resume-data", JSON.stringify(resumeData))
+  }, [resumeData, hydrated])
 
 
 
@@ -204,34 +205,34 @@ export default function EditorClient() {
   const hasAtsAccess = plan === "ADVANCED" || plan === "PREMIUM"
 
   const searchParams = useSearchParams()
-const templateFromQuery = searchParams.get("template")
+  const templateFromQuery = searchParams.get("template")
 
-const [resumeStyle, setResumeStyle] = useState<ResumeStyle>({
-  template: "modern-minimal", // fallback
-  colors: {
-    primary: "#1f2937",
-    secondary: "#8b5cf6",
-    accent: "#3b82f6",
-    text: "#374151",
-    background: "#ffffff",
-  },
-  fonts: {
-    heading: "Inter",
-    body: "Inter",
-  },
-  spacing: 16,
-  borderRadius: 8,
-  showPhoto: false,
-})
+  const [resumeStyle, setResumeStyle] = useState<ResumeStyle>({
+    template: "modern-minimal", // fallback
+    colors: {
+      primary: "#1f2937",
+      secondary: "#8b5cf6",
+      accent: "#3b82f6",
+      text: "#374151",
+      background: "#ffffff",
+    },
+    fonts: {
+      heading: "Inter",
+      body: "Inter",
+    },
+    spacing: 16,
+    borderRadius: 8,
+    showPhoto: false,
+  })
 
-useEffect(() => {
-  if (!templateFromQuery) return
+  useEffect(() => {
+    if (!templateFromQuery) return
 
-  setResumeStyle((prev) => ({
-    ...prev,
-    template: templateFromQuery,
-  }))
-}, [templateFromQuery])
+    setResumeStyle((prev) => ({
+      ...prev,
+      template: templateFromQuery,
+    }))
+  }, [templateFromQuery])
 
 
   const [activeTab, setActiveTab] = useState("content")
