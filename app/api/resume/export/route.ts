@@ -49,11 +49,11 @@ export async function POST(req: Request) {
   })
 
   await page.goto(`${process.env.APP_URL}/export`, {
-    waitUntil: "networkidle0",
+  waitUntil: "domcontentloaded",
   })
 
   const element = await page.waitForSelector("#export-area", {
-    timeout: 10000,
+    timeout: 20000,
   })
 
   if (!element) {
