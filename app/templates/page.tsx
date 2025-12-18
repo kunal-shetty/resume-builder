@@ -22,7 +22,7 @@ interface Template {
 }
 
 const templates: Template[] = [
-  // ===== BASIC (Free) =====
+  // ===== FREE / BASIC =====
   {
     id: "modern-minimal",
     name: "Modern Minimal",
@@ -31,7 +31,7 @@ const templates: Template[] = [
     isPremium: false,
     rating: 3.9,
     downloads: "18.2K",
-    preview: "/no-photo/modern-minimal.jpg",
+    preview: "/resumes/modern-minimal.png",
     description: "Clean and modern resume for all professionals",
     colors: ["#1f2937", "#3b82f6", "#ffffff"],
   },
@@ -43,7 +43,7 @@ const templates: Template[] = [
     isPremium: false,
     rating: 4.7,
     downloads: "12.4K",
-    preview: "/no-photo/creative-photo.jpg",
+    preview: "/resumes/creative-photo.png",
     description: "Creative layout with visual emphasis",
     colors: ["#8b5cf6", "#ec4899", "#ffffff"],
   },
@@ -55,7 +55,7 @@ const templates: Template[] = [
     isPremium: false,
     rating: 4.6,
     downloads: "9.1K",
-    preview: "/no-photo/timeline.jpg",
+    preview: "/resumes/timeline.png",
     description: "Timeline-based layout highlighting experience growth",
     colors: ["#1f2937", "#10b981", "#ffffff"],
   },
@@ -67,7 +67,7 @@ const templates: Template[] = [
     isPremium: false,
     rating: 4.5,
     downloads: "7.8K",
-    preview: "/no-photo/creative-card.jpg",
+    preview: "/resumes/creative-card.png",
     description: "Card-style sections for a bold creative look",
     colors: ["#6366f1", "#f59e0b", "#ffffff"],
   },
@@ -81,7 +81,7 @@ const templates: Template[] = [
     isPremium: true,
     rating: 5.0,
     downloads: "21.3K",
-    preview: "/ats/executive-pro.jpg",
+    preview: "/resumes/executive-pro.png",
     description: "ATS-optimized resume for senior professionals",
     colors: ["#111827", "#059669", "#ffffff"],
   },
@@ -93,7 +93,7 @@ const templates: Template[] = [
     isPremium: true,
     rating: 4.9,
     downloads: "19.6K",
-    preview: "/ats/tech-focused.jpg",
+    preview: "/resumes/tech-focused.png",
     description: "ATS-safe layout for developers and engineers",
     colors: ["#1f2937", "#3b82f6", "#ffffff"],
   },
@@ -105,7 +105,7 @@ const templates: Template[] = [
     isPremium: true,
     rating: 4.8,
     downloads: "14.2K",
-    preview: "/ats/centered-elegant.jpg",
+    preview: "/resumes/centered-elegant.png",
     description: "Balanced, centered design with ATS compliance",
     colors: ["#1f2937", "#6b7280", "#ffffff"],
   },
@@ -117,7 +117,7 @@ const templates: Template[] = [
     isPremium: true,
     rating: 4.8,
     downloads: "16.9K",
-    preview: "/ats/two-column-modern.jpg",
+    preview: "/resumes/two-column.png",
     description: "Modern two-column structure, fully ATS-safe",
     colors: ["#111827", "#2563eb", "#ffffff"],
   },
@@ -129,7 +129,7 @@ const templates: Template[] = [
     isPremium: true,
     rating: 4.7,
     downloads: "13.5K",
-    preview: "/ats/modern-sidebar.jpg",
+    preview: "/resumes/modern-sidebar.png",
     description: "Sidebar layout with clean ATS-friendly formatting",
     colors: ["#1f2937", "#7c3aed", "#ffffff"],
   },
@@ -141,11 +141,12 @@ const templates: Template[] = [
     isPremium: true,
     rating: 4.6,
     downloads: "11.8K",
-    preview: "/ats/classic-highlight.jpg",
+    preview: "/resumes/classic-highlight.png",
     description: "Classic resume with subtle highlights for ATS",
     colors: ["#1f2937", "#f59e0b", "#ffffff"],
   },
 ]
+
 
 
 
@@ -202,6 +203,7 @@ export default function TemplatesPage() {
   const handleSelectTemplate = (template: Template) => {
     setSelectedTemplate(template)
     // Navigate to editor with selected template
+    
     setTimeout(() => {
       window.location.href = `/editor?template=${template.id}`
     }, 500)
@@ -258,30 +260,30 @@ export default function TemplatesPage() {
           </div>
         </div>
 
-        {/* Templates Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+       {/* Templates Grid */}
+<div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
   {filteredTemplates.map((template, index) => (
     <Card
       key={template.id}
-      className={cn(
-        "group cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-card/60 backdrop-blur-sm border-border/50 overflow-hidden",
-        selectedTemplate?.id === template.id &&
-          "ring-2 ring-accent"
-      )}
       onClick={() => handleSelectTemplate(template)}
       style={{ animationDelay: `${index * 80}ms` }}
+      className={cn(
+        "group cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 bg-card/60 backdrop-blur-sm border-border/50 p-0",
+        selectedTemplate?.id === template.id && "ring-2 ring-accent"
+      )}
     >
-      {/* Template Preview */}
-      <div className="relative aspect-[4/5] overflow-hidden">
+      {/* ================= Template Preview ================= */}
+      <div className="relative aspect-[4/5] overflow-hidden rounded-t-lg">
+        {/* Image */}
         <img
           src={template.preview || "/placeholder.svg"}
           alt={template.name}
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
         />
 
         {/* Hover Overlay */}
-        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <div className="absolute bottom-3 left-3 right-3">
+        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end z-10">
+          <div className="w-full p-3">
             <Button
               size="sm"
               className="w-full bg-white/20 backdrop-blur-sm text-white border-white/30 hover:bg-white/30"
@@ -294,15 +296,15 @@ export default function TemplatesPage() {
 
         {/* Premium Badge */}
         {template.isPremium && (
-          <div className="absolute top-2 left-2">
-            <Badge className="bg-accent text-accent-foreground text-[10px] px-2 py-0.5">
+          <div className="absolute top-2 left-2 z-20">
+            <Badge className="bg-accent text-accent-foreground text-[10px] px-2 py-0.5 shadow-sm">
               Premium
             </Badge>
           </div>
         )}
 
         {/* Color Palette */}
-        <div className="absolute top-2 right-2 flex gap-1">
+        <div className="absolute top-2 right-2 z-20 flex gap-1  px-1.5 py-1 rounded-full">
           {template.colors.map((color, i) => (
             <span
               key={i}
@@ -313,7 +315,7 @@ export default function TemplatesPage() {
         </div>
       </div>
 
-      {/* Template Info */}
+      {/* ================= Template Info ================= */}
       <div className="p-3">
         <h3 className="font-semibold text-sm mb-0.5">
           {template.name}

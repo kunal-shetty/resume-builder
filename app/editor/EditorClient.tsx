@@ -430,124 +430,49 @@ export default function EditorClient() {
     });
   };
 
+const handleExport = async (format: "png" | "pdf" = "png") => {
+  // 1️⃣ Save resume first
+  const saveRes = await fetch("/api/resume/save", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      templateId: resumeStyle.template,
+      styleConfig: resumeStyle,
+      data: resumeData,
+      title: "My Resume",
+    }),
+  })
 
-  const exportResume = async (format: "png" | "pdf") => {
-    // The element that wraps your resume preview
-    const element = document.getElementById("export-area");
-    if (!element) {
-      console.error("export-area not found");
-      return;
-    }
+  if (!saveRes.ok) {
+    alert("Failed to save resume")
+    return
+  }
 
-    // Lazy import to avoid SSR issues in Next.js
-    const html2canvasModule = await import("html2canvas");
-    const html2canvas = html2canvasModule.default;
+  // 2️⃣ Export via Puppeteer
+  const exportRes = await fetch("/api/resume/export", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ format }), // "png" | "pdf"
+  })
 
-    // Higher scale → sharper export
-    const scale = window.devicePixelRatio > 1 ? window.devicePixelRatio : 2;
+  if (!exportRes.ok) {
+    alert("Export failed")
+    return
+  }
 
-    // Make sure element is fully visible (just in case)
-    element.scrollIntoView({ block: "center", behavior: "instant" as ScrollBehavior });
+  const blob = await exportRes.blob()
+  const url = URL.createObjectURL(blob)
 
-    const canvas = await html2canvas(element, {
-      scale,
-      useCORS: true,
-      backgroundColor: "#ffffff",
-      logging: false,
-      removeContainer: true,
-      windowWidth: element.scrollWidth,
-      windowHeight: element.scrollHeight,
-    });
+  const a = document.createElement("a")
+  a.href = url
+  a.download = `resume.${format}`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
 
-    const pngDataUrl = canvas.toDataURL("image/png");
+  URL.revokeObjectURL(url)
+}
 
-    // ---- PNG EXPORT ----
-    if (format === "png") {
-      const link = document.createElement("a");
-      link.href = pngDataUrl;
-      link.download = "resume.png";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      return;
-    }
-
-    // ---- PDF EXPORT (no jsPDF) ----
-    if (format === "pdf") {
-      // Open a new tab with only the image, then call print()
-      const printWindow = window.open("", "_blank");
-      if (!printWindow) {
-        alert("Popup blocked. Please allow popups to download the PDF.");
-        return;
-      }
-
-      const html = `
-      <!doctype html>
-      <html>
-        <head>
-          <title>Resume</title>
-          <style>
-            @page { margin: 0; }
-            body {
-              margin: 0;
-              padding: 0;
-              background: #ffffff;
-            }
-            img {
-              width: 100%;
-              height: auto;
-              display: block;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
-          </style>
-        </head>
-        <body>
-          <img src="${pngDataUrl}" />
-          <script>
-            window.onload = function () {
-              window.focus();
-              window.print();
-              setTimeout(function () { window.close(); }, 1000);
-            };
-          </script>
-        </body>
-      </html>
-    `;
-
-      printWindow.document.open();
-      printWindow.document.write(html);
-      printWindow.document.close();
-    }
-  };
-
-  const exportPDF = async () => {
-    const element = document.getElementById("export-area");
-    if (!element) return alert("Resume preview not found");
-
-    const html2pdf = (await import("html2pdf.js")).default;
-
-    const fileName = "resume.pdf";
-
-    const options = {
-      margin: [0, 0, 0, 0],
-      filename: fileName,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: {
-        scale: 2,
-        scrollY: 0,
-        useCORS: true,
-        backgroundColor: null,
-      },
-      jsPDF: {
-        unit: "mm",
-        format: "a4",
-        orientation: "portrait",
-      },
-    };
-
-    html2pdf().set(options).from(element).save();
-  };
 
 
   return (
@@ -989,40 +914,47 @@ export default function EditorClient() {
                           </p>
 
                           <Select
-                            disabled={plan === "FREE" || plan === "BASIC"}
-                            value={atsTemplate}
-                            onValueChange={(value) => {
-                              if (plan === "FREE" || plan === "BASIC") {
-                                setShowTemplateLockModal(true)
-                                return
-                              }
+  disabled={plan === "FREE"}
+  value={atsTemplate}
+  onValueChange={(value) => {
+    if (plan === "FREE") {
+      setShowModal(true)
+      return
+    }
 
-                              // Reset Basic
-                              setBasicTemplate("")
-                              setAtsTemplate(value)
+    if (plan === "BASIC") {
+      setShowTemplateLockModal(true)
+      return
+    }
 
-                              updateStyle("template", "", value)
-                            }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue
-                                placeholder={
-                                  plan === "FREE" || plan === "BASIC"
-                                    ? "Upgrade for ATS templates"
-                                    : "Choose ATS template"
-                                }
-                              />
-                            </SelectTrigger>
+    // Reset Basic template
+    setBasicTemplate("")
+    setAtsTemplate(value)
+    updateStyle("template", "", value)
+  }}
+>
+  <SelectTrigger>
+    <SelectValue
+      placeholder={
+        plan === "FREE"
+          ? "Upgrade for ATS templates"
+          : plan === "BASIC"
+          ? "Upgrade plan to unlock ATS"
+          : "Choose ATS template"
+      }
+    />
+  </SelectTrigger>
 
-                            <SelectContent>
-                              <SelectItem value="executive-pro">Executive Pro</SelectItem>
-                              <SelectItem value="tech-focused">Tech Focused</SelectItem>
-                              <SelectItem value="centered-elegant">Centered Elegant</SelectItem>
-                              <SelectItem value="two-column-modern">Two Column Modern</SelectItem>
-                              <SelectItem value="modern-sidebar">Modern Sidebar</SelectItem>
-                              <SelectItem value="classic-highlight">Classic Highlight</SelectItem>
-                            </SelectContent>
-                          </Select>
+  <SelectContent>
+    <SelectItem value="executive-pro">Executive Pro</SelectItem>
+    <SelectItem value="tech-focused">Tech Focused</SelectItem>
+    <SelectItem value="centered-elegant">Centered Elegant</SelectItem>
+    <SelectItem value="two-column-modern">Two Column Modern</SelectItem>
+    <SelectItem value="modern-sidebar">Modern Sidebar</SelectItem>
+    <SelectItem value="classic-highlight">Classic Highlight</SelectItem>
+  </SelectContent>
+</Select>
+
                         </div>
                       </div>
                     </Card>
@@ -1189,7 +1121,7 @@ export default function EditorClient() {
                             setShowModal(true);
                             return;
                           }
-                          exportPDF();
+                          handleExport("pdf");
                         }}
                         className="flex-col h-auto py-4"
                       >
@@ -1203,7 +1135,7 @@ export default function EditorClient() {
                             setShowModal(true);
                             return;
                           }
-                          exportResume("png");
+                          handleExport("png");
                         }}
                         variant="outline"
                         className="flex-col h-auto py-4"

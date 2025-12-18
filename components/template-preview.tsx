@@ -203,7 +203,7 @@ function ModernMinimalTemplate({
 }) {
   return (
     <Card
-      className="shadow-lg py-0"
+      className="py-0"
       style={{
         padding: styleConfig.spacing,
         background: styleConfig.colors.background,
@@ -433,7 +433,7 @@ function ModernMinimalPhotoTemplate({
 
   return (
     <Card
-      className="shadow-lg py-0"
+      className=" py-0"
       style={{
         padding: styleConfig.spacing,
         background: styleConfig.colors.background,
@@ -664,7 +664,7 @@ function CreativePhotoTemplate({
 
   return (
     <Card
-      className="w-full max-w-2xl mx-auto shadow-lg overflow-hidden py-0"
+      className="w-full max-w-2xl mx-auto  overflow-hidden py-0"
       style={{
         background: styleConfig.colors.background,
         borderRadius: styleConfig.borderRadius,
@@ -754,7 +754,7 @@ function CreativePhotoTemplate({
               </h3>
 
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {data.skills.slice(0, 6).map((skill: string, i: number) => (
+                {data.skills.map((skill: string, i: number) => (
                   <div
                     key={i}
                     style={{
@@ -977,7 +977,7 @@ function ExecutiveProTemplate({
 
   return (
     <Card
-      className="w-full max-w-2xl mx-auto shadow-lg overflow-hidden"
+      className="w-full max-w-2xl mx-auto  overflow-hidden"
       style={{
         background: styleConfig.colors.background,
         borderRadius: styleConfig.borderRadius,
@@ -1343,7 +1343,7 @@ function TechFocusedTemplate({
 
   return (
     <Card
-      className="shadow-lg"
+      className=""
       style={{
         padding: styleConfig.spacing,
         background: styleConfig.colors.background,
@@ -1722,7 +1722,7 @@ function TimelineResumeTemplate({
 
   return (
     <Card
-      className="shadow-lg"
+      className=""
       style={{
         padding: styleConfig.spacing,
         background: styleConfig.colors.background,
@@ -2094,7 +2094,7 @@ function CenteredElegantTemplate({
 
   return (
     <Card
-      className="shadow-lg py-0"
+      className=" py-0"
       style={{
         padding: styleConfig.spacing,
         background: styleConfig.colors.background,
@@ -2395,7 +2395,7 @@ function TwoColumnModernTemplate({
 
   return (
     <Card
-      className="shadow-lg py-0"
+      className=" py-0"
       style={{
         padding: styleConfig.spacing,
         background: styleConfig.colors.background,
@@ -2675,7 +2675,7 @@ function ClassicHighlightTemplate({
 
   return (
     <Card
-      className="shadow-lg py-0"
+      className=" py-0"
       style={{
         padding: styleConfig.spacing,
         background: styleConfig.colors.background,
@@ -2800,7 +2800,7 @@ function ModernSidebarTemplate({
 
   return (
     <Card
-      className="shadow-lg py-0"
+      className=" py-0"
       style={{
         display: "grid",
         gridTemplateColumns: "32% 68%",

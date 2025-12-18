@@ -145,7 +145,7 @@ function EditorGate() {
   const [step, setStep] = useState(0)
   const [isComplete, setIsComplete] = useState(false)
   const [shouldRender, setShouldRender] = useState(false)
-
+  
   useEffect(() => {
     let current = 0
 

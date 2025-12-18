@@ -17,7 +17,6 @@ const handler = NextAuth({
 
   callbacks: {
     async signIn({ user }) {
-      // Create user in DB if not exists
       const { data } = await supabase
         .from("users")
         .select("id")
@@ -34,8 +33,15 @@ const handler = NextAuth({
       return true
     },
 
-    async session({ session }) {
-      // Attach payment status to session
+    // 🔑 READ HEADER HERE (ONLY PLACE IT WORKS)
+    async jwt({ token, req }) {
+      const isPuppeteer = req?.headers?.["x-puppeteer"] === "1"
+
+      token.isPuppeteer = isPuppeteer
+      return token
+    },
+
+    async session({ session, token }) {
       const { data } = await supabase
         .from("users")
         .select("id, has_paid")
@@ -44,6 +50,9 @@ const handler = NextAuth({
 
       session.user.id = data.id
       session.user.hasPaid = data.has_paid
+
+      // 🟢 Attach from token
+      session.user.isPuppeteer = Boolean(token.isPuppeteer)
 
       return session
     },
