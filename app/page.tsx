@@ -173,7 +173,7 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 whileHover={{ scale: 1.05, rotateX: 5 }}
                 className="group relative p-8 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 hover:border-pink-500/50 transition-all duration-300 shadow-lg"
-              >
+            >
                 <div className="absolute inset-0 bg-gradient-to-br from-pink-500/10 to-yellow-400/10 opacity-0 group-hover:opacity-100 rounded-3xl transition-opacity" />
 
                 <motion.div
