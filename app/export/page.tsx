@@ -5,15 +5,8 @@ import { TemplatePreview } from "@/components/template-preview"
 
 export default async function ExportPage() {
   const headersList = headers()
-  const isPuppeteer = headersList.get("x-puppeteer") === "1"
 
   const session = await getServerSession()
-
-  //  DO NOT redirect during puppeteer render
-  if (!session?.user?.email) {
-    if (isPuppeteer) return null
-    throw new Error("Unauthorized")
-  }
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,10 +19,6 @@ export default async function ExportPage() {
     .eq("email", session.user.email)
     .single()
 
-  if (!user) {
-    if (isPuppeteer) return null
-    throw new Error("User not found")
-  }
 
   const { data: resume } = await supabase
     .from("resumes")
@@ -38,11 +27,6 @@ export default async function ExportPage() {
     .order("updated_at", { ascending: false })
     .limit(1)
     .single()
-
-  if (!resume) {
-    if (isPuppeteer) return null
-    throw new Error("Resume not found")
-  }
 
   return (
     <div
