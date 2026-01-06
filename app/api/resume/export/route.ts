@@ -37,7 +37,7 @@ export async function POST(req: Request) {
 
   const page = await browser.newPage()
 
-  // ✅ FORWARD AUTH COOKIES (MOST IMPORTANT)
+  // FORWARD AUTH COOKIES (MOST IMPORTANT)
   await page.setExtraHTTPHeaders({
     cookie: req.headers.get("cookie") || "",
   })
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
   })
 
   const element = await page.waitForSelector("#export-area", {
-    timeout: 20000,
+    timeout: 50000,
   })
 
   if (!element) {

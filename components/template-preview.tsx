@@ -1722,41 +1722,39 @@ function TimelineResumeTemplate({
 
   return (
     <Card
-      className=""
       style={{
-        padding: styleConfig.spacing,
+        padding: 0,
         background: styleConfig.colors.background,
         color: styleConfig.colors.text,
         borderRadius: styleConfig.borderRadius,
         fontFamily: styleConfig.fonts.body,
+        overflow: "hidden",
       }}
     >
-      {/* HEADER */}
+      {/* ================= HEADER BAR ================= */}
       <div
         style={{
+          background: styleConfig.colors.primary,
+          color: styleConfig.colors.background,
+          padding: styleConfig.spacing * 1.5,
           display: "flex",
           alignItems: "center",
           gap: styleConfig.spacing,
-          marginBottom: styleConfig.spacing * 1.5,
         }}
       >
         {styleConfig.showPhoto && (
           <div
             style={{
-              width: 100,
-              height: 100,
+              width: 90,
+              height: 90,
               borderRadius: "50%",
               overflow: "hidden",
-              background: styleConfig.colors.accent + "33",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              background: styleConfig.colors.background,
               flexShrink: 0,
             }}
           >
             <img
               src={data.personal.photo || placeholder}
-              alt="Profile"
               style={{
                 width: "100%",
                 height: "100%",
@@ -1767,318 +1765,207 @@ function TimelineResumeTemplate({
           </div>
         )}
 
-        <div style={{ flex: 1 }}>
+        <div>
           <h1
             style={{
-              fontSize: 32,
+              fontSize: 30,
               fontWeight: 700,
-              color: styleConfig.colors.primary,
               fontFamily: styleConfig.fonts.heading,
-              marginBottom: 8,
             }}
           >
             {data.personal.firstName} {data.personal.lastName}
           </h1>
 
-          <p
-            style={{
-              fontSize: 15,
-              opacity: 0.9,
-              marginBottom: 12,
-            }}
-          >
+          <p style={{ fontSize: 15, opacity: 0.9 }}>
             {data.personal.summary}
           </p>
-
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 14,
-              fontSize: 13,
-            }}
-          >
-            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-              <Mail className="w-4 h-4" color={styleConfig.colors.primary} />
-              {data.personal.email}
-            </div>
-            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-              <Phone className="w-4 h-4" color={styleConfig.colors.primary} />
-              {data.personal.phone}
-            </div>
-            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-              <MapPin className="w-4 h-4" color={styleConfig.colors.primary} />
-              {data.personal.location}
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* SKILLS */}
-      {data.skills.length > 0 && (
-        <div style={{ marginBottom: styleConfig.spacing }}>
-          <h2
-            style={{
-              fontSize: 20,
-              fontWeight: 600,
-              marginBottom: 12,
-              color: styleConfig.colors.primary,
-              fontFamily: styleConfig.fonts.heading,
-            }}
-          >
-            Technical Skills
-          </h2>
+      {/* ================= BODY ================= */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "200px 1fr",
+        }}
+      >
+        {/* ============ LEFT COLUMN ============ */}
+        <aside
+          style={{
+            background: styleConfig.colors.accent + "11",
+            padding: styleConfig.spacing,
+          }}
+        >
+          {/* CONTACT */}
+          <TimelineSection title="Contact" styleConfig={styleConfig}>
+            <InfoLine icon={<Mail size={14} />} text={data.personal.email} />
+            <InfoLine icon={<Phone size={14} />} text={data.personal.phone} />
+            <InfoLine
+              icon={<MapPin size={14} />}
+              text={data.personal.location}
+            />
+          </TimelineSection>
 
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 8,
-            }}
-          >
-            {data.skills.map((skill: string, i: number) => (
-              <span
-                key={i}
-                style={{
-                  background: styleConfig.colors.accent + "22",
-                  color: styleConfig.colors.primary,
-                  borderRadius: 6,
-                  padding: "6px 12px",
-                  fontSize: 13,
-                  fontWeight: 500,
-                }}
-              >
-                {skill}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* EXPERIENCE TIMELINE */}
-      {data.experience.length > 0 && (
-        <div style={{ marginBottom: styleConfig.spacing }}>
-          <h2
-            style={{
-              fontSize: 20,
-              fontWeight: 600,
-              marginBottom: 16,
-              color: styleConfig.colors.primary,
-              fontFamily: styleConfig.fonts.heading,
-            }}
-          >
-            Professional Experience
-          </h2>
-
-          <div style={{ position: "relative" }}>
-            {data.experience.map((exp: any, i: number) => (
-              <div
-                key={i}
-                style={{
-                  borderLeft: `3px solid ${styleConfig.colors.accent}`,
-                  paddingLeft: 20,
-                  marginBottom: 24,
-                  position: "relative",
-                }}
-              >
-                {/* Timeline dot */}
-                <div
-                  style={{
-                    position: "absolute",
-                    left: -7,
-                    top: 4,
-                    width: 12,
-                    height: 12,
-                    borderRadius: "50%",
-                    background: styleConfig.colors.primary,
-                    border: `2px solid ${styleConfig.colors.background}`,
-                  }}
-                />
-
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                    marginBottom: 6,
-                  }}
-                >
-                  <div>
-                    <h3
-                      style={{
-                        fontWeight: 600,
-                        fontSize: 16,
-                        color: styleConfig.colors.primary,
-                      }}
-                    >
-                      {exp.position}
-                    </h3>
-                    <div
-                      style={{
-                        fontSize: 14,
-                        color: styleConfig.colors.secondary,
-                        fontWeight: 500,
-                      }}
-                    >
-                      {exp.company}
-                    </div>
-                  </div>
-
-                  <span
-                    style={{
-                      fontSize: 12,
-                      padding: "4px 10px",
-                      borderRadius: 4,
-                      background: styleConfig.colors.accent + "22",
-                      color: styleConfig.colors.primary,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {formatDate(exp.startDate)} -{" "}
-                    {exp.current ? "Present" : formatDate(exp.endDate)}
-                  </span>
-                </div>
-
-                <p style={{ fontSize: 14, lineHeight: 1.6 }}>
-                  {exp.description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* EDUCATION */}
-      {data.education.length > 0 && (
-        <div style={{ marginBottom: styleConfig.spacing }}>
-          <h2
-            style={{
-              fontSize: 20,
-              fontWeight: 600,
-              marginBottom: 16,
-              color: styleConfig.colors.primary,
-              fontFamily: styleConfig.fonts.heading,
-            }}
-          >
-            Education
-          </h2>
-
-          <div style={{ position: "relative" }}>
-            {data.education.map((edu: any, idx: number) => (
-              <div
-                key={idx}
-                style={{
-                  borderLeft: `3px solid ${styleConfig.colors.accent}`,
-                  paddingLeft: 20,
-                  marginBottom: 20,
-                  position: "relative",
-                }}
-              >
-                {/* Timeline dot */}
-                <div
-                  style={{
-                    position: "absolute",
-                    left: -7,
-                    top: 4,
-                    width: 12,
-                    height: 12,
-                    borderRadius: "50%",
-                    background: styleConfig.colors.primary,
-                    border: `2px solid ${styleConfig.colors.background}`,
-                  }}
-                />
-
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                  }}
-                >
-                  <div>
-                    <strong
-                      style={{
-                        color: styleConfig.colors.primary,
-                        fontSize: 15,
-                      }}
-                    >
-                      {edu.degree} in {edu.field}
-                    </strong>
-                    <p style={{ fontSize: 14 }}>{edu.school}</p>
-                  </div>
-
-                  <span
-                    style={{
-                      fontSize: 13,
-                      background: styleConfig.colors.accent + "22",
-                      padding: "4px 10px",
-                      borderRadius: 6,
-                      color: styleConfig.colors.primary,
-                    }}
-                  >
-                    {formatDate(edu.graduationDate)}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* CUSTOM SECTIONS */}
-      {data.customSections &&
-        data.customSections.length > 0 &&
-        data.customSections.map((section: any) => (
-          <div key={section.id} style={{ marginBottom: styleConfig.spacing }}>
-            <h2
-              style={{
-                fontSize: 20,
-                fontWeight: 600,
-                marginBottom: 16,
-                color: styleConfig.colors.primary,
-                fontFamily: styleConfig.fonts.heading,
-              }}
-            >
-              {section.title}
-            </h2>
-
-            {/* TEXT SECTION */}
-            {section.type === "text" && (
-              <p
-                style={{
-                  fontSize: 14,
-                  lineHeight: 1.6,
-                  color: styleConfig.colors.text,
-                  whiteSpace: "pre-line",
-                }}
-              >
-                {section.content}
-              </p>
-            )}
-
-            {/* LIST SECTION */}
-            {section.type === "list" && (
-              <ul
-                style={{
-                  paddingLeft: 20,
-                  lineHeight: 1.6,
-                  color: styleConfig.colors.text,
-                  fontSize: 14,
-                }}
-              >
-                {section.content
-                  .split("\n")
-                  .filter((i: string) => i.trim() !== "")
-                  .map((item: string, idx: number) => (
-                    <li key={idx} style={{ marginBottom: 6 }}>
-                      {item}
-                    </li>
-                  ))}
+          {/* SKILLS */}
+          {data.skills.length > 0 && (
+            <TimelineSection title="Skills" styleConfig={styleConfig}>
+              <ul style={{ paddingLeft: 16 }}>
+                {data.skills.map((skill: string, i: number) => (
+                  <li key={i} style={{ marginBottom: 6 }}>
+                    {skill}
+                  </li>
+                ))}
               </ul>
-            )}
-          </div>
-        ))}
+            </TimelineSection>
+          )}
+        </aside>
+
+        {/* ============ RIGHT COLUMN ============ */}
+        <main style={{ padding: styleConfig.spacing * 1.5 }}>
+          {/* EXPERIENCE */}
+          {data.experience.length > 0 && (
+            <MainSection title="Work Experience" styleConfig={styleConfig}>
+              {data.experience.map((exp: any, i: number) => (
+                <TimelineBlock
+                  key={i}
+                  title={exp.company}
+                  subtitle={exp.position}
+                  date={`${formatDate(exp.startDate)} – ${
+                    exp.current ? "Present" : formatDate(exp.endDate)
+                  }`}
+                  description={exp.description}
+                  styleConfig={styleConfig}
+                />
+              ))}
+            </MainSection>
+          )}
+
+          {/* EDUCATION */}
+          {data.education.length > 0 && (
+            <MainSection title="Education" styleConfig={styleConfig}>
+              {data.education.map((edu: any, i: number) => (
+                <TimelineBlock
+                  key={i}
+                  title={`${edu.degree} in ${edu.field}`}
+                  subtitle={edu.school}
+                  date={formatDate(edu.graduationDate)}
+                  description={edu.gpa ? `GPA: ${edu.gpa}` : ""}
+                  styleConfig={styleConfig}
+                />
+              ))}
+            </MainSection>
+          )}
+        </main>
+      </div>
     </Card>
+  );
+}
+
+/* ================= SMALL HELPERS ================= */
+
+function TimelineSection({ title, children, styleConfig }: any) {
+  return (
+    <div style={{ marginBottom: styleConfig.spacing }}>
+      <h3
+        style={{
+          fontSize: 15,
+          fontWeight: 600,
+          marginBottom: 10,
+          color: styleConfig.colors.primary,
+        }}
+      >
+        {title}
+      </h3>
+      {children}
+    </div>
+  );
+}
+
+function MainSection({ title, children, styleConfig }: any) {
+  return (
+    <div style={{ marginBottom: styleConfig.spacing * 1.5 }}>
+      <h2
+        style={{
+          fontSize: 20,
+          fontWeight: 600,
+          marginBottom: 16,
+          color: styleConfig.colors.primary,
+          fontFamily: styleConfig.fonts.heading,
+          borderBottom: `2px solid ${styleConfig.colors.accent}`,
+          paddingBottom: 6,
+        }}
+      >
+        {title}
+      </h2>
+      {children}
+    </div>
+  );
+}
+
+function TimelineBlock({
+  title,
+  subtitle,
+  date,
+  description,
+  styleConfig,
+}: any) {
+  return (
+    <div
+      style={{
+        position: "relative",
+        paddingLeft: 24,
+        marginBottom: 24,
+        borderLeft: `3px solid ${styleConfig.colors.accent}`,
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          left: -7,
+          top: 4,
+          width: 12,
+          height: 12,
+          borderRadius: "50%",
+          background: styleConfig.colors.primary,
+        }}
+      />
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginBottom: 6,
+        }}
+      >
+        <div>
+          <strong>{title}</strong>
+          <div style={{ fontSize: 14, opacity: 0.8 }}>{subtitle}</div>
+        </div>
+
+        <span style={{ fontSize: 12 }}>{date}</span>
+      </div>
+
+      {description && (
+        <p style={{ fontSize: 14, lineHeight: 1.6 }}>{description}</p>
+      )}
+    </div>
+  );
+}
+
+function InfoLine({ icon, text }: any) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        gap: 8,
+        alignItems: "center",
+        marginBottom: 8,
+        fontSize: 13,
+      }}
+    >
+      {icon}
+      <span>{text}</span>
+    </div>
   );
 }
 
