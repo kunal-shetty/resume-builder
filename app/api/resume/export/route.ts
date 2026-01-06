@@ -1,5 +1,5 @@
 import puppeteer from "puppeteer-core"
-import chromium from "@sparticuz/chromium"
+import chromium from "@sparticuz/chromium-min"
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import crypto from "crypto"
