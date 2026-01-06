@@ -1,8 +1,6 @@
-import puppeteer from "puppeteer-core"
-import chromium from "@sparticuz/chromium-min"
+import { chromium } from "playwright-core"
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
-import crypto from "crypto"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -11,15 +9,16 @@ export async function POST(req: Request) {
   console.log("🚀 EXPORT STARTED")
 
   try {
+    // ---------------- AUTH ----------------
     console.log("🔐 Fetching session...")
     const session = await getServerSession()
-    console.log("✅ Session:", session?.user?.email)
 
     if (!session?.user?.email) {
-      console.log("❌ Unauthorized request")
+      console.log("❌ Unauthorized")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    // ---------------- BODY ----------------
     const { format } = await req.json()
     console.log("📦 Format:", format)
 
@@ -27,64 +26,70 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid format" }, { status: 400 })
     }
 
-
-    console.log("🌍 Environment:", process.env.NODE_ENV)
-
-    console.log("🧠 Launching browser...")
-    const browser = await puppeteer.launch(
-        {
-            args: chromium.args,
-            executablePath: await chromium.executablePath(),
-            headless: chromium.headless,
-          }
-    )
+    // ---------------- BROWSER ----------------
+    console.log("🧠 Launching Playwright Chromium...")
+    const browser = await chromium.launch({
+      headless: true,
+    })
 
     console.log("🧭 Browser launched")
 
-    const page = await browser.newPage()
-
-    await page.setExtraHTTPHeaders({
-      cookie: req.headers.get("cookie") || "",
-      "x-puppeteer": "1",
+    const context = await browser.newContext({
+      viewport: { width: 794, height: 1123 },
     })
 
-    await page.setViewport({
-      width: 794,
-      height: 1123,
-      deviceScaleFactor: 2,
+    const page = await context.newPage()
+
+    // Forward auth cookies
+    await page.setExtraHTTPHeaders({
+      cookie: req.headers.get("cookie") || "",
+      "x-puppeteer": "1", // reused flag
     })
 
     const url = `${process.env.NEXT_PUBLIC_APP_URL}/export`
     console.log("🌐 Navigating to:", url)
 
-    await page.goto(url, { waitUntil: "networkidle0", timeout: 60000 })
+    await page.goto(url, {
+      waitUntil: "networkidle",
+      timeout: 60000,
+    })
 
     console.log("🔍 Waiting for #export-area")
-    const element = await page.waitForSelector("#export-area", { timeout: 30000 })
+    const element = await page.waitForSelector("#export-area", {
+      timeout: 30000,
+    })
 
-    if (!element) throw new Error("Export area not found")
+    if (!element) {
+      throw new Error("Export area not found")
+    }
 
     let buffer: Buffer
     let filename: string
     let contentType: string
 
+    // ---------------- EXPORT ----------------
     if (format === "png") {
-      buffer = (await element.screenshot({ type: "png" })) as Buffer
+      console.log("🖼 Taking PNG screenshot")
+      buffer = await element.screenshot()
       filename = "resume.png"
       contentType = "image/png"
     } else {
+      console.log("📄 Generating PDF")
       buffer = await page.pdf({
         format: "A4",
         printBackground: true,
-        preferCSSPageSize: true,
-        margin: { top: "0mm", right: "0mm", bottom: "0mm", left: "0mm" },
+        margin: {
+          top: "0mm",
+          right: "0mm",
+          bottom: "0mm",
+          left: "0mm",
+        },
       })
       filename = "resume.pdf"
       contentType = "application/pdf"
     }
 
     await browser.close()
-
     console.log("🎉 EXPORT SUCCESS")
 
     return new NextResponse(buffer, {
@@ -93,9 +98,16 @@ export async function POST(req: Request) {
         "Content-Disposition": `attachment; filename="${filename}"`,
       },
     })
-  } catch (err) {
+  } catch (err: any) {
     console.error("🔥 EXPORT FAILED")
     console.error(err)
-    return NextResponse.json({ error: "Export failed" }, { status: 500 })
+
+    return NextResponse.json(
+      {
+        error: "Export failed",
+        message: err?.message,
+      },
+      { status: 500 }
+    )
   }
 }
