@@ -27,20 +27,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid format" }, { status: 400 })
     }
 
-    const isProd = process.env.NODE_ENV === "production"
 
     console.log("🌍 Environment:", process.env.NODE_ENV)
 
     console.log("🧠 Launching browser...")
     const browser = await puppeteer.launch(
-      isProd
-        ? {
+        {
             args: chromium.args,
             executablePath: await chromium.executablePath(),
             headless: chromium.headless,
-          }
-        : {
-            headless: true,
           }
     )
 
