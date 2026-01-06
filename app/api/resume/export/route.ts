@@ -1,4 +1,5 @@
-import puppeteer from "puppeteer"
+import puppeteer from "puppeteer-core"
+import chromium from "@sparticuz/chromium"
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import crypto from "crypto"
@@ -17,7 +18,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid format" }, { status: 400 })
   }
 
-  // 🔐 SET export_token (PUPPETEER ACCESS KEY)
+  //  SET export_token (PUPPETEER ACCESS KEY)
   const exportToken = crypto.randomUUID()
 
   const response = new NextResponse()
@@ -27,13 +28,14 @@ export async function POST(req: Request) {
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
     maxAge: 30, // seconds
-    path: "/export",
+    path: "/",
   })
 
   const browser = await puppeteer.launch({
-    headless: "new",
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  })
+  args: chromium.args,
+  executablePath: await chromium.executablePath(),
+  headless: chromium.headless,
+})
 
   const page = await browser.newPage()
 

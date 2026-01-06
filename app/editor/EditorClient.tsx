@@ -26,6 +26,7 @@ import {
   Undo,
   Redo,
   Zap,
+  Loader2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { TemplatePreview } from "@/components/template-preview"
@@ -148,9 +149,10 @@ export default function EditorClient() {
   }, [resumeData, hydrated])
 
 
+  const [isExporting, setIsExporting] = useState<"pdf" | "png" | null>(null)
 
   const [isBlurred, setIsBlurred] = useState(true)
-  const [plan, setPlan] = useState<"FREE" | "BASIC" | "ADVANCED" | "PREMIUM">("FREE")
+  const [plan, setPlan] = useState<"" | "BASIC" | "ADVANCED" | "PREMIUM">("")
 
   useEffect(() => {
     const raw = localStorage.getItem("rb_user")
@@ -161,12 +163,12 @@ export default function EditorClient() {
 
       // Default state
       setIsBlurred(true)
-      setPlan("FREE")
+      setPlan("")
 
       // User never paid
-      if (!user.hasPaid || user.plan === "FREE") {
+      if (!user.hasPaid || user.plan) {
         setIsBlurred(true)
-        setPlan("FREE")
+        setPlan("")
         return
       }
 
@@ -431,47 +433,57 @@ export default function EditorClient() {
   };
 
 const handleExport = async (format: "png" | "pdf" = "png") => {
-  // 1️⃣ Save resume first
-  const saveRes = await fetch("/api/resume/save", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      templateId: resumeStyle.template,
-      styleConfig: resumeStyle,
-      data: resumeData,
-      title: "My Resume",
-    }),
-  })
+  if (isExporting) return // 🚫 block multiple clicks
 
-  if (!saveRes.ok) {
-    alert("Failed to save resume")
-    return
+  setIsExporting(format)
+
+  try {
+    // 1️⃣ Save resume first
+    const saveRes = await fetch("/api/resume/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        templateId: resumeStyle.template,
+        styleConfig: resumeStyle,
+        data: resumeData,
+        title: "My Resume",
+      }),
+    })
+
+    if (!saveRes.ok) {
+      throw new Error("Save failed")
+    }
+
+    // 2️⃣ Export via Puppeteer
+    const exportRes = await fetch("/api/resume/export", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ format }),
+    })
+
+    if (!exportRes.ok) {
+      throw new Error("Export failed")
+    }
+
+    const blob = await exportRes.blob()
+    const url = URL.createObjectURL(blob)
+
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `resume.${format}`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+
+    URL.revokeObjectURL(url)
+
+  } catch (err) {
+  
+  } finally {
+    setIsExporting(null) // 🔓 unlock buttons ALWAYS
   }
-
-  // 2️⃣ Export via Puppeteer
-  const exportRes = await fetch("/api/resume/export", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ format }), // "png" | "pdf"
-  })
-
-  if (!exportRes.ok) {
-    alert("Export failed")
-    return
-  }
-
-  const blob = await exportRes.blob()
-  const url = URL.createObjectURL(blob)
-
-  const a = document.createElement("a")
-  a.href = url
-  a.download = `resume.${format}`
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-
-  URL.revokeObjectURL(url)
 }
+
 
 
 
@@ -914,10 +926,10 @@ const handleExport = async (format: "png" | "pdf" = "png") => {
                           </p>
 
                           <Select
-  disabled={plan === "FREE"}
+  disabled={plan}
   value={atsTemplate}
   onValueChange={(value) => {
-    if (plan === "FREE") {
+    if (plan) {
       setShowModal(true)
       return
     }
@@ -936,7 +948,7 @@ const handleExport = async (format: "png" | "pdf" = "png") => {
   <SelectTrigger>
     <SelectValue
       placeholder={
-        plan === "FREE"
+        plan
           ? "Upgrade for ATS templates"
           : plan === "BASIC"
           ? "Upgrade plan to unlock ATS"
@@ -1113,39 +1125,50 @@ const handleExport = async (format: "png" | "pdf" = "png") => {
 
                   {/* Export Options */}
                   <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50">
-                    <h3 className="text-lg font-semibold mb-4">Export Options</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Button
-                        onClick={() => {
-                          if (!plan) {
-                            setShowModal(true);
-                            return;
-                          }
-                          handleExport("pdf");
-                        }}
-                        className="flex-col h-auto py-4"
-                      >
-                        <Download className="w-6 h-6 mb-2" />
-                        PDF
-                      </Button>
+  <h3 className="text-lg font-semibold mb-4">Export Options</h3>
 
-                      <Button
-                        onClick={() => {
-                          if (!plan) {
-                            setShowModal(true);
-                            return;
-                          }
-                          handleExport("png");
-                        }}
-                        variant="outline"
-                        className="flex-col h-auto py-4"
-                      >
-                        <Download className="w-6 h-6 mb-2" />
-                        PNG
-                      </Button>
+  <div className="grid grid-cols-2 gap-3">
+    {/* PDF */}
+    <Button
+      disabled={!!isExporting}
+      onClick={() => handleExport("pdf")}
+      className="flex-col h-auto py-4"
+    >
+      {isExporting === "pdf" ? (
+        <>
+          <Loader2 className="w-5 h-5 mb-2 animate-spin" />
+          Exporting…
+        </>
+      ) : (
+        <>
+          <Download className="w-6 h-6 mb-2" />
+          PDF
+        </>
+      )}
+    </Button>
 
-                    </div>
-                  </Card>
+    {/* PNG */}
+    <Button
+      disabled={!!isExporting}
+      onClick={() => handleExport("png")}
+      variant="outline"
+      className="flex-col h-auto py-4"
+    >
+      {isExporting === "png" ? (
+        <>
+          <Loader2 className="w-5 h-5 mb-2 animate-spin" />
+          Exporting…
+        </>
+      ) : (
+        <>
+          <Download className="w-6 h-6 mb-2" />
+          PNG
+        </>
+      )}
+    </Button>
+  </div>
+</Card>
+
                 </TabsContent>
               </Tabs>
             </div>
