@@ -1,6 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import TemplateThumbnail from "@/components/TemplateThumbnail"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -13,7 +16,7 @@ interface Template {
   name: string
   category: string[]
   hasPhoto: boolean
-  isPremium: boolean
+  ats: boolean
   rating: number
   downloads: string
   preview: string
@@ -28,7 +31,7 @@ const templates: Template[] = [
     name: "Modern Minimal",
     category: ["Professional", "Modern", "Traditional"],
     hasPhoto: false,
-    isPremium: false,
+    ats: false,
     rating: 3.9,
     downloads: "18.2K",
     preview: "/resumes/modern-minimal.png",
@@ -40,7 +43,7 @@ const templates: Template[] = [
     name: "Creative Photo",
     category: ["Creative", "Modern"],
     hasPhoto: false,
-    isPremium: false,
+    ats: false,
     rating: 4.7,
     downloads: "12.4K",
     preview: "/resumes/creative-photo.png",
@@ -52,7 +55,7 @@ const templates: Template[] = [
     name: "Timeline Resume",
     category: ["Modern", "Professional"],
     hasPhoto: false,
-    isPremium: false,
+    ats: false,
     rating: 4.6,
     downloads: "9.1K",
     preview: "/resumes/timeline.png",
@@ -64,7 +67,7 @@ const templates: Template[] = [
     name: "Creative Card",
     category: ["Creative", "Modern"],
     hasPhoto: false,
-    isPremium: false,
+    ats: false,
     rating: 4.5,
     downloads: "7.8K",
     preview: "/resumes/creative-card.png",
@@ -78,7 +81,7 @@ const templates: Template[] = [
     name: "Executive Pro (ATS)",
     category: ["Executive", "Professional", "Traditional"],
     hasPhoto: false,
-    isPremium: true,
+    ats: true,
     rating: 5.0,
     downloads: "21.3K",
     preview: "/resumes/executive-pro.png",
@@ -90,7 +93,7 @@ const templates: Template[] = [
     name: "Tech Focused (ATS)",
     category: ["Technology", "Professional", "Modern"],
     hasPhoto: false,
-    isPremium: true,
+    ats: true,
     rating: 4.9,
     downloads: "19.6K",
     preview: "/resumes/tech-focused.png",
@@ -102,7 +105,7 @@ const templates: Template[] = [
     name: "Centered Elegant (ATS)",
     category: ["Professional", "Executive", "Traditional"],
     hasPhoto: false,
-    isPremium: true,
+    ats: true,
     rating: 4.8,
     downloads: "14.2K",
     preview: "/resumes/centered-elegant.png",
@@ -114,7 +117,7 @@ const templates: Template[] = [
     name: "Two Column Modern (ATS)",
     category: ["Modern", "Professional", "Technology"],
     hasPhoto: false,
-    isPremium: true,
+    ats: true,
     rating: 4.8,
     downloads: "16.9K",
     preview: "/resumes/two-column.png",
@@ -126,7 +129,7 @@ const templates: Template[] = [
     name: "Modern Sidebar (ATS)",
     category: ["Modern", "Professional", "Executive"],
     hasPhoto: false,
-    isPremium: true,
+    ats: true,
     rating: 4.7,
     downloads: "13.5K",
     preview: "/resumes/modern-sidebar.png",
@@ -138,7 +141,7 @@ const templates: Template[] = [
     name: "Classic Highlight (ATS)",
     category: ["Traditional", "Professional", "Executive"],
     hasPhoto: false,
-    isPremium: true,
+    ats: true,
     rating: 4.6,
     downloads: "11.8K",
     preview: "/resumes/classic-highlight.png",
@@ -200,13 +203,11 @@ export default function TemplatesPage() {
 })
 
 
+  const router = useRouter()
+
   const handleSelectTemplate = (template: Template) => {
     setSelectedTemplate(template)
-    // Navigate to editor with selected template
-    
-    setTimeout(() => {
-      window.location.href = `/editor?template=${template.id}`
-    }, 500)
+    router.push(`/editor?template=${template.id}`)
   }
 
   return (
@@ -216,13 +217,15 @@ export default function TemplatesPage() {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm" onClick={() => window.history.back()}>
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Home
+                </Link>
               </Button>
               <div>
                 <h1 className="text-2xl font-bold">Choose Your Template</h1>
-                <p className="text-sm text-muted-foreground">Select from our collection of professional templates</p>
+                <p className="text-sm text-muted-foreground">All templates are free. Your content carries over when you switch.</p>
               </div>
             </div>
             <Badge variant="secondary" className="px-3 py-1">
@@ -273,13 +276,8 @@ export default function TemplatesPage() {
       )}
     >
       {/* ================= Template Preview ================= */}
-      <div className="relative aspect-[4/5] overflow-hidden rounded-t-lg">
-        {/* Image */}
-        <img
-          src={template.preview || "/placeholder.svg"}
-          alt={template.name}
-          className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
-        />
+      <div className="relative aspect-[210/297] overflow-hidden rounded-t-lg border-b">
+        <TemplateThumbnail templateId={template.id} />
 
         {/* Hover Overlay */}
         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end z-10">
@@ -289,16 +287,16 @@ export default function TemplatesPage() {
               className="w-full bg-white/20 backdrop-blur-sm text-white border-white/30 hover:bg-white/30"
             >
               <Eye className="w-4 h-4 mr-2" />
-              Preview
+              Use this template
             </Button>
           </div>
         </div>
 
         {/* Premium Badge */}
-        {template.isPremium && (
+        {template.ats && (
           <div className="absolute top-2 left-2 z-20">
-            <Badge className="bg-accent text-accent-foreground text-[10px] px-2 py-0.5 shadow-sm">
-              Premium
+            <Badge className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 shadow-sm">
+              ATS-friendly
             </Badge>
           </div>
         )}
@@ -356,7 +354,7 @@ export default function TemplatesPage() {
             handleSelectTemplate(template)
           }}
         >
-          {template.isPremium ? "Upgrade & Use" : "Use Template"}
+          Use Template
         </Button>
       </div>
     </Card>
