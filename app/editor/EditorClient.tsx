@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useSearchParams } from "next/navigation"
+import { useCallback, useEffect, useRef, useState } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -13,694 +13,633 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowUp,
+  Check,
+  ChevronDown,
   Download,
   Eye,
   EyeOff,
-  Palette,
-  Type,
+  FileJson,
+  ImageIcon,
   Layout,
-  Plus,
-  Trash2,
-  GripVertical,
-  Save,
-  Undo,
-  Redo,
-  Zap,
   Loader2,
+  Palette,
+  Plus,
+  Redo,
+  RotateCcw,
+  Sparkles,
+  Trash2,
+  Type,
+  Undo,
+  Upload,
+  Wand2,
+  X,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { TemplatePreview } from "@/components/template-preview"
-import type { MutableRefObject } from "react";
-import { useUserSync } from "@/hooks/useUserSync"
-import GeneralToast from "@/components/Toast"
+import { useToast } from "@/hooks/use-toast"
+import { ResumePreview, type ResumePreviewHandle } from "@/components/ResumePreview"
+import AIPanel from "@/components/editor/AIPanel"
+import { callAI } from "@/lib/ai-client"
+import { exportResume, googleFontsHref } from "@/lib/resume-export"
+import {
+  FONTS,
+  TEMPLATES,
+  defaultStyle,
+  emptyResume,
+  isValidTemplate,
+  loadResume,
+  loadStyle,
+  newId,
+  normalizeResume,
+  normalizeStyle,
+  resizeImage,
+  resumeToText,
+  saveResume,
+  saveStyle,
+  type ResumeData,
+  type ResumeStyle,
+} from "@/lib/resume"
 
-interface ResumeData {
-  personal: {
-    firstName: string
-    lastName: string
-    email: string
-    phone: string
-    location: string
-    summary: string
-    photo?: string
-  }
-  experience: Array<{
-    id: string
-    company: string
-    position: string
-    startDate: string
-    endDate: string
-    current: boolean
-    description: string
-  }>
-  education: Array<{
-    id: string
-    school: string
-    degree: string
-    field: string
-    graduationDate: string
-    gpa?: string
-  }>
-  skills: string[]
-  customSections: Array<{
-    id: string
-    title: string
-    content: string
-    type: "text" | "list"
-  }>
+interface Snapshot {
+  data: ResumeData
+  style: ResumeStyle
 }
 
-interface ResumeStyle {
-  template: string
-  colors: {
-    primary: string
-    secondary: string
-    accent: string
-    text: string
-    background: string
-  }
-  fonts: {
-    heading: string
-    body: string
-  }
-  spacing: number
-  borderRadius: number
-  showPhoto: boolean
+interface History {
+  past: Snapshot[]
+  present: Snapshot
+  future: Snapshot[]
 }
+
+const COALESCE_MS = 800
+const MAX_HISTORY = 100
+const JOB_KEY = "resume-job-description"
+
+const COLOR_PRESETS = [
+  { name: "Slate", primary: "#1f2937", secondary: "#8b5cf6", accent: "#3b82f6", text: "#374151" },
+  { name: "Navy", primary: "#1e3a8a", secondary: "#2563eb", accent: "#60a5fa", text: "#1f2937" },
+  { name: "Emerald", primary: "#064e3b", secondary: "#059669", accent: "#34d399", text: "#1f2937" },
+  { name: "Burgundy", primary: "#7f1d1d", secondary: "#b91c1c", accent: "#f87171", text: "#292524" },
+  { name: "Orange", primary: "#7c2d12", secondary: "#ea580c", accent: "#fb923c", text: "#292524" },
+  { name: "Mono", primary: "#000000", secondary: "#525252", accent: "#a3a3a3", text: "#262626" },
+]
 
 export default function EditorClient() {
-  useUserSync();
-  const [showToast, setShowToast] = useState(false)
-  const [toastPayload, setToastPayload] = useState<{
-    variant: "success" | "error" | "warning" | "info"
-    title: string
-    description: string
-  } | null>(null)
+  const { toast } = useToast()
+  const previewRef = useRef<ResumePreviewHandle>(null)
+  const photoInputRef = useRef<HTMLInputElement>(null)
+  const restoreInputRef = useRef<HTMLInputElement>(null)
 
-  const [resumeData, setResumeData] = useState<ResumeData>({
-    personal: {
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      location: "",
-      summary: "",
-    },
-    experience: [],
-    education: [],
-    skills: [],
-    customSections: [],
+  const [history, setHistory] = useState<History>({
+    past: [],
+    present: { data: emptyResume(), style: defaultStyle() },
+    future: [],
   })
-
+  const lastCommit = useRef(0)
   const [hydrated, setHydrated] = useState(false)
+  const saveWarned = useRef(false)
 
-  useEffect(() => {
-    const saved = localStorage.getItem("resume-data")
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        setResumeData({
-          personal: {
-            firstName: parsed.personal?.firstName || "",
-            lastName: parsed.personal?.lastName || "",
-            email: parsed.personal?.email || "",
-            phone: parsed.personal?.phone || "",
-            location: parsed.personal?.location || "",
-            summary: parsed.personal?.summary || "",
-            photo: parsed.personal?.photo || "",
-          },
-          experience: parsed.experience || [],
-          education: parsed.education || [],
-          skills: parsed.skills || [],
-          customSections: parsed.customSections || [],
-        })
-      } catch (e) {
-        console.error("Error loading saved data:", e)
-      }
-    }
-
-    setHydrated(true) // ✅ mark hydration complete
-  }, [])
-
-  useEffect(() => {
-    if (!hydrated) return // 🚨 critical guard
-
-    localStorage.setItem("resume-data", JSON.stringify(resumeData))
-  }, [resumeData, hydrated])
-
-
-  const [isExporting, setIsExporting] = useState<"pdf" | "png" | null>(null)
-
-  const [isBlurred, setIsBlurred] = useState(true)
-  const [plan, setPlan] = useState<"" | "BASIC" | "ADVANCED" | "PREMIUM">("")
-
-  useEffect(() => {
-    const raw = localStorage.getItem("rb_user")
-    if (!raw) return
-
-    try {
-      const user = JSON.parse(raw)
-
-      // Default state
-      setIsBlurred(true)
-      setPlan("")
-
-      // User never paid
-      if (!user.hasPaid || user.plan) {
-        setIsBlurred(true)
-        setPlan("")
-        return
-      }
-
-      // Paid user → unlock based on plan
-      setIsBlurred(false)
-      setPlan(user.plan) // BASIC | ADVANCED | PREMIUM
-      setShowModal(false)
-
-    } catch (err) {
-      console.error("Failed to parse rb_user", err)
-    }
-  }, [])
-
-  const [showModal, setShowModal] = useState(false);
-  const [showTemplateLockModal, setShowTemplateLockModal] = useState(false);
-
-  const [basicTemplate, setBasicTemplate] = useState("")
-  const [atsTemplate, setAtsTemplate] = useState("")
-
-  const BASIC_TEMPLATES = [
-    { id: "modern-minimal", label: "Modern Minimal" },
-    { id: "creative-photo", label: "Creative Photo" },
-    { id: "timeline", label: "Timeline Resume" },
-    { id: "creative-card", label: "Creative Card" },
-  ]
-
-  const ATS_TEMPLATES = [
-    { id: "executive-pro", label: "Executive Pro (ATS)" },
-    { id: "tech-focused", label: "Tech Focused (ATS)" },
-    { id: "centered-elegant", label: "Centered Elegant (ATS)" },
-    { id: "two-column-modern", label: "Two Column Modern (ATS)" },
-    { id: "modern-sidebar", label: "Modern Sidebar (ATS)" },
-    { id: "classic-highlight", label: "Classic Highlight (ATS)" },
-  ]
-
-  const hasAtsAccess = plan === "ADVANCED" || plan === "PREMIUM"
-
-  const searchParams = useSearchParams()
-  const templateFromQuery = searchParams.get("template")
-
-  const [resumeStyle, setResumeStyle] = useState<ResumeStyle>({
-    template: "modern-minimal", // fallback
-    colors: {
-      primary: "#1f2937",
-      secondary: "#8b5cf6",
-      accent: "#3b82f6",
-      text: "#374151",
-      background: "#ffffff",
-    },
-    fonts: {
-      heading: "Inter",
-      body: "Inter",
-    },
-    spacing: 16,
-    borderRadius: 8,
-    showPhoto: false,
-  })
-
-  useEffect(() => {
-    if (!templateFromQuery) return
-
-    setResumeStyle((prev) => ({
-      ...prev,
-      template: templateFromQuery,
-    }))
-  }, [templateFromQuery])
-
+  const { data, style } = history.present
 
   const [activeTab, setActiveTab] = useState("content")
-  const [previewMode, setPreviewMode] = useState(false)
-  const [history, setHistory] = useState<any[]>([])
-  const [historyIndex, setHistoryIndex] = useState(-1)
+  const [previewOnly, setPreviewOnly] = useState(false)
+  const [exporting, setExporting] = useState<"pdf" | "png" | null>(null)
+  const [jobDescription, setJobDescription] = useState("")
+  const [aiBusy, setAiBusy] = useState<string | null>(null)
+  const [skillInput, setSkillInput] = useState("")
+  const [suggestedSkills, setSuggestedSkills] = useState<string[]>([])
 
-  // Save to history for undo/redo
-  const saveToHistory = () => {
-    const newHistory = history.slice(0, historyIndex + 1)
-    newHistory.push({ data: resumeData, style: resumeStyle })
-    setHistory(newHistory)
-    setHistoryIndex(newHistory.length - 1)
-  }
+  // ---------- Load / persist ----------
 
-  const undo = () => {
-    if (historyIndex > 0) {
-      const prevState = history[historyIndex - 1]
-      setResumeData(prevState.data)
-      setResumeStyle(prevState.style)
-      setHistoryIndex(historyIndex - 1)
+  useEffect(() => {
+    const loaded = { data: loadResume(), style: loadStyle() }
+    const fromQuery = new URLSearchParams(window.location.search).get("template")
+    if (isValidTemplate(fromQuery)) {
+      loaded.style = { ...loaded.style, template: fromQuery }
+      // Drop the param so a later reload keeps the user's in-editor choice.
+      window.history.replaceState(null, "", "/editor")
     }
-  }
+    setHistory({ past: [], present: loaded, future: [] })
+    try {
+      setJobDescription(localStorage.getItem(JOB_KEY) || "")
+    } catch {}
+    setHydrated(true)
+  }, [])
 
-  const redo = () => {
-    if (historyIndex < history.length - 1) {
-      const nextState = history[historyIndex + 1]
-      setResumeData(nextState.data)
-      setResumeStyle(nextState.style)
-      setHistoryIndex(historyIndex + 1)
+  useEffect(() => {
+    if (!hydrated) return
+    const ok = saveResume(data) && saveStyle(style)
+    if (!ok && !saveWarned.current) {
+      saveWarned.current = true
+      toast({
+        title: "Couldn't save to this browser",
+        description: "Storage is full or blocked. Download a backup from the menu so you don't lose work.",
+        variant: "destructive",
+      })
     }
-  }
+  }, [data, style, hydrated, toast])
 
-  const triggerToast = (
-    variant: "success" | "error" | "warning" | "info",
-    title: string,
-    description: string
-  ) => {
-    setShowToast(false)
-    setToastPayload({ variant, title, description })
+  useEffect(() => {
+    if (!hydrated) return
+    try {
+      localStorage.setItem(JOB_KEY, jobDescription)
+    } catch {}
+  }, [jobDescription, hydrated])
 
-    setTimeout(() => {
-      setShowToast(true)
-    }, 10)
-  }
-
-  const updatePersonal = (field: string, value: string) => {
-    saveToHistory()
-    setResumeData((prev) => ({
-      ...prev,
-      personal: { ...prev.personal, [field]: value },
-    }))
-  }
-
-  const addExperience = () => {
-    const newExp = {
-      id: Date.now().toString(),
-      company: "",
-      position: "",
-      startDate: "",
-      endDate: "",
-      current: false,
-      description: "",
+  // Load the chosen Google Fonts so the preview matches the export.
+  useEffect(() => {
+    const id = "resume-fonts"
+    let link = document.getElementById(id) as HTMLLinkElement | null
+    if (!link) {
+      link = document.createElement("link")
+      link.id = id
+      link.rel = "stylesheet"
+      document.head.appendChild(link)
     }
-    saveToHistory()
-    setResumeData((prev) => ({
-      ...prev,
-      experience: [...prev.experience, newExp],
+    link.href = googleFontsHref([style.fonts.heading, style.fonts.body])
+  }, [style.fonts.heading, style.fonts.body])
+
+  // ---------- History ----------
+
+  /** Applies a change. Rapid edits (typing) collapse into one undo step. */
+  const commit = useCallback((update: (s: Snapshot) => Snapshot, coalesce = true) => {
+    const now = Date.now()
+    const merge = coalesce && now - lastCommit.current < COALESCE_MS
+    lastCommit.current = coalesce ? now : 0
+    setHistory((h) => ({
+      past: merge && h.past.length ? h.past : [...h.past, h.present].slice(-MAX_HISTORY),
+      present: update(h.present),
+      future: [],
     }))
-  }
+  }, [])
 
-  const updateExperience = (id: string, field: string, value: any) => {
-    saveToHistory()
-    setResumeData((prev) => ({
-      ...prev,
-      experience: prev.experience.map((exp) => (exp.id === id ? { ...exp, [field]: value } : exp)),
-    }))
-  }
+  const setData = useCallback(
+    (update: (d: ResumeData) => ResumeData, coalesce = true) => commit((s) => ({ ...s, data: update(s.data) }), coalesce),
+    [commit],
+  )
+  const setStyle = useCallback(
+    (update: (st: ResumeStyle) => ResumeStyle, coalesce = true) =>
+      commit((s) => ({ ...s, style: update(s.style) }), coalesce),
+    [commit],
+  )
 
-  const removeExperience = (id: string) => {
-    saveToHistory()
-    setResumeData((prev) => ({
-      ...prev,
-      experience: prev.experience.filter((exp) => exp.id !== id),
-    }))
-  }
+  const undo = useCallback(() => {
+    lastCommit.current = 0
+    setHistory((h) =>
+      h.past.length
+        ? { past: h.past.slice(0, -1), present: h.past[h.past.length - 1], future: [h.present, ...h.future] }
+        : h,
+    )
+  }, [])
 
-  const addEducation = () => {
-    const newEdu = {
-      id: Date.now().toString(),
-      school: "",
-      degree: "",
-      field: "",
-      graduationDate: "",
-    }
-    saveToHistory()
-    setResumeData((prev) => ({
-      ...prev,
-      education: [...prev.education, newEdu],
-    }))
-  }
+  const redo = useCallback(() => {
+    lastCommit.current = 0
+    setHistory((h) =>
+      h.future.length ? { past: [...h.past, h.present], present: h.future[0], future: h.future.slice(1) } : h,
+    )
+  }, [])
 
-  const updateEducation = (id: string, field: string, value: string) => {
-    saveToHistory()
-    setResumeData((prev) => ({
-      ...prev,
-      education: prev.education.map((edu) => (edu.id === id ? { ...edu, [field]: value } : edu)),
-    }))
-  }
-
-  const removeEducation = (id: string) => {
-    saveToHistory()
-    setResumeData((prev) => ({
-      ...prev,
-      education: prev.education.filter((edu) => edu.id !== id),
-    }))
-  }
-
-  const addSkill = (skill: string) => {
-    saveToHistory()
-    if (skill.trim() && !resumeData.skills.includes(skill.trim())) {
-      setResumeData((prev) => ({
-        ...prev,
-        skills: [...prev.skills, skill.trim()],
-      }))
-    }
-  }
-
-  const removeSkill = (skill: string) => {
-    saveToHistory()
-    setResumeData((prev) => ({
-      ...prev,
-      skills: prev.skills.filter((s) => s !== skill),
-    }))
-  }
-
-  const addCustomSection = () => {
-    const newSection = {
-      id: Date.now().toString(),
-      title: "Custom Section",
-      content: "",
-      type: "text" as const,
-    }
-    saveToHistory()
-    setResumeData((prev) => ({
-      ...prev,
-      customSections: [...prev.customSections, newSection],
-    }))
-  }
-
-  const updateCustomSection = (id: string, field: string, value: any) => {
-    saveToHistory()
-    setResumeData((prev) => ({
-      ...prev,
-      customSections: prev.customSections.map((section) =>
-        section.id === id ? { ...section, [field]: value } : section,
-      ),
-    }))
-  }
-
-  const removeCustomSection = (id: string) => {
-    saveToHistory()
-    setResumeData((prev) => ({
-      ...prev,
-      customSections: prev.customSections.filter((section) => section.id !== id),
-    }))
-  }
-
-  const updateStyle = (
-    category: keyof ResumeStyle,
-    field: string | null,
-    value: any
-  ) => {
-    saveToHistory();
-
-    setResumeStyle((prev) => {
-      const current = prev[category];
-
-      // Nested object update
-      if (field && typeof current === "object" && current !== null) {
-        return {
-          ...prev,
-          [category]: {
-            ...current,
-            [field]: value,
-          },
-        };
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey)) return
+      const key = e.key.toLowerCase()
+      if (key === "z" && !e.shiftKey) {
+        e.preventDefault()
+        undo()
+      } else if (key === "y" || (key === "z" && e.shiftKey)) {
+        e.preventDefault()
+        redo()
       }
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [undo, redo])
 
-      // Primitive value update
-      return {
-        ...prev,
-        [category]: value,
-      };
-    });
-  };
+  // ---------- Content helpers ----------
 
-const handleExport = async (format: "png" | "pdf" = "png") => {
-  if (isExporting) return // 🚫 block multiple clicks
+  const updatePersonal = (field: keyof ResumeData["personal"], value: string) =>
+    setData((d) => ({ ...d, personal: { ...d.personal, [field]: value } }))
 
-  setIsExporting(format)
+  const updateList = <K extends "experience" | "education" | "customSections">(
+    key: K,
+    id: string,
+    patch: Partial<ResumeData[K][number]>,
+  ) =>
+    setData((d) => ({
+      ...d,
+      [key]: (d[key] as any[]).map((item) => (item.id === id ? { ...item, ...patch } : item)),
+    }))
 
-  try {
-    // 1️⃣ Save resume first
-    const saveRes = await fetch("/api/resume/save", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        templateId: resumeStyle.template,
-        styleConfig: resumeStyle,
-        data: resumeData,
-        title: "My Resume",
+  const removeFromList = (key: "experience" | "education" | "customSections", id: string) =>
+    setData((d) => ({ ...d, [key]: (d[key] as any[]).filter((item) => item.id !== id) }), false)
+
+  const moveInList = (key: "experience" | "education" | "customSections", index: number, dir: -1 | 1) =>
+    setData((d) => {
+      const list = [...(d[key] as any[])]
+      const target = index + dir
+      if (target < 0 || target >= list.length) return d
+      ;[list[index], list[target]] = [list[target], list[index]]
+      return { ...d, [key]: list }
+    }, false)
+
+  const addExperience = () =>
+    setData(
+      (d) => ({
+        ...d,
+        experience: [
+          ...d.experience,
+          { id: newId(), company: "", position: "", startDate: "", endDate: "", current: false, description: "" },
+        ],
       }),
+      false,
+    )
+
+  const addEducation = () =>
+    setData(
+      (d) => ({
+        ...d,
+        education: [...d.education, { id: newId(), school: "", degree: "", field: "", graduationDate: "", gpa: "" }],
+      }),
+      false,
+    )
+
+  const addCustomSection = () =>
+    setData(
+      (d) => ({
+        ...d,
+        customSections: [...d.customSections, { id: newId(), title: "Projects", content: "", type: "text" }],
+      }),
+      false,
+    )
+
+  const addSkills = (skills: string[]) =>
+    setData((d) => {
+      const existing = new Set(d.skills.map((s) => s.toLowerCase()))
+      const fresh = skills.map((s) => s.trim()).filter((s) => s && !existing.has(s.toLowerCase()))
+      return fresh.length ? { ...d, skills: [...d.skills, ...fresh] } : d
+    }, false)
+
+  const removeSkill = (skill: string) => setData((d) => ({ ...d, skills: d.skills.filter((s) => s !== skill) }), false)
+
+  const handlePhoto = async (file?: File) => {
+    if (!file) return
+    try {
+      const photo = await resizeImage(file)
+      commit((s) => ({ data: { ...s.data, personal: { ...s.data.personal, photo } }, style: { ...s.style, showPhoto: true } }), false)
+    } catch (err) {
+      toast({ title: "Photo not added", description: (err as Error).message, variant: "destructive" })
+    }
+  }
+
+  // ---------- AI ----------
+
+  const runAI = async <T,>(key: string, fn: () => Promise<T>): Promise<T | undefined> => {
+    if (aiBusy) return
+    setAiBusy(key)
+    try {
+      return await fn()
+    } catch (err) {
+      toast({ title: "AI couldn't finish", description: (err as Error).message, variant: "destructive" })
+    } finally {
+      setAiBusy(null)
+    }
+  }
+
+  const aiSummary = () =>
+    runAI("summary", async () => {
+      const { summary } = await callAI<{ summary: string }>("summary", {
+        resume: resumeToText(data),
+        jobDescription: jobDescription || undefined,
+      })
+      setData((d) => ({ ...d, personal: { ...d.personal, summary } }), false)
+      toast({ title: "Summary written", description: "Review it and press Ctrl+Z to undo." })
     })
 
-    if (!saveRes.ok) {
-      throw new Error("Save failed")
-    }
-
-    // 2️⃣ Export via Puppeteer
-    const exportRes = await fetch("/api/resume/export", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ format }),
+  const aiImproveExperience = (id: string) =>
+    runAI(`exp-${id}`, async () => {
+      const exp = data.experience.find((e) => e.id === id)
+      if (!exp) return
+      if (!exp.position.trim()) throw new Error("Add the position title first.")
+      const { description } = await callAI<{ description: string }>("improveExperience", {
+        ...exp,
+        jobDescription: jobDescription || undefined,
+      })
+      setData((d) => ({ ...d, experience: d.experience.map((e) => (e.id === id ? { ...e, description } : e)) }), false)
     })
 
-    if (!exportRes.ok) {
-      throw new Error("Export failed")
-    }
+  const aiSuggestSkills = () =>
+    runAI("skills", async () => {
+      const { skills } = await callAI<{ skills: string[] }>("suggestSkills", {
+        resume: resumeToText(data),
+        jobDescription: jobDescription || undefined,
+      })
+      const have = new Set(data.skills.map((s) => s.toLowerCase()))
+      setSuggestedSkills(skills.filter((s) => !have.has(s.toLowerCase())))
+    })
 
-    const blob = await exportRes.blob()
+  // ---------- Export / backup ----------
+
+  const fileBase =
+    [data.personal.firstName, data.personal.lastName].filter(Boolean).join("_").replace(/[^\w-]+/g, "") || "resume"
+
+  const handleExport = async (format: "pdf" | "png") => {
+    if (exporting) return
+    const sheet = previewRef.current?.getSheet()
+    if (!sheet) return
+    setExporting(format)
+    try {
+      const result = await exportResume(sheet, format, {
+        fonts: [style.fonts.heading, style.fonts.body],
+        filename: `${fileBase}_Resume`,
+      })
+      if (result === "print-dialog") {
+        toast({
+          title: "Save as PDF",
+          description: 'In the print dialog choose "Save as PDF", paper A4, margins None, and turn on Background graphics.',
+        })
+      }
+    } catch (err) {
+      toast({ title: "Export failed", description: (err as Error).message, variant: "destructive" })
+    } finally {
+      setExporting(null)
+    }
+  }
+
+  const downloadBackup = () => {
+    const blob = new Blob([JSON.stringify({ version: 1, data, style }, null, 2)], { type: "application/json" })
     const url = URL.createObjectURL(blob)
-
     const a = document.createElement("a")
     a.href = url
-    a.download = `resume.${format}`
-    document.body.appendChild(a)
+    a.download = `${fileBase}_resume_backup.json`
     a.click()
-    document.body.removeChild(a)
-
     URL.revokeObjectURL(url)
-
-  } catch (err) {
-  
-  } finally {
-    setIsExporting(null) // 🔓 unlock buttons ALWAYS
   }
-}
 
+  const restoreBackup = async (file?: File) => {
+    if (!file) return
+    try {
+      const parsed = JSON.parse(await file.text())
+      commit(() => ({ data: normalizeResume(parsed.data ?? parsed), style: normalizeStyle(parsed.style) }), false)
+      toast({ title: "Backup restored" })
+    } catch {
+      toast({ title: "Not a valid backup file", variant: "destructive" })
+    }
+  }
 
+  const startOver = () => {
+    if (!window.confirm("Clear the whole resume? You can still undo this until you leave the page.")) return
+    commit((s) => ({ data: emptyResume(), style: s.style }), false)
+  }
 
+  const applyImported = (imported: ResumeData) =>
+    commit((s) => ({ ...s, data: { ...imported, personal: { ...imported.personal, photo: s.data.personal.photo } } }), false)
+
+  // ---------- UI ----------
+
+  const aiButton = (key: string, label: string, onClick: () => void, disabled = false) => (
+    <Button
+      type="button"
+      size="sm"
+      variant="outline"
+      onClick={onClick}
+      disabled={!!aiBusy || disabled}
+      className="h-8 gap-1.5 border-violet-300 text-violet-700 hover:bg-violet-50 hover:text-violet-800"
+    >
+      {aiBusy === key ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+      {label}
+    </Button>
+  )
+
+  const listControls = (key: "experience" | "education" | "customSections", index: number, length: number, id: string) => (
+    <div className="flex items-center gap-1">
+      <Button variant="ghost" size="icon" className="h-8 w-8" disabled={index === 0} onClick={() => moveInList(key, index, -1)} aria-label="Move up">
+        <ArrowUp className="h-4 w-4" />
+      </Button>
+      <Button variant="ghost" size="icon" className="h-8 w-8" disabled={index === length - 1} onClick={() => moveInList(key, index, 1)} aria-label="Move down">
+        <ArrowDown className="h-4 w-4" />
+      </Button>
+      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => removeFromList(key, id)} aria-label="Remove">
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  )
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-accent/10">
       {/* Header */}
-      <div className="bg-card/80 backdrop-blur-md border-b border-border/50 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-
-            {/* LEFT SIDE — Title */}
-            <div className="flex items-center space-x-4">
-              <div>
-                <h1 className="text-xl font-bold">Resume Editor</h1>
-                <p className="text-sm text-muted-foreground hidden sm:block">
-                  Customize your resume
-                </p>
-              </div>
-            </div>
-
-            {/* RIGHT SIDE — Actions */}
-            <div className="flex items-center space-x-2">
-
-              {/* UNDO */}
-              <Button variant="ghost" size="sm" onClick={undo} disabled={historyIndex <= 0}>
-                <Undo className="w-4 h-4" />
-                <span className="hidden md:inline ml-1">Undo</span>
-              </Button>
-
-              {/* REDO */}
-              <Button variant="ghost" size="sm" onClick={redo} disabled={historyIndex >= history.length - 1}>
-                <Redo className="w-4 h-4" />
-                <span className="hidden md:inline ml-1">Redo</span>
-              </Button>
-
-              {/* PREVIEW TOGGLE */}
-              <Button variant="ghost" size="sm" onClick={() => setPreviewMode(!previewMode)}>
-                {previewMode ? (
-                  <EyeOff className="w-4 h-4" />
-                ) : (
-                  <Eye className="w-4 h-4" />
-                )}
-                <span className="hidden md:inline ml-1">
-                  {previewMode ? "Edit" : "Preview"}
-                </span>
-              </Button>
-
-              {/* SAVE */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  saveToHistory();
-                  triggerToast("success", "Progress Saved", "Your resume has been updated successfully.");
-                }}
-              >
-                <Save className="w-4 h-4" />
-                <span className="hidden md:inline ml-2">Save</span>
-              </Button>
-
+      <header className="sticky top-0 z-50 border-b border-border/50 bg-card/80 backdrop-blur-md">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <Button asChild variant="ghost" size="icon" aria-label="Back to templates">
+              <Link href="/templates">
+                <ArrowLeft className="h-4 w-4" />
+              </Link>
+            </Button>
+            <div className="min-w-0">
+              <h1 className="truncate text-lg font-bold">Resume Editor</h1>
+              <p className="hidden text-xs text-muted-foreground sm:block">
+                {hydrated ? "Saved in this browser" : "Loading…"}
+              </p>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto p-4">
-        <div className={cn("grid gap-6 transition-all duration-300", previewMode ? "grid-cols-1" : "lg:grid-cols-2")}>
-          {/* Editor Panel */}
-          {!previewMode && (
-            <div className="space-y-6">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Button variant="ghost" size="sm" onClick={undo} disabled={!history.past.length} title="Undo (Ctrl+Z)">
+              <Undo className="h-4 w-4" />
+              <span className="ml-1 hidden md:inline">Undo</span>
+            </Button>
+            <Button variant="ghost" size="sm" onClick={redo} disabled={!history.future.length} title="Redo (Ctrl+Shift+Z)">
+              <Redo className="h-4 w-4" />
+              <span className="ml-1 hidden md:inline">Redo</span>
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setPreviewOnly((v) => !v)}>
+              {previewOnly ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              <span className="ml-1 hidden md:inline">{previewOnly ? "Edit" : "Preview"}</span>
+            </Button>
+
+            <div className="flex">
+              <Button size="sm" onClick={() => handleExport("pdf")} disabled={!!exporting} className="rounded-r-none">
+                {exporting === "pdf" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                <span className="ml-1.5">PDF</span>
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" className="rounded-l-none border-l border-primary-foreground/20 px-2" aria-label="More export options">
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem onClick={() => handleExport("png")} disabled={!!exporting}>
+                    <ImageIcon className="mr-2 h-4 w-4" /> Download PNG
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={downloadBackup}>
+                    <FileJson className="mr-2 h-4 w-4" /> Download backup (.json)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => restoreInputRef.current?.click()}>
+                    <Upload className="mr-2 h-4 w-4" /> Restore backup
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={startOver} className="text-destructive focus:text-destructive">
+                    <RotateCcw className="mr-2 h-4 w-4" /> Start over
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <input
+              ref={restoreInputRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={(e) => {
+                restoreBackup(e.target.files?.[0])
+                e.target.value = ""
+              }}
+            />
+          </div>
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-7xl p-4">
+        <div className={cn("grid gap-6", previewOnly ? "grid-cols-1" : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]")}>
+          {!previewOnly && (
+            <div className="min-w-0 space-y-6">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="content" className="flex items-center gap-2">
-                    <Type className="w-4 h-4" />
-                    Content
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="content" className="gap-1.5">
+                    <Type className="h-4 w-4" /> <span className="hidden sm:inline">Content</span>
                   </TabsTrigger>
-                  <TabsTrigger value="design" className="flex items-center gap-2">
-                    <Palette className="w-4 h-4" />
-                    Design
+                  <TabsTrigger value="ai" className="gap-1.5">
+                    <Wand2 className="h-4 w-4" /> <span className="hidden sm:inline">AI</span>
                   </TabsTrigger>
-                  <TabsTrigger value="layout" className="flex items-center gap-2">
-                    <Layout className="w-4 h-4" />
-                    Layout
+                  <TabsTrigger value="design" className="gap-1.5">
+                    <Palette className="h-4 w-4" /> <span className="hidden sm:inline">Design</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="layout" className="gap-1.5">
+                    <Layout className="h-4 w-4" /> <span className="hidden sm:inline">Layout</span>
                   </TabsTrigger>
                 </TabsList>
 
+                {/* ================= CONTENT ================= */}
                 <TabsContent value="content" className="space-y-6">
-                  {/* Personal Information */}
-                  <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50">
-                    <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName">First Name</Label>
-                        <Input
-                          id="firstName"
-                          value={resumeData.personal.firstName}
-                          onChange={(e) => updatePersonal("firstName", e.target.value)}
-                        />
+                  <Card className="gap-0 border-border/50 bg-card/60 p-6 backdrop-blur-sm">
+                    <h3 className="mb-4 text-lg font-semibold">Personal Information</h3>
+                    <div className="mb-4 flex items-center gap-4">
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted ring-1 ring-border">
+                        {data.personal.photo ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={data.personal.photo} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                        )}
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName">Last Name</Label>
-                        <Input
-                          id="lastName"
-                          value={resumeData.personal.lastName}
-                          onChange={(e) => updatePersonal("lastName", e.target.value)}
-                        />
+                      <div className="flex flex-wrap gap-2">
+                        <Button size="sm" variant="outline" onClick={() => photoInputRef.current?.click()}>
+                          <Upload className="mr-1.5 h-4 w-4" /> {data.personal.photo ? "Change photo" : "Add photo"}
+                        </Button>
+                        {data.personal.photo && (
+                          <Button size="sm" variant="ghost" onClick={() => updatePersonal("photo", "")}>
+                            <X className="mr-1 h-4 w-4" /> Remove
+                          </Button>
+                        )}
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                          id="email"
-                          value={resumeData.personal.email}
-                          onChange={(e) => updatePersonal("email", e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="phone">Phone</Label>
-                        <Input
-                          id="phone"
-                          value={resumeData.personal.phone}
-                          onChange={(e) => updatePersonal("phone", e.target.value)}
-                        />
-                      </div>
+                      <input
+                        ref={photoInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          handlePhoto(e.target.files?.[0])
+                          e.target.value = ""
+                        }}
+                      />
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {(
+                        [
+                          ["firstName", "First Name", "text"],
+                          ["lastName", "Last Name", "text"],
+                          ["email", "Email", "email"],
+                          ["phone", "Phone", "tel"],
+                        ] as const
+                      ).map(([field, label, type]) => (
+                        <div key={field} className="space-y-2">
+                          <Label htmlFor={field}>{label}</Label>
+                          <Input id={field} type={type} value={data.personal[field]} onChange={(e) => updatePersonal(field, e.target.value)} />
+                        </div>
+                      ))}
                       <div className="space-y-2 md:col-span-2">
                         <Label htmlFor="location">Location</Label>
-                        <Input
-                          id="location"
-                          value={resumeData.personal.location}
-                          onChange={(e) => updatePersonal("location", e.target.value)}
-                        />
+                        <Input id="location" value={data.personal.location} placeholder="City, Country" onChange={(e) => updatePersonal("location", e.target.value)} />
                       </div>
                       <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="summary">Professional Summary</Label>
-                        <Textarea
-                          id="summary"
-                          value={resumeData.personal.summary}
-                          onChange={(e) => updatePersonal("summary", e.target.value)}
-                          rows={7}
-                        />
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="summary">Professional Summary</Label>
+                          {aiButton("summary", data.personal.summary ? "AI rewrite" : "AI write", aiSummary)}
+                        </div>
+                        <Textarea id="summary" value={data.personal.summary} onChange={(e) => updatePersonal("summary", e.target.value)} rows={6} placeholder="2–4 sentences about who you are and the value you bring." />
                       </div>
                     </div>
                   </Card>
 
                   {/* Experience */}
-                  <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50">
-                    <div className="flex items-center justify-between mb-4">
+                  <Card className="gap-0 border-border/50 bg-card/60 p-6 backdrop-blur-sm">
+                    <div className="mb-4 flex items-center justify-between">
                       <h3 className="text-lg font-semibold">Work Experience</h3>
                       <Button onClick={addExperience} size="sm">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Experience
+                        <Plus className="mr-1.5 h-4 w-4" /> Add
                       </Button>
                     </div>
+                    {data.experience.length === 0 && (
+                      <p className="py-6 text-center text-sm text-muted-foreground">No experience yet. Add your most recent role first.</p>
+                    )}
                     <div className="space-y-4">
-                      {resumeData.experience.map((exp, index) => (
-                        <Card key={exp.id} className="p-4 bg-muted/30">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              <GripVertical className="w-4 h-4 text-muted-foreground cursor-move" />
-                              <span className="font-medium">Experience #{index + 1}</span>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeExperience(exp.id)}
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                      {data.experience.map((exp, index) => (
+                        <Card key={exp.id} className="gap-0 bg-muted/30 p-4">
+                          <div className="mb-3 flex items-center justify-between">
+                            <span className="truncate font-medium">{exp.position || exp.company || `Experience #${index + 1}`}</span>
+                            {listControls("experience", index, data.experience.length, exp.id)}
                           </div>
-                          <div className="grid md:grid-cols-2 gap-3">
+                          <div className="grid gap-3 md:grid-cols-2">
                             <div className="space-y-2">
                               <Label>Company</Label>
-                              <Input
-                                value={exp.company}
-                                onChange={(e) => updateExperience(exp.id, "company", e.target.value)}
-                                placeholder="Company name"
-                              />
+                              <Input value={exp.company} onChange={(e) => updateList("experience", exp.id, { company: e.target.value })} placeholder="Company name" />
                             </div>
                             <div className="space-y-2">
                               <Label>Position</Label>
-                              <Input
-                                value={exp.position}
-                                onChange={(e) => updateExperience(exp.id, "position", e.target.value)}
-                                placeholder="Job title"
-                              />
+                              <Input value={exp.position} onChange={(e) => updateList("experience", exp.id, { position: e.target.value })} placeholder="Job title" />
                             </div>
                             <div className="space-y-2">
                               <Label>Start Date</Label>
-                              <Input
-                                type="month"
-                                value={exp.startDate}
-                                onChange={(e) => updateExperience(exp.id, "startDate", e.target.value)}
-                              />
+                              <Input type="month" value={exp.startDate} onChange={(e) => updateList("experience", exp.id, { startDate: e.target.value })} />
                             </div>
                             <div className="space-y-2">
                               <Label>End Date</Label>
-                              <Input
-                                type="month"
-                                value={exp.endDate}
-                                onChange={(e) => updateExperience(exp.id, "endDate", e.target.value)}
-                                disabled={exp.current}
-                              />
-                              <div className="flex items-center space-x-2">
-                                <Switch
-                                  checked={exp.current}
-                                  onCheckedChange={(checked) => updateExperience(exp.id, "current", checked)}
-                                />
-                                <Label className="text-sm">Currently working here</Label>
+                              <Input type="month" value={exp.current ? "" : exp.endDate} disabled={exp.current} onChange={(e) => updateList("experience", exp.id, { endDate: e.target.value })} />
+                              <div className="flex items-center gap-2">
+                                <Switch id={`current-${exp.id}`} checked={exp.current} onCheckedChange={(current) => updateList("experience", exp.id, { current })} />
+                                <Label htmlFor={`current-${exp.id}`} className="text-sm font-normal">I currently work here</Label>
                               </div>
                             </div>
                             <div className="space-y-2 md:col-span-2">
-                              <Label>Description</Label>
+                              <div className="flex items-center justify-between">
+                                <Label>Description</Label>
+                                {aiButton(`exp-${exp.id}`, exp.description ? "AI improve" : "AI write", () => aiImproveExperience(exp.id))}
+                              </div>
                               <Textarea
                                 value={exp.description}
-                                onChange={(e) => updateExperience(exp.id, "description", e.target.value)}
-                                placeholder="Describe your responsibilities and achievements..."
-                                rows={2}
+                                onChange={(e) => updateList("experience", exp.id, { description: e.target.value })}
+                                placeholder={"• Achievement with impact\n• Another responsibility"}
+                                rows={4}
                               />
                             </div>
                           </div>
@@ -710,63 +649,43 @@ const handleExport = async (format: "png" | "pdf" = "png") => {
                   </Card>
 
                   {/* Education */}
-                  <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50">
-                    <div className="flex items-center justify-between mb-4">
+                  <Card className="gap-0 border-border/50 bg-card/60 p-6 backdrop-blur-sm">
+                    <div className="mb-4 flex items-center justify-between">
                       <h3 className="text-lg font-semibold">Education</h3>
                       <Button onClick={addEducation} size="sm">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Education
+                        <Plus className="mr-1.5 h-4 w-4" /> Add
                       </Button>
                     </div>
+                    {data.education.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">No education added yet.</p>}
                     <div className="space-y-4">
-                      {resumeData.education.map((edu, index) => (
-                        <Card key={edu.id} className="p-4 bg-muted/30">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              <GripVertical className="w-4 h-4 text-muted-foreground cursor-move" />
-                              <span className="font-medium">Education #{index + 1}</span>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeEducation(edu.id)}
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                      {data.education.map((edu, index) => (
+                        <Card key={edu.id} className="gap-0 bg-muted/30 p-4">
+                          <div className="mb-3 flex items-center justify-between">
+                            <span className="truncate font-medium">{edu.school || `Education #${index + 1}`}</span>
+                            {listControls("education", index, data.education.length, edu.id)}
                           </div>
-                          <div className="grid md:grid-cols-2 gap-3">
+                          <div className="grid gap-3 md:grid-cols-2">
                             <div className="space-y-2">
-                              <Label>School/University</Label>
-                              <Input
-                                value={edu.school}
-                                onChange={(e) => updateEducation(edu.id, "school", e.target.value)}
-                                placeholder="Institution name"
-                              />
+                              <Label>School / University</Label>
+                              <Input value={edu.school} onChange={(e) => updateList("education", edu.id, { school: e.target.value })} placeholder="Institution name" />
                             </div>
                             <div className="space-y-2">
                               <Label>Degree</Label>
-                              <Input
-                                value={edu.degree}
-                                onChange={(e) => updateEducation(edu.id, "degree", e.target.value)}
-                                placeholder="Bachelor of Science"
-                              />
+                              <Input value={edu.degree} onChange={(e) => updateList("education", edu.id, { degree: e.target.value })} placeholder="Bachelor of Science" />
                             </div>
                             <div className="space-y-2">
                               <Label>Field of Study</Label>
-                              <Input
-                                value={edu.field}
-                                onChange={(e) => updateEducation(edu.id, "field", e.target.value)}
-                                placeholder="Computer Science"
-                              />
+                              <Input value={edu.field} onChange={(e) => updateList("education", edu.id, { field: e.target.value })} placeholder="Computer Science" />
                             </div>
-                            <div className="space-y-2">
-                              <Label>Graduation Date</Label>
-                              <Input
-                                type="month"
-                                value={edu.graduationDate}
-                                onChange={(e) => updateEducation(edu.id, "graduationDate", e.target.value)}
-                              />
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-2">
+                                <Label>Graduation</Label>
+                                <Input type="month" value={edu.graduationDate} onChange={(e) => updateList("education", edu.id, { graduationDate: e.target.value })} />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>GPA (optional)</Label>
+                                <Input value={edu.gpa || ""} onChange={(e) => updateList("education", edu.id, { gpa: e.target.value })} placeholder="3.8/4.0" />
+                              </div>
                             </div>
                           </div>
                         </Card>
@@ -775,694 +694,231 @@ const handleExport = async (format: "png" | "pdf" = "png") => {
                   </Card>
 
                   {/* Skills */}
-                  <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50">
-                    <h3 className="text-lg font-semibold mb-4">Skills</h3>
-                    <div className="space-y-4">
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Add a skill and press Enter"
-                          onKeyPress={(e) => {
-                            if (e.key === "Enter") {
-                              addSkill(e.currentTarget.value)
-                              e.currentTarget.value = ""
-                            }
-                          }}
-                        />
-                        <Button
-                          onClick={(e) => {
-                            const input = e.currentTarget.previousElementSibling as HTMLInputElement
-                            addSkill(input.value)
-                            input.value = ""
-                          }}
-                        >
-                          <Plus className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {resumeData.skills.map((skill) => (
-                          <Badge
-                            key={skill}
-                            variant="secondary"
-                            className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground transition-colors"
-                            onClick={() => removeSkill(skill)}
-                          >
-                            {skill}
-                            <Trash2 className="w-3 h-3 ml-2" />
-                          </Badge>
-                        ))}
-                      </div>
+                  <Card className="gap-0 border-border/50 bg-card/60 p-6 backdrop-blur-sm">
+                    <div className="mb-4 flex items-center justify-between">
+                      <h3 className="text-lg font-semibold">Skills</h3>
+                      {aiButton("skills", "Suggest skills", aiSuggestSkills)}
                     </div>
-                  </Card>
-
-                  {/* Custom Sections */}
-                  <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold">Custom Sections</h3>
-                      <Button onClick={addCustomSection} size="sm">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Section
+                    <form
+                      className="mb-4 flex gap-2"
+                      onSubmit={(e) => {
+                        e.preventDefault()
+                        addSkills(skillInput.split(","))
+                        setSkillInput("")
+                      }}
+                    >
+                      <Input value={skillInput} onChange={(e) => setSkillInput(e.target.value)} placeholder="Add skills (comma separated) and press Enter" />
+                      <Button type="submit" aria-label="Add skill">
+                        <Plus className="h-4 w-4" />
                       </Button>
+                    </form>
+                    <div className="flex flex-wrap gap-2">
+                      {data.skills.map((skill) => (
+                        <Badge key={skill} variant="secondary" className="gap-1 py-1 pl-2.5 pr-1 text-sm">
+                          {skill}
+                          <button onClick={() => removeSkill(skill)} className="rounded-full p-0.5 hover:bg-destructive hover:text-white" aria-label={`Remove ${skill}`}>
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                      {data.skills.length === 0 && <p className="text-sm text-muted-foreground">No skills yet.</p>}
                     </div>
-
-                    {/* Empty State */}
-                    {resumeData.customSections.length === 0 && (
-                      <div className="text-center py-16 text-gray-500">
-                        <Plus className="w-10 h-10 mx-auto mb-3 opacity-40" />
-                        <p className="text-sm">No custom sections added yet</p>
-                        <p className="text-xs">Click “Add Section” to create one</p>
-                      </div>
-                    )}
-
-                    {/* Sections List */}
-                    <div className="space-y-4">
-                      {resumeData.customSections.map((section, index) => (
-                        <Card key={section.id} className="p-4 bg-muted/30">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              <GripVertical className="w-4 h-4 text-muted-foreground cursor-move" />
-                              <span className="font-medium">Section #{index + 1}</span>
-                            </div>
-
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeCustomSection(section.id)}
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="w-4 h-4" />
+                    {suggestedSkills.length > 0 && (
+                      <div className="mt-4 rounded-lg border border-violet-200 bg-violet-50/60 p-3">
+                        <div className="mb-2 flex items-center justify-between">
+                          <p className="text-xs font-medium text-violet-800">Suggested. Click to add only the ones you really have.</p>
+                          <div className="flex gap-1">
+                            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => { addSkills(suggestedSkills); setSuggestedSkills([]) }}>
+                              Add all
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setSuggestedSkills([])} aria-label="Dismiss suggestions">
+                              <X className="h-3.5 w-3.5" />
                             </Button>
                           </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {suggestedSkills.map((s) => (
+                            <button
+                              key={s}
+                              onClick={() => {
+                                addSkills([s])
+                                setSuggestedSkills((list) => list.filter((x) => x !== s))
+                              }}
+                              className="inline-flex items-center gap-1 rounded-full border border-violet-300 bg-white px-2.5 py-1 text-xs text-violet-800 hover:bg-violet-100"
+                            >
+                              <Plus className="h-3 w-3" /> {s}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </Card>
 
+                  {/* Custom sections */}
+                  <Card className="gap-0 border-border/50 bg-card/60 p-6 backdrop-blur-sm">
+                    <div className="mb-4 flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold">Additional Sections</h3>
+                        <p className="text-xs text-muted-foreground">Projects, certifications, awards, languages…</p>
+                      </div>
+                      <Button onClick={addCustomSection} size="sm">
+                        <Plus className="mr-1.5 h-4 w-4" /> Add
+                      </Button>
+                    </div>
+                    <div className="space-y-4">
+                      {data.customSections.map((section, index) => (
+                        <Card key={section.id} className="gap-0 bg-muted/30 p-4">
+                          <div className="mb-3 flex items-center justify-between">
+                            <span className="truncate font-medium">{section.title || `Section #${index + 1}`}</span>
+                            {listControls("customSections", index, data.customSections.length, section.id)}
+                          </div>
                           <div className="space-y-3">
-                            <div className="space-y-2">
-                              <Label>Section Title</Label>
-                              <Input
-                                value={section.title}
-                                onChange={(e) => updateCustomSection(section.id, "title", e.target.value)}
-                                placeholder="Section title"
-                              />
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label>Content</Label>
-                              <Textarea
-                                value={section.content}
-                                onChange={(e) => updateCustomSection(section.id, "content", e.target.value)}
-                                placeholder="Section content..."
-                                rows={3}
-                              />
-                            </div>
+                            <Input value={section.title} onChange={(e) => updateList("customSections", section.id, { title: e.target.value })} placeholder="Section title" />
+                            <Textarea value={section.content} onChange={(e) => updateList("customSections", section.id, { content: e.target.value })} placeholder={"• AWS Certified Solutions Architect (2024)"} rows={3} />
                           </div>
                         </Card>
                       ))}
                     </div>
                   </Card>
-
                 </TabsContent>
 
+                {/* ================= AI ================= */}
+                <TabsContent value="ai">
+                  <AIPanel
+                    data={data}
+                    jobDescription={jobDescription}
+                    onJobDescriptionChange={setJobDescription}
+                    onAddSkills={addSkills}
+                    onImport={applyImported}
+                    onTailorSummary={aiSummary}
+                    tailorBusy={aiBusy === "summary"}
+                  />
+                </TabsContent>
+
+                {/* ================= DESIGN ================= */}
                 <TabsContent value="design" className="space-y-6">
-                  {/* Template Selection */}
-                  {plan && (
-                    <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50">
-                      <h3 className="text-lg font-semibold mb-4">Template</h3>
+                  <Card className="gap-0 border-border/50 bg-card/60 p-6 backdrop-blur-sm">
+                    <h3 className="mb-1 text-lg font-semibold">Template</h3>
+                    <p className="mb-4 text-xs text-muted-foreground">ATS templates use simple structure that applicant tracking systems parse reliably.</p>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {TEMPLATES.map((t) => (
+                        <button
+                          key={t.id}
+                          onClick={() => setStyle((s) => ({ ...s, template: t.id }), false)}
+                          className={cn(
+                            "relative rounded-lg border p-3 text-left text-sm transition-colors hover:border-primary/60",
+                            style.template === t.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border bg-background",
+                          )}
+                        >
+                          <span className="block font-medium">{t.name}</span>
+                          {t.ats && <span className="mt-1 inline-block rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-800">ATS</span>}
+                          {style.template === t.id && <Check className="absolute right-2 top-2 h-4 w-4 text-primary" />}
+                        </button>
+                      ))}
+                    </div>
+                  </Card>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        {/* ================= BASIC TEMPLATES ================= */}
-                        <div>
-                          <p className="text-sm font-medium mb-2 text-muted-foreground">
-                            Basic Templates
-                          </p>
+                  <Card className="gap-0 border-border/50 bg-card/60 p-6 backdrop-blur-sm">
+                    <h3 className="mb-4 text-lg font-semibold">Colors</h3>
+                    <div className="mb-5 flex flex-wrap gap-2">
+                      {COLOR_PRESETS.map((p) => (
+                        <button
+                          key={p.name}
+                          onClick={() => setStyle((s) => ({ ...s, colors: { ...s.colors, primary: p.primary, secondary: p.secondary, accent: p.accent, text: p.text } }), false)}
+                          className="flex items-center gap-1.5 rounded-full border bg-background px-2.5 py-1 text-xs hover:border-primary/60"
+                        >
+                          <span className="flex">
+                            {[p.primary, p.secondary, p.accent].map((c) => (
+                              <span key={c} className="-ml-1 h-3.5 w-3.5 rounded-full ring-2 ring-background first:ml-0" style={{ background: c }} />
+                            ))}
+                          </span>
+                          {p.name}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      {(["primary", "secondary", "accent", "text"] as const).map((key) => (
+                        <div key={key} className="space-y-2">
+                          <Label className="capitalize">{key} color</Label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={/^#[0-9a-f]{6}$/i.test(style.colors[key]) ? style.colors[key] : "#000000"}
+                              onChange={(e) => setStyle((s) => ({ ...s, colors: { ...s.colors, [key]: e.target.value } }))}
+                              className="h-10 w-10 shrink-0 cursor-pointer rounded border border-border"
+                            />
+                            <Input value={style.colors[key]} onChange={(e) => setStyle((s) => ({ ...s, colors: { ...s.colors, [key]: e.target.value } }))} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </Card>
 
-                          <Select
-                            value={basicTemplate}
-                            onValueChange={(value) => {
-                              // Reset ATS
-                              setAtsTemplate("")
-                              setBasicTemplate(value)
-
-                              updateStyle("template", "", value)
-                            }}
-                          >
-                            <SelectTrigger>
-                              <SelectValue
-                                placeholder={"Choose basic template"}
-                              />
+                  <Card className="gap-0 border-border/50 bg-card/60 p-6 backdrop-blur-sm">
+                    <h3 className="mb-4 text-lg font-semibold">Typography</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {(["heading", "body"] as const).map((key) => (
+                        <div key={key} className="space-y-2">
+                          <Label className="capitalize">{key} font</Label>
+                          <Select value={style.fonts[key]} onValueChange={(value) => setStyle((s) => ({ ...s, fonts: { ...s.fonts, [key]: value } }), false)}>
+                            <SelectTrigger className="w-full">
+                              <SelectValue />
                             </SelectTrigger>
-
                             <SelectContent>
-                              <SelectItem value="modern-minimal">Modern Minimal</SelectItem>
-                              <SelectItem value="creative-photo">Creative Photo</SelectItem>
-                              <SelectItem value="timeline">Timeline Resume</SelectItem>
-                              <SelectItem value="creative-card">Creative Card</SelectItem>
+                              {FONTS.map((f) => (
+                                <SelectItem key={f} value={f} style={{ fontFamily: f }}>
+                                  {f}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
-
                         </div>
-
-                        {/* ================= ATS TEMPLATES ================= */}
-                        <div>
-                          <p className="text-sm font-medium mb-2 text-muted-foreground">
-                            ATS-Friendly Templates
-                          </p>
-
-                          <Select
-  disabled={plan}
-  value={atsTemplate}
-  onValueChange={(value) => {
-    if (plan) {
-      setShowModal(true)
-      return
-    }
-
-    if (plan === "BASIC") {
-      setShowTemplateLockModal(true)
-      return
-    }
-
-    // Reset Basic template
-    setBasicTemplate("")
-    setAtsTemplate(value)
-    updateStyle("template", "", value)
-  }}
->
-  <SelectTrigger>
-    <SelectValue
-      placeholder={
-        plan
-          ? "Upgrade for ATS templates"
-          : plan === "BASIC"
-          ? "Upgrade plan to unlock ATS"
-          : "Choose ATS template"
-      }
-    />
-  </SelectTrigger>
-
-  <SelectContent>
-    <SelectItem value="executive-pro">Executive Pro</SelectItem>
-    <SelectItem value="tech-focused">Tech Focused</SelectItem>
-    <SelectItem value="centered-elegant">Centered Elegant</SelectItem>
-    <SelectItem value="two-column-modern">Two Column Modern</SelectItem>
-    <SelectItem value="modern-sidebar">Modern Sidebar</SelectItem>
-    <SelectItem value="classic-highlight">Classic Highlight</SelectItem>
-  </SelectContent>
-</Select>
-
-                        </div>
-                      </div>
-                    </Card>
-                  )}
-
-                  {/* Colors */}
-                  <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50">
-                    <h3 className="text-lg font-semibold mb-0">Colors</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Primary Color</Label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="color"
-                            value={resumeStyle.colors.primary}
-                            onChange={(e) => updateStyle("colors", "primary", e.target.value)}
-                            className="w-10 h-10 rounded border border-border"
-                          />
-                          <Input
-                            value={resumeStyle.colors.primary}
-                            onChange={(e) => updateStyle("colors", "primary", e.target.value)}
-                            placeholder="#1f2937"
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Secondary Color</Label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="color"
-                            value={resumeStyle.colors.secondary}
-                            onChange={(e) => updateStyle("colors", "secondary", e.target.value)}
-                            className="w-10 h-10 rounded border border-border"
-                          />
-                          <Input
-                            value={resumeStyle.colors.secondary}
-                            onChange={(e) => updateStyle("colors", "secondary", e.target.value)}
-                            placeholder="#8b5cf6"
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Accent Color</Label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="color"
-                            value={resumeStyle.colors.accent}
-                            onChange={(e) => updateStyle("colors", "accent", e.target.value)}
-                            className="w-10 h-10 rounded border border-border"
-                          />
-                          <Input
-                            value={resumeStyle.colors.accent}
-                            onChange={(e) => updateStyle("colors", "accent", e.target.value)}
-                            placeholder="#3b82f6"
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Text Color</Label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="color"
-                            value={resumeStyle.colors.text}
-                            onChange={(e) => updateStyle("colors", "text", e.target.value)}
-                            className="w-10 h-10 rounded border border-border"
-                          />
-                          <Input
-                            value={resumeStyle.colors.text}
-                            onChange={(e) => updateStyle("colors", "text", e.target.value)}
-                            placeholder="#374151"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-
-                  {/* Typography */}
-                  <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50">
-                    <h3 className="text-lg font-semibold mb-0">Typography</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Heading Font</Label>
-                        <Select
-                          value={resumeStyle.fonts.heading}
-                          onValueChange={(value) => updateStyle("fonts", "heading", value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Inter">Inter</SelectItem>
-                            <SelectItem value="Roboto">Roboto</SelectItem>
-                            <SelectItem value="Open Sans">Open Sans</SelectItem>
-                            <SelectItem value="Lato">Lato</SelectItem>
-                            <SelectItem value="Montserrat">Montserrat</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Body Font</Label>
-                        <Select
-                          value={resumeStyle.fonts.body}
-                          onValueChange={(value) => updateStyle("fonts", "body", value)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Inter">Inter</SelectItem>
-                            <SelectItem value="Roboto">Roboto</SelectItem>
-                            <SelectItem value="Open Sans">Open Sans</SelectItem>
-                            <SelectItem value="Lato">Lato</SelectItem>
-                            <SelectItem value="Montserrat">Montserrat</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      ))}
                     </div>
                   </Card>
                 </TabsContent>
 
+                {/* ================= LAYOUT ================= */}
                 <TabsContent value="layout" className="space-y-6">
-                  {/* Layout Options */}
-                  <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50">
-                    <h3 className="text-lg font-semibold mb-4">Layout Options</h3>
+                  <Card className="gap-0 border-border/50 bg-card/60 p-6 backdrop-blur-sm">
+                    <h3 className="mb-4 text-lg font-semibold">Layout Options</h3>
                     <div className="space-y-6">
                       <div className="flex items-center justify-between">
-                        <Label>Show Photo</Label>
-                        <Switch
-                          checked={resumeStyle.showPhoto}
-                          onCheckedChange={(checked) => updateStyle("showPhoto", "", checked)}
-                        />
+                        <div>
+                          <Label htmlFor="show-photo">Show photo</Label>
+                          <p className="text-xs text-muted-foreground">Many US/UK employers prefer resumes without photos.</p>
+                        </div>
+                        <Switch id="show-photo" checked={style.showPhoto} onCheckedChange={(showPhoto) => setStyle((s) => ({ ...s, showPhoto }), false)} />
                       </div>
-
-                      <div className="space-y-2">
-                        <Label>Spacing: {resumeStyle.spacing}px</Label>
-                        <Slider
-                          value={[resumeStyle.spacing]}
-                          onValueChange={(value) => updateStyle("spacing", "", value[0])}
-                          max={32}
-                          min={8}
-                          step={2}
-                        />
+                      <div className="space-y-3">
+                        <Label>Spacing: {style.spacing}px</Label>
+                        <Slider value={[style.spacing]} onValueChange={([v]) => setStyle((s) => ({ ...s, spacing: v }))} max={32} min={8} step={2} />
                       </div>
-                      <div className="space-y-2">
-                        <Label>Border Radius: {resumeStyle.borderRadius}px</Label>
-                        <Slider
-                          value={[resumeStyle.borderRadius]}
-                          onValueChange={(value) => updateStyle("borderRadius", "", value[0])}
-                          max={16}
-                          min={0}
-                          step={2}
-                        />
+                      <div className="space-y-3">
+                        <Label>Corner radius: {style.borderRadius}px</Label>
+                        <Slider value={[style.borderRadius]} onValueChange={([v]) => setStyle((s) => ({ ...s, borderRadius: v }))} max={16} min={0} step={2} />
                       </div>
                     </div>
                   </Card>
-
-                  {/* Export Options */}
-                  <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50">
-  <h3 className="text-lg font-semibold mb-4">Export Options</h3>
-
-  <div className="grid grid-cols-2 gap-3">
-    {/* PDF */}
-    <Button
-      disabled={!!isExporting}
-      onClick={() => handleExport("pdf")}
-      className="flex-col h-auto py-4"
-    >
-      {isExporting === "pdf" ? (
-        <>
-          <Loader2 className="w-5 h-5 mb-2 animate-spin" />
-          Exporting…
-        </>
-      ) : (
-        <>
-          <Download className="w-6 h-6 mb-2" />
-          PDF
-        </>
-      )}
-    </Button>
-
-    {/* PNG */}
-    <Button
-      disabled={!!isExporting}
-      onClick={() => handleExport("png")}
-      variant="outline"
-      className="flex-col h-auto py-4"
-    >
-      {isExporting === "png" ? (
-        <>
-          <Loader2 className="w-5 h-5 mb-2 animate-spin" />
-          Exporting…
-        </>
-      ) : (
-        <>
-          <Download className="w-6 h-6 mb-2" />
-          PNG
-        </>
-      )}
-    </Button>
-  </div>
-</Card>
-
                 </TabsContent>
               </Tabs>
             </div>
           )}
 
-          {/* Preview Panel */}
-          <div className={cn("sticky top-24 h-fit", previewMode && "mx-auto max-w-4xl")}>
-            <Card className="p-6 bg-card/60 backdrop-blur-sm border-border/50">
-              <div className="flex items-center justify-between mb-4">
+          {/* Preview */}
+          <div className={cn("min-w-0", previewOnly ? "mx-auto w-full max-w-[860px]" : "lg:sticky lg:top-20 lg:h-fit")}>
+            <Card className="gap-0 border-border/50 bg-card/60 p-4 backdrop-blur-sm sm:p-6">
+              <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg font-semibold">Live Preview</h3>
-                <div className="flex items-center space-x-2">
-                  <Badge variant="secondary" className="animate-pulse">
-                    <Zap className="w-3 h-3 mr-1" />
-                    Live
-                  </Badge>
-                </div>
+                <Badge variant="secondary">A4 · {TEMPLATES.find((t) => t.id === style.template)?.name}</Badge>
               </div>
-              <div
-                id="export-area"
-                style={{
-                  position: "relative",
-                  background: "white",
-                  padding: 0,
-                  margin: 0,
-                  userSelect: "none",
-                  WebkitUserSelect: "none",
-                  MozUserSelect: "none",
-                  overflow: "hidden",
-                }}
-              >
-                {/* BLUR OVERLAY */}
-                {/* BLUR OVERLAY */}
-                {isBlurred && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      backdropFilter: "blur(12px)",
-                      WebkitBackdropFilter: "blur(12px)",
-                      background: "rgba(255, 255, 255, 0.45)",
-                      pointerEvents: "none",
-                      zIndex: 99999,
-                    }}
-                  ></div>
-                )}
-
-                {/* PREVIEW BUTTON */}
-                {isBlurred && (
-                  <button
-                    onClick={() => setShowModal(true)}
-                    style={{
-                      position: "absolute",
-                      top: "50%",
-                      left: "50%",
-                      transform: "translate(-50%, -50%)",
-                      padding: "14px 28px",
-                      fontSize: "16px",
-                      fontWeight: "600",
-                      background: "#111827",
-                      color: "white",
-                      borderRadius: "8px",
-                      border: "none",
-                      cursor: "pointer",
-                      zIndex: 100000,
-                      boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
-                    }}
-                  >
-                    Preview Resume
-                  </button>
-                )}
-                {/* BLUR OVERLAY */}
-                {isBlurred && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      backdropFilter: "blur(12px)",
-                      WebkitBackdropFilter: "blur(12px)",
-                      background: "rgba(255, 255, 255, 0.45)",
-                      pointerEvents: "none",
-                      zIndex: 99999,
-                    }}
-                  ></div>
-                )}
-
-                {/* PREVIEW BUTTON */}
-                {isBlurred && (
-                  <button
-                    onClick={() => setShowModal(true)}
-                    style={{
-                      position: "absolute",
-                      top: "50%",
-                      left: "50%",
-                      transform: "translate(-50%, -50%)",
-                      padding: "14px 28px",
-                      fontSize: "16px",
-                      fontWeight: "600",
-                      background: "#111827",
-                      color: "white",
-                      borderRadius: "8px",
-                      border: "none",
-                      cursor: "pointer",
-                      zIndex: 100000,
-                      boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
-                    }}
-                  >
-                    Preview Resume
-                  </button>
-                )}
-
-
-
-                <TemplatePreview templateId={resumeStyle.template} data={resumeData} styleConfig={resumeStyle} />
+              <div className={cn(!previewOnly && "lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto lg:pr-1")}>
+                <ResumePreview ref={previewRef} data={data} style={style} />
               </div>
-
             </Card>
           </div>
         </div>
       </div>
-      {showToast && toastPayload && (
-        <GeneralToast
-          variant={toastPayload.variant}
-          title={toastPayload.title}
-          description={toastPayload.description}
-        />
-      )}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-[200000] px-3 py-8 overflow-y-auto">
-
-          <div
-            className="
-        bg-white 
-        rounded-2xl 
-        shadow-2xl 
-        w-full 
-        max-w-3xl 
-        p-4 sm:p-10 
-        relative 
-        transition-all 
-        animate-in fade-in zoom-in-95
-      "
-          >
-            {/* Title */}
-            <h2 className="text-xl sm:text-3xl font-bold text-gray-900 text-center mb-2 sm:mb-3">
-              Unlock Full Resume Access
-            </h2>
-
-            <p className="text-sm sm:text-lg text-gray-600 text-center mb-5 sm:mb-10">
-              Choose a plan to preview in HD & export without limits.
-            </p>
-
-            {/* Pricing Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-
-              {/* OPTION 1 */}
-              <div className="border rounded-2xl p-4 sm:p-6 bg-gray-50 hover:shadow-xl transition cursor-pointer">
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 text-center">₹49</h3>
-                <p className="text-xs sm:text-sm text-gray-600 text-center mb-3">
-                  Basic Pack
-                </p>
-
-                <ul className="text-[13px] sm:text-[15px] text-gray-700 space-y-1.5 mb-4">
-                  <li>✔ Full HD Preview</li>
-                  <li>✔ Export PDF & PNG</li>
-                  <li>✔ Remove Watermark</li>
-                </ul>
-
-                <button
-                  onClick={() => window.location.href = `/checkout?plan=BASIC`}
-                  className="w-full py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition text-sm sm:text-base"
-                >
-                  Choose ₹49
-                </button>
-              </div>
-
-              {/* OPTION 2 (Popular) */}
-              <div className="relative border-2 border-blue-600 rounded-2xl p-4 sm:p-6 bg-blue-50 hover:shadow-xl transition cursor-pointer">
-
-                {/* Ribbon */}
-                <span className="absolute -top-3 sm:-top-5 left-1/2 -translate-x-1/2 rotate-[5deg] bg-blue-600 text-white px-3 sm:px-6 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-semibold shadow-md">
-                  MOST POPULAR
-                </span>
-
-                <h3 className="text-lg sm:text-xl font-semibold text-blue-700 text-center">₹69</h3>
-                <p className="text-xs sm:text-sm text-blue-600 text-center mb-3">Advanced Pack</p>
-
-                <ul className="text-[13px] sm:text-[15px] text-gray-700 space-y-1.5 mb-4">
-                  <li>✔ Unlimited Downloads</li>
-                  <li>✔ HD Preview Forever</li>
-                  <li>✔ Access All Templates</li>
-                </ul>
-
-                <button
-                  onClick={() => window.location.href = `/checkout?plan=ADVANCED`}
-                  className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition text-sm sm:text-base"
-                >
-                  Choose ₹69
-                </button>
-              </div>
-
-              {/* OPTION 3 */}
-              <div className="border rounded-2xl p-4 sm:p-6 bg-gray-50 hover:shadow-xl transition cursor-pointer">
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 text-center">₹119</h3>
-                <p className="text-xs sm:text-sm text-gray-600 text-center mb-3">
-                  Premium Pack
-                </p>
-
-                <ul className="text-[13px] sm:text-[15px] text-gray-700 space-y-1.5 mb-4">
-                  <li>✔ Unlimited Everything</li>
-                  <li>✔ All Future Templates</li>
-                  <li>✔ Priority Support</li>
-                </ul>
-
-                <button
-                  onClick={() => window.location.href = `/checkout?plan=PREMIUM`}
-                  className="w-full py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-black transition text-sm sm:text-base"
-                >
-                  Choose ₹119
-                </button>
-              </div>
-
-            </div>
-
-            {/* CLOSE BUTTON */}
-            <div className="flex justify-center mt-6 sm:mt-10">
-              <button
-                onClick={() => setShowModal(false)}
-                className="
-            w-full sm:w-auto
-            px-10 
-            py-4 
-            rounded-xl
-            bg-gray-200 
-            text-gray-800 
-            font-semibold 
-            hover:bg-gray-300 
-            transition
-            text-base sm:text-lg
-            shadow-md 
-            active:scale-95
-          "
-              >
-                Close
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
-
-
-      {showTemplateLockModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-6">
-          <div className="bg-white w-full max-w-md p-8 rounded-2xl shadow-2xl text-center">
-
-            <h2 className="text-2xl font-bold mb-2">Upgrade Required 🔒</h2>
-
-            <p className="text-gray-600 mb-6">
-              This feature is only available for Advanced & Premium users.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3 w-full mt-6">
-
-              {/* Upgrade to Advanced */}
-              <button
-                onClick={() => window.location.href = "/checkout?plan=BASICTOADVANCED"}
-                className="flex-1 py-3 bg-green-600 text-white rounded-xl font-semibold 
-             hover:bg-green-700 transition"
-              >
-                Upgrade to Advanced <span className="font-bold">₹59</span>
-              </button>
-
-              {/* Upgrade to Premium */}
-              <button
-                onClick={() => window.location.href = "/checkout?plan=BASICTOPREMIUM"}
-                className="flex-1 py-3 bg-purple-600 text-white rounded-xl font-semibold 
-             hover:bg-purple-700 transition"
-              >
-                Upgrade to Premium <span className="font-bold">₹69</span>
-              </button>
-
-            </div>
-
-            {/* Close Button */}
-            <button
-              onClick={() => setShowTemplateLockModal(false)}
-              className="w-full py-3 mt-4 bg-gray-100 text-gray-800 rounded-xl 
-             hover:bg-gray-200 transition font-medium"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
