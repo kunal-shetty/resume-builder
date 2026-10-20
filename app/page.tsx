@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import {
-  ArrowRight, Sparkles, Zap, Palette, Download, Globe,
-  AppWindow, FileDown, Brain, CloudUpload, ShieldCheck, Trophy, LineChart
+  ArrowRight, Sparkles, Zap, Palette, Download,
+  FileDown, Brain, CloudUpload, ShieldCheck, Trophy, LineChart
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -13,13 +13,16 @@ import AnimatedBlob from "@/components/AnimatedBlob"
 import TypewriterText from "@/components/TypewriterText"
 import GlitchText from "@/components/GlitchText"
 import FloatingElements from "@/components/FloatingElements"
+import { hasSavedResume } from "@/lib/resume"
 
 export default function HomePage() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [isLoaded, setIsLoaded] = useState(false)
+  const [hasDraft, setHasDraft] = useState(false)
 
   useEffect(() => {
     setIsLoaded(true)
+    setHasDraft(hasSavedResume())
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY })
     }
@@ -29,47 +32,46 @@ export default function HomePage() {
 
   const features = [
     {
-      icon: <Palette className="w-8 h-8" />,
-      title: "Premium Templates",
-      description: "Choose from sleek, recruiter-approved designs and tailor them with fonts, colors, and layouts that fit your style.",
-    },
-    {
-      icon: <FileDown className="w-8 h-8" />,
-      title: "Instant Export",
-      description: "Download high-quality PDF or DOCX versions of your resume instantly with one click.",
-    },
-    {
-      icon: <Globe className="w-8 h-8" />,
-      title: "Access Anywhere",
-      description: "Your resume builder works seamlessly across devices, anytime, anywhere with auto-sync.",
+      icon: <Brain className="w-8 h-8" />,
+      title: "AI Writing",
+      description: "AI drafts your summary and turns rough notes into strong, achievement-focused bullet points.",
     },
     {
       icon: <Zap className="w-8 h-8" />,
-      title: "ATS Optimized",
-      description: "Smart formatting ensures your resume beats Applicant Tracking Systems with ease.",
+      title: "ATS Job Match",
+      description: "Paste a job post to get a match score, missing keywords and specific fixes before you apply.",
     },
     {
-      icon: <Brain className="w-8 h-8" />,
-      title: "Smart Sections",
-      description: "Easily add projects, certifications, and custom sections that highlight your strengths.",
+      icon: <Palette className="w-8 h-8" />,
+      title: "10 Templates",
+      description: "Recruiter-friendly designs, six of them ATS-optimized, with your own colors, fonts and spacing.",
+    },
+    {
+      icon: <FileDown className="w-8 h-8" />,
+      title: "Pixel-Perfect PDF",
+      description: "Download a crisp A4 PDF with real, selectable text that looks exactly like the preview.",
+    },
+    {
+      icon: <CloudUpload className="w-8 h-8" />,
+      title: "Import in Seconds",
+      description: "Paste an old resume or LinkedIn profile and AI fills in every section for you.",
     },
     {
       icon: <ShieldCheck className="w-8 h-8" />,
-      title: "Secure & Private",
-      description: "Your data is encrypted, auto-saved, and protected with enterprise-grade security.",
+      title: "No Sign-Up, Private",
+      description: "No account needed. Your resume is saved only in your browser; back it up to a file anytime.",
     },
     {
       icon: <Trophy className="w-8 h-8" />,
-      title: "Career Boost",
-      description: "Stand out with polished, professional resumes that give you the competitive edge.",
+      title: "Career Assistant",
+      description: "Ask the built-in AI how to phrase an achievement, what to cut, or how to tailor for a role.",
     },
     {
       icon: <LineChart className="w-8 h-8" />,
-      title: "Insights & Analytics",
-      description: "Track performance, get insights, and optimize your resumes for better opportunities.",
+      title: "Live Preview",
+      description: "Every edit shows instantly on a true A4 page, with page-break guides so nothing gets cut off.",
     },
   ]
-
 
   return (
     <div className="min-h-screen relative text-white overflow-hidden">
@@ -83,7 +85,7 @@ export default function HomePage() {
 
       {/* Custom glowing cursor */}
       <motion.div
-        className="fixed w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full pointer-events-none z-50 mix-blend-difference shadow-lg shadow-orange-500/50"
+        className="fixed top-0 left-0 hidden md:block w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full pointer-events-none z-50 mix-blend-difference shadow-lg shadow-orange-500/50"
         animate={{
           x: mousePosition.x - 12,
           y: mousePosition.y - 12,
@@ -119,26 +121,36 @@ export default function HomePage() {
             transition={{ delay: 1.5 }}
             className="text-lg sm:text-xl md:text-2xl text-gray-300 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed"
           >
-            Build world-class resumes with modern designs, real-time editing, and recruiter-approved layouts.
-            Land interviews faster with a tool designed for professionals.
+            Build an ATS-ready resume in minutes. AI writes and tailors it to the job, and you download a
+            pixel-perfect PDF. Free, no sign-up, and your data never leaves your browser.
           </motion.p>
 
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 2 }}
-            className="flex justify-center items-center"
+            className="flex flex-col sm:flex-row justify-center items-center gap-4"
           >
-            <Link href="/auth">
+            <Link href={hasDraft ? "/editor" : "/templates"}>
               <Button
                 size="lg"
                 className="relative group bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-8 py-4 text-lg font-semibold rounded-full overflow-hidden"
               >
                 <span className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500"></span>
                 <span className="relative flex items-center">
-                  Start Building
+                  {hasDraft ? "Continue Editing" : "Choose a Template"}
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </span>
+              </Button>
+            </Link>
+            <Link href="/builder">
+              <Button
+                size="lg"
+                variant="outline"
+                className="rounded-full border-white/30 bg-white/5 px-8 py-4 text-lg font-semibold text-white hover:bg-white/10 hover:text-white"
+              >
+                <Sparkles className="mr-2 w-5 h-5" />
+                Guided Builder
               </Button>
             </Link>
           </motion.div>
@@ -215,7 +227,7 @@ export default function HomePage() {
             Craft a resume that speaks louder than words — designed to impress recruiters,
             stand out instantly, and unlock better opportunities.
           </p>
-          <Link href="/auth">
+          <Link href={hasDraft ? "/editor" : "/templates"}>
             <Button
               size="lg"
               className="relative group px-12 py-6 text-xl font-bold rounded-full bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-white overflow-hidden"
