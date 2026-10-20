@@ -1,7 +1,9 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -9,40 +11,12 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, ArrowRight, User, Briefcase, GraduationCap, Zap, FileText, Plus, X } from "lucide-react"
+import { ArrowLeft, ArrowRight, User, Briefcase, GraduationCap, Zap, FileText, Plus, X, Sparkles, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import GeneralToast from "@/components/Toast"
+import { useToast } from "@/hooks/use-toast"
 import CurtainReveal from "@/components/CurtainReveal"
-
-interface ResumeData {
-  personal: {
-    firstName: string
-    lastName: string
-    email: string
-    phone: string
-    location: string
-    summary: string
-  }
-  experience: Array<{
-    id: string
-    company: string
-    position: string
-    startDate: string
-    endDate: string
-    current: boolean
-    description: string
-  }>
-  education: Array<{
-    id: string
-    school: string
-    degree: string
-    field: string
-    graduationDate: string
-    gpa?: string
-  }>
-  skills: string[]
-  customSections: string[]
-}
+import { callAI } from "@/lib/ai-client"
+import { emptyResume, loadResume, newId, resumeToText, saveResume, type ResumeData } from "@/lib/resume"
 
 const steps = [
   { id: 1, title: "Personal", icon: User },
@@ -53,49 +27,31 @@ const steps = [
 ]
 
 export default function ResumeBuilderPage() {
-  const [showToast, setShowToast] = useState(false)
-  const [toastPayload, setToastPayload] = useState<{
-    variant: "success" | "error" | "warning" | "info"
-    title: string
-    description: string
-  } | null>(null)
-
+  const { toast } = useToast()
+  const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
-  const [resumeData, setResumeData] = useState<ResumeData>({
-    personal: {
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      location: "",
-      summary: "",
-    },
-    experience: [],
-    education: [],
-    skills: [],
-    customSections: []
-  })
+  const [resumeData, setResumeData] = useState<ResumeData>(emptyResume)
+  const [hydrated, setHydrated] = useState(false)
+
+  // Resume where the user left off; everything stays in this browser.
+  useEffect(() => {
+    setResumeData(loadResume())
+    setHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    if (hydrated) saveResume(resumeData)
+  }, [resumeData, hydrated])
 
   const progress = (currentStep / steps.length) * 100
 
-  const triggerToast = (
-    variant: "success" | "error" | "warning" | "info",
-    title: string,
-    description: string
-  ) => {
-    setShowToast(false)
-    setToastPayload({ variant, title, description })
-
-    setTimeout(() => {
-      setShowToast(true)
-    }, 10)
-  }
-
+  const triggerToast = (variant: "success" | "error" | "warning" | "info", title: string, description: string) =>
+    toast({ title, description, variant: variant === "error" ? "destructive" : "default" })
 
   const nextStep = () => {
     if (!validateStep(currentStep)) return
-
     setCurrentStep((prev) => prev + 1)
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
 
@@ -107,7 +63,7 @@ export default function ResumeBuilderPage() {
 
   const addExperience = () => {
     const newExp = {
-      id: Date.now().toString(),
+      id: newId(),
       company: "",
       position: "",
       startDate: "",
@@ -137,7 +93,7 @@ export default function ResumeBuilderPage() {
 
   const addEducation = () => {
     const newEdu = {
-      id: Date.now().toString(),
+      id: newId(),
       school: "",
       degree: "",
       field: "",
@@ -218,6 +174,7 @@ export default function ResumeBuilderPage() {
         return (
           <SummaryStep
             data={resumeData}
+            onError={(message: string) => triggerToast("error", "AI couldn't finish", message)}
             onSummaryChange={(value :any) =>
               setResumeData((prev) => ({
                 ...prev,
@@ -236,14 +193,12 @@ export default function ResumeBuilderPage() {
     if (step === 1) {
       const p = resumeData.personal
 
-      if (!p.firstName || !p.lastName || !p.email || !p.phone || !p.location) {
-        triggerToast(
-          "error",
-          "Missing Information",
-          "Please fill in your name, email, phone, and location to continue."
-        )
-
-
+      if (!p.firstName.trim() || !p.lastName.trim() || !p.email.trim()) {
+        triggerToast("error", "Missing information", "Please fill in at least your name and email to continue.")
+        return false
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email.trim())) {
+        triggerToast("error", "Check your email", "That email address doesn't look right.")
         return false
       }
 
@@ -273,22 +228,12 @@ export default function ResumeBuilderPage() {
 
     // STEP 3 — EDUCATION
     if (step === 3) {
-      if (resumeData.education.length === 0) {
-        triggerToast(
-          "warning",
-          "Education Required",
-          "Add at least one education entry to proceed to the next step."
-        )
-
-        return false
-      }
-
       for (const edu of resumeData.education) {
-        if (!edu.school || !edu.degree || !edu.field || !edu.graduationDate) {
+        if (!edu.school || !edu.degree) {
           triggerToast(
             "error",
-            "Education Details Incomplete",
-            "Please fill in your school name, degree, field of study, and graduation date."
+            "Education details incomplete",
+            "Each education entry needs at least a school and a degree. Remove empty entries you don't need."
           )
 
           return false
@@ -323,13 +268,15 @@ export default function ResumeBuilderPage() {
         <div className="max-w-4xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <Button
+              asChild
               variant="ghost"
               size="sm"
-              onClick={() => window.history.back()}
               className="text-gray-600 hover:text-orange-600 hover:bg-orange-50 transition-all duration-200"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
+              <Link href="/">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Home
+              </Link>
             </Button>
             <Badge className="bg-orange-100 text-orange-700 border-orange-200 shadow-lg shadow-orange-500/20">
               {currentStep} / {steps.length}
@@ -361,7 +308,7 @@ export default function ResumeBuilderPage() {
                   }}
                   disabled={!isCompleted}
                   className={cn(
-                    "flex items-center space-x-6 mx-2 px-6 py-2 rounded-lg transition-all duration-300 text-sm font-medium relative",
+                    "flex items-center gap-2 mx-0.5 sm:mx-1 px-3 sm:px-4 py-2 rounded-lg transition-all duration-300 text-sm font-medium relative",
                     isActive && "bg-orange-500 text-white shadow-lg shadow-orange-500/40 scale-105",
                     isCompleted && "text-orange-600 hover:bg-orange-50",
                     !isActive && !isCompleted && "text-gray-500 hover:text-gray-700 hover:bg-orange-50",
@@ -398,18 +345,11 @@ export default function ResumeBuilderPage() {
 
               className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 shadow-lg shadow-orange-500/30 hover:shadow-orange-500/40 hover:scale-105 transition-all duration-200"
               onClick={() => {
-                localStorage.setItem(
-                  "resume-data",
-                  JSON.stringify({
-                    ...resumeData,
-                    customSections: resumeData.customSections || [],
-                  })
-                )
-
-                window.location.href = "/editor"
+                saveResume(resumeData)
+                router.push("/templates")
               }}
             >
-              Preview
+              Choose a template
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           ) : (
@@ -423,13 +363,6 @@ export default function ResumeBuilderPage() {
           )}
         </div>
       </div>
-      {showToast && toastPayload && (
-        <GeneralToast
-          variant={toastPayload.variant}
-          title={toastPayload.title}
-          description={toastPayload.description}
-        />
-      )}
     </div>
   )
 }
@@ -513,7 +446,6 @@ function PersonalInfoStep({ data, onChange }: any) {
 function ExperienceStep({ experiences, onAdd, onRemove, onUpdate }: any) {
   return (
     <div className="space-y-6">
-      <CurtainReveal />
 
       <div className="text-center mb-8">
         <h2 className="text-2xl font-semibold text-gray-900 mb-2 drop-shadow-sm">Work Experience</h2>
@@ -623,7 +555,6 @@ function ExperienceStep({ experiences, onAdd, onRemove, onUpdate }: any) {
 function EducationStep({ education, onAdd, onRemove, onUpdate }: any) {
   return (
     <div className="space-y-6">
-      <CurtainReveal />
       <div className="text-center mb-8">
         <h2 className="text-2xl font-semibold text-gray-900 mb-2 drop-shadow-sm">Education</h2>
         <p className="text-gray-600">Add your educational background</p>
@@ -731,7 +662,6 @@ function SkillsStep({ skills, onAdd, onRemove }: any) {
 
   return (
     <div className="space-y-6">
-      <CurtainReveal />
       <div className="text-center mb-8">
         <h2 className="text-2xl font-semibold text-gray-900 mb-2 drop-shadow-sm">Skills</h2>
         <p className="text-gray-600">Add your key skills and competencies</p>
@@ -741,7 +671,7 @@ function SkillsStep({ skills, onAdd, onRemove }: any) {
         <Input
           value={newSkill}
           onChange={(e) => setNewSkill(e.target.value)}
-          onKeyPress={handleKeyPress}
+          onKeyDown={handleKeyPress}
           placeholder="Type a skill and press Enter"
           className="flex-1 border-gray-300 focus:border-orange-500 focus:ring-orange-500 focus:shadow-lg focus:shadow-orange-500/20 transition-all duration-200"
         />
@@ -783,26 +713,52 @@ function SkillsStep({ skills, onAdd, onRemove }: any) {
   )
 }
 
-function SummaryStep({ data, onSummaryChange }: any) {
+function SummaryStep({ data, onSummaryChange, onError }: any) {
+  const [busy, setBusy] = useState(false)
+
+  const writeWithAI = async () => {
+    setBusy(true)
+    try {
+      const { summary } = await callAI<{ summary: string }>("summary", { resume: resumeToText(data) })
+      onSummaryChange(summary)
+    } catch (err) {
+      onError((err as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
-      <CurtainReveal />
       <div className="text-center mb-8">
         <h2 className="text-2xl font-semibold text-gray-900 mb-2 drop-shadow-sm">Review & Summary</h2>
         <p className="text-gray-600">Add a professional summary to complete your resume</p>
       </div>
 
       <div className="space-y-4">
-        <Label htmlFor="summary" className="text-sm font-medium text-gray-700">
-          Professional Summary
-        </Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="summary" className="text-sm font-medium text-gray-700">
+            Professional Summary
+          </Label>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={writeWithAI}
+            disabled={busy}
+            className="gap-1.5 border-orange-300 text-orange-700 hover:bg-orange-50"
+          >
+            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            {data.personal.summary ? "Rewrite with AI" : "Write with AI"}
+          </Button>
+        </div>
         <Textarea
           id="summary"
           value={data.personal.summary}
           onChange={(e) => onSummaryChange(e.target.value)}
           placeholder="Write a brief summary of your professional background and goals..."
-          rows={4}
-          className="border-gray-300 focus:border-orange-500 focus:ring-orange-500 focus:shadow-lg focus:shadow-orange-500/20 resize-none transition-all duration-200"
+          rows={6}
+          className="border-gray-300 focus:border-orange-500 focus:ring-orange-500 focus:shadow-lg focus:shadow-orange-500/20 transition-all duration-200"
         />
       </div>
 
