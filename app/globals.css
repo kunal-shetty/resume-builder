@@ -242,3 +242,11 @@
 }
 
 
+
+/* Resume sheet: honour line breaks so AI/user bullet points render as lines. */
+.resume-sheet p {
+  white-space: pre-line;
+}
+.resume-sheet {
+  -webkit-font-smoothing: antialiased;
+}
