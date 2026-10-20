@@ -1,8 +1,86 @@
 "use client"
 
-import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import type React from "react"
 import { User, Mail, Phone, MapPin, Building } from "lucide-react"
+
+// Neutral avatar shown when "Show photo" is on but no photo was uploaded.
+// Inline so it renders in the PDF renderer, which blocks external requests.
+const PHOTO_PLACEHOLDER =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#e5e7eb"/><circle cx="32" cy="25" r="11" fill="#9ca3af"/><path d="M12 56c2-11 10-17 20-17s18 6 20 17z" fill="#9ca3af"/></svg>',
+  )
+
+// The page itself. Fixed to A4 width so preview and PDF lay out identically.
+// className from the templates is intentionally ignored: it carried card chrome
+// (border, shadow, max-width) that does not belong on a printed page.
+function Card({
+  style,
+  children,
+  extras,
+}: {
+  className?: string
+  style?: React.CSSProperties
+  children?: React.ReactNode
+  extras?: { data: any; styleConfig: any }
+}) {
+  return (
+    <div
+      className="resume-sheet"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        // Grid templates define their own columns; a gap there would push them off the page.
+        gap: style?.display === "grid" ? 0 : 24,
+        width: 794,
+        minHeight: 1123,
+        boxSizing: "border-box",
+        overflow: "hidden",
+        ...style,
+      }}
+    >
+      {children}
+      {extras && <ExtraSections data={extras.data} styleConfig={extras.styleConfig} fullWidth={style?.display === "grid"} />}
+    </div>
+  )
+}
+
+/** Generic "Additional Sections" block for templates without their own design for it. */
+function ExtraSections({ data, styleConfig, fullWidth }: { data: any; styleConfig: any; fullWidth: boolean }) {
+  const sections = (data.customSections || []).filter((s: any) => s.title || s.content)
+  if (!sections.length) return null
+  return (
+    <div
+      style={{
+        gridColumn: fullWidth ? "1 / -1" : undefined,
+        padding: fullWidth ? styleConfig.spacing : 0,
+        paddingTop: 0,
+        color: styleConfig.colors.text,
+        fontFamily: styleConfig.fonts.body,
+      }}
+    >
+      {sections.map((section: any) => (
+        <div key={section.id} style={{ marginBottom: styleConfig.spacing }}>
+          <h2
+            style={{
+              fontSize: 18,
+              fontWeight: 600,
+              marginBottom: 8,
+              paddingBottom: 4,
+              color: styleConfig.colors.primary,
+              borderBottom: `1px solid ${styleConfig.colors.secondary}55`,
+              fontFamily: styleConfig.fonts.heading,
+            }}
+          >
+            {section.title}
+          </h2>
+          <p style={{ fontSize: 14, lineHeight: 1.6 }}>{section.content}</p>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 interface TemplatePreviewProps {
   templateId: string
@@ -203,6 +281,7 @@ function ModernMinimalTemplate({
 }) {
   return (
     <Card
+      extras={{ data, styleConfig }}
       className="py-0"
       style={{
         padding: styleConfig.spacing,
@@ -428,11 +507,11 @@ function ModernMinimalPhotoTemplate({
 }) {
 
   // Placeholder image (simple avatar)
-  const placeholder =
-    "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+  const placeholder = PHOTO_PLACEHOLDER
 
   return (
     <Card
+      extras={{ data, styleConfig }}
       className=" py-0"
       style={{
         padding: styleConfig.spacing,
@@ -659,8 +738,7 @@ function CreativePhotoTemplate({
   styleConfig: any;
 }) {
   // Placeholder avatar
-  const placeholder =
-    "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+  const placeholder = PHOTO_PLACEHOLDER
 
   return (
     <Card
@@ -972,8 +1050,7 @@ function ExecutiveProTemplate({
   data: any;
   styleConfig: any;
 }) {
-  const placeholder =
-    "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+  const placeholder = PHOTO_PLACEHOLDER
 
   return (
     <Card
@@ -1053,6 +1130,12 @@ function ExecutiveProTemplate({
               <Phone className="w-4 h-4" color={styleConfig.colors.primary} />
               {data.personal.phone}
             </div>
+            {data.personal.location && (
+              <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <MapPin className="w-4 h-4" color={styleConfig.colors.primary} />
+                {data.personal.location}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1338,8 +1421,7 @@ function TechFocusedTemplate({
   data: any;
   styleConfig: any;
 }) {
-  const placeholder =
-    "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+  const placeholder = PHOTO_PLACEHOLDER
 
   return (
     <Card
@@ -1717,11 +1799,11 @@ function TimelineResumeTemplate({
   data: any;
   styleConfig: any;
 }) {
-  const placeholder =
-    "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+  const placeholder = PHOTO_PLACEHOLDER
 
   return (
     <Card
+      extras={{ data, styleConfig }}
       style={{
         padding: 0,
         background: styleConfig.colors.background,
@@ -1976,11 +2058,11 @@ function CenteredElegantTemplate({
   data: any
   styleConfig: any
 }) {
-  const placeholder =
-    "https://cdn-icons-png.flaticon.com/512/847/847969.png"
+  const placeholder = PHOTO_PLACEHOLDER
 
   return (
     <Card
+      extras={{ data, styleConfig }}
       className=" py-0"
       style={{
         padding: styleConfig.spacing,
@@ -2277,11 +2359,11 @@ function TwoColumnModernTemplate({
   data: any
   styleConfig: any
 }) {
-  const placeholder =
-    "https://cdn-icons-png.flaticon.com/512/847/847969.png"
+  const placeholder = PHOTO_PLACEHOLDER
 
   return (
     <Card
+      extras={{ data, styleConfig }}
       className=" py-0"
       style={{
         padding: styleConfig.spacing,
@@ -2562,6 +2644,7 @@ function ClassicHighlightTemplate({
 
   return (
     <Card
+      extras={{ data, styleConfig }}
       className=" py-0"
       style={{
         padding: styleConfig.spacing,
@@ -2682,8 +2765,7 @@ function ModernSidebarTemplate({
   data: any
   styleConfig: any
 }) {
-  const placeholder =
-    "https://cdn-icons-png.flaticon.com/512/847/847969.png"
+  const placeholder = PHOTO_PLACEHOLDER
 
   return (
     <Card
@@ -2738,9 +2820,23 @@ function ModernSidebarTemplate({
           {data.personal.firstName} {data.personal.lastName}
         </h1>
 
-        <p style={{ fontSize: 14, marginBottom: 16 }}>
-          {data.personal.location}
-        </p>
+        <div style={{ fontSize: 13, marginBottom: 20, display: "flex", flexDirection: "column", gap: 6, wordBreak: "break-word" }}>
+          {data.personal.email && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <Mail className="w-4 h-4 shrink-0" /> {data.personal.email}
+            </div>
+          )}
+          {data.personal.phone && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <Phone className="w-4 h-4 shrink-0" /> {data.personal.phone}
+            </div>
+          )}
+          {data.personal.location && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <MapPin className="w-4 h-4 shrink-0" /> {data.personal.location}
+            </div>
+          )}
+        </div>
 
         <SidebarSection title="Skills">
           {data.skills.map((s: string, i: number) => (
@@ -2762,6 +2858,12 @@ function ModernSidebarTemplate({
 
       {/* MAIN CONTENT */}
       <div style={{ padding: styleConfig.spacing }}>
+        {data.personal.summary && (
+          <div style={{ marginBottom: 22 }}>
+            <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8, color: styleConfig.colors.primary }}>Profile</h2>
+            <p style={{ fontSize: 14, lineHeight: 1.6 }}>{data.personal.summary}</p>
+          </div>
+        )}
         <h2
           style={{
             fontSize: 22,
@@ -2788,6 +2890,7 @@ function ModernSidebarTemplate({
             </p>
           </div>
         ))}
+        <ExtraSections data={data} styleConfig={styleConfig} fullWidth={false} />
       </div>
     </Card>
   )
@@ -2816,8 +2919,7 @@ function CreativeCardTemplate({
   data: any
   styleConfig: any
 }) {
-  const placeholder =
-    "https://cdn-icons-png.flaticon.com/512/847/847969.png"
+  const placeholder = PHOTO_PLACEHOLDER
 
   return (
     <Card
