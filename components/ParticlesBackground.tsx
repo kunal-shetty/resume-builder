@@ -45,7 +45,7 @@ export default function ParticlesBackground() {
     }
 
     function animate() {
-      if (!ctx) return
+      if (!ctx || !canvas) return
 
       ctx.fillStyle = "#0f172a"
       ctx.fillRect(0, 0, canvas.width, canvas.height)
