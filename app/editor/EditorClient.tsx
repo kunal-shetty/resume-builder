@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -52,6 +52,7 @@ import { callAI } from "@/lib/ai-client"
 import { exportResume, googleFontsHref } from "@/lib/resume-export"
 import {
   FONTS,
+  SECTION_LABELS,
   TEMPLATES,
   defaultStyle,
   emptyResume,
@@ -67,6 +68,7 @@ import {
   saveStyle,
   type ResumeData,
   type ResumeStyle,
+  type SectionKey,
 } from "@/lib/resume"
 
 interface Snapshot {
@@ -117,6 +119,7 @@ export default function EditorClient() {
   const [aiBusy, setAiBusy] = useState<string | null>(null)
   const [skillInput, setSkillInput] = useState("")
   const [suggestedSkills, setSuggestedSkills] = useState<string[]>([])
+  const [draggedSkill, setDraggedSkill] = useState<string | null>(null)
 
   // ---------- Load / persist ----------
 
@@ -290,6 +293,33 @@ export default function EditorClient() {
 
   const removeSkill = (skill: string) => setData((d) => ({ ...d, skills: d.skills.filter((s) => s !== skill) }), false)
 
+  /** Moves a skill to where another one is (drag and drop). */
+  const moveSkill = (skill: string, target: string) =>
+    setData((d) => {
+      const from = d.skills.indexOf(skill)
+      const to = d.skills.indexOf(target)
+      if (from < 0 || to < 0 || from === to) return d
+      const skills = [...d.skills]
+      skills.splice(to, 0, ...skills.splice(from, 1))
+      return { ...d, skills }
+    }) // coalesced, so one drag is one undo step
+
+  /** Nudges a skill one place left or right (keyboard alternative to dragging). */
+  const shiftSkill = (skill: string, dir: -1 | 1) => {
+    const target = data.skills[data.skills.indexOf(skill) + dir]
+    if (target) moveSkill(skill, target)
+  }
+
+  const moveSection = (key: SectionKey, dir: -1 | 1) =>
+    setData((d) => {
+      const order = [...d.sectionOrder]
+      const index = order.indexOf(key)
+      const target = index + dir
+      if (index < 0 || target < 0 || target >= order.length) return d
+      ;[order[index], order[target]] = [order[target], order[index]]
+      return { ...d, sectionOrder: order }
+    }, false)
+
   const handlePhoto = async (file?: File) => {
     if (!file) return
     try {
@@ -401,7 +431,13 @@ export default function EditorClient() {
   }
 
   const applyImported = (imported: ResumeData) =>
-    commit((s) => ({ ...s, data: { ...imported, personal: { ...imported.personal, photo: s.data.personal.photo } } }), false)
+    commit(
+      (s) => ({
+        ...s,
+        data: { ...imported, personal: { ...imported.personal, photo: s.data.personal.photo }, sectionOrder: s.data.sectionOrder },
+      }),
+      false,
+    )
 
   // ---------- UI ----------
 
@@ -433,6 +469,253 @@ export default function EditorClient() {
     </div>
   )
 
+  const sectionMover = (key: SectionKey) => {
+    const index = data.sectionOrder.indexOf(key)
+    const label = SECTION_LABELS[key]
+    return (
+      <div className="flex items-center">
+        <Button variant="ghost" size="icon" className="h-8 w-8" disabled={index <= 0} onClick={() => moveSection(key, -1)} aria-label={`Move ${label} section up`} title="Move section up">
+          <ArrowUp className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8" disabled={index === data.sectionOrder.length - 1} onClick={() => moveSection(key, 1)} aria-label={`Move ${label} section down`} title="Move section down">
+          <ArrowDown className="h-4 w-4" />
+        </Button>
+      </div>
+    )
+  }
+
+  // Rendered in data.sectionOrder, which is also the order on the page.
+  const sectionCards: Record<SectionKey, ReactNode> = {
+    summary: (
+      <Card className="gap-0 border-border/50 bg-card/60 p-6 backdrop-blur-sm">
+        <div className="mb-4 flex items-center gap-2">
+          <Label htmlFor="summary" className="flex-1 text-lg font-semibold">
+            Professional Summary
+          </Label>
+          {aiButton("summary", data.personal.summary ? "AI rewrite" : "AI write", aiSummary)}
+          {sectionMover("summary")}
+        </div>
+        <Textarea id="summary" value={data.personal.summary} onChange={(e) => updatePersonal("summary", e.target.value)} rows={6} placeholder="2–4 sentences about who you are and the value you bring." />
+      </Card>
+    ),
+    experience: (
+      <Card className="gap-0 border-border/50 bg-card/60 p-6 backdrop-blur-sm">
+        <div className="mb-4 flex items-center gap-2">
+          <h3 className="flex-1 text-lg font-semibold">Work Experience</h3>
+          <Button onClick={addExperience} size="sm">
+            <Plus className="mr-1.5 h-4 w-4" /> Add
+          </Button>
+          {sectionMover("experience")}
+        </div>
+        {data.experience.length === 0 && (
+          <p className="py-6 text-center text-sm text-muted-foreground">No experience yet. Add your most recent role first.</p>
+        )}
+        <div className="space-y-4">
+          {data.experience.map((exp, index) => (
+            <Card key={exp.id} className="gap-0 bg-muted/30 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="truncate font-medium">{exp.position || exp.company || `Experience #${index + 1}`}</span>
+                {listControls("experience", index, data.experience.length, exp.id)}
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Company</Label>
+                  <Input value={exp.company} onChange={(e) => updateList("experience", exp.id, { company: e.target.value })} placeholder="Company name" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Position</Label>
+                  <Input value={exp.position} onChange={(e) => updateList("experience", exp.id, { position: e.target.value })} placeholder="Job title" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Start Date</Label>
+                  <Input type="month" value={exp.startDate} onChange={(e) => updateList("experience", exp.id, { startDate: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>End Date</Label>
+                  <Input type="month" value={exp.current ? "" : exp.endDate} disabled={exp.current} onChange={(e) => updateList("experience", exp.id, { endDate: e.target.value })} />
+                  <div className="flex items-center gap-2">
+                    <Switch id={`current-${exp.id}`} checked={exp.current} onCheckedChange={(current) => updateList("experience", exp.id, { current })} />
+                    <Label htmlFor={`current-${exp.id}`} className="text-sm font-normal">I currently work here</Label>
+                  </div>
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Description</Label>
+                    {aiButton(`exp-${exp.id}`, exp.description ? "AI improve" : "AI write", () => aiImproveExperience(exp.id))}
+                  </div>
+                  <Textarea
+                    value={exp.description}
+                    onChange={(e) => updateList("experience", exp.id, { description: e.target.value })}
+                    placeholder={"• Achievement with impact\n• Another responsibility"}
+                    rows={4}
+                  />
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </Card>
+    ),
+    education: (
+      <Card className="gap-0 border-border/50 bg-card/60 p-6 backdrop-blur-sm">
+        <div className="mb-4 flex items-center gap-2">
+          <h3 className="flex-1 text-lg font-semibold">Education</h3>
+          <Button onClick={addEducation} size="sm">
+            <Plus className="mr-1.5 h-4 w-4" /> Add
+          </Button>
+          {sectionMover("education")}
+        </div>
+        {data.education.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">No education added yet.</p>}
+        <div className="space-y-4">
+          {data.education.map((edu, index) => (
+            <Card key={edu.id} className="gap-0 bg-muted/30 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="truncate font-medium">{edu.school || `Education #${index + 1}`}</span>
+                {listControls("education", index, data.education.length, edu.id)}
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>School / University</Label>
+                  <Input value={edu.school} onChange={(e) => updateList("education", edu.id, { school: e.target.value })} placeholder="Institution name" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Degree</Label>
+                  <Input value={edu.degree} onChange={(e) => updateList("education", edu.id, { degree: e.target.value })} placeholder="Bachelor of Science" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Field of Study</Label>
+                  <Input value={edu.field} onChange={(e) => updateList("education", edu.id, { field: e.target.value })} placeholder="Computer Science" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Graduation</Label>
+                    <Input type="month" value={edu.graduationDate} onChange={(e) => updateList("education", edu.id, { graduationDate: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>GPA (optional)</Label>
+                    <Input value={edu.gpa || ""} onChange={(e) => updateList("education", edu.id, { gpa: e.target.value })} placeholder="3.8/4.0" />
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </Card>
+    ),
+    skills: (
+      <Card className="gap-0 border-border/50 bg-card/60 p-6 backdrop-blur-sm">
+        <div className="mb-4 flex items-center gap-2">
+          <h3 className="flex-1 text-lg font-semibold">Skills</h3>
+          {aiButton("skills", "Suggest skills", aiSuggestSkills)}
+          {sectionMover("skills")}
+        </div>
+        <form
+          className="mb-4 flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault()
+            addSkills(skillInput.split(","))
+            setSkillInput("")
+          }}
+        >
+          <Input value={skillInput} onChange={(e) => setSkillInput(e.target.value)} placeholder="Add skills (comma separated) and press Enter" />
+          <Button type="submit" aria-label="Add skill">
+            <Plus className="h-4 w-4" />
+          </Button>
+        </form>
+        <div className="flex flex-wrap gap-2">
+          {data.skills.map((skill) => (
+            <Badge
+              key={skill}
+              variant="secondary"
+              draggable
+              tabIndex={0}
+              title="Drag to reorder (or focus and press Alt+←/→)"
+              onDragStart={(e) => {
+                setDraggedSkill(skill)
+                e.dataTransfer.effectAllowed = "move"
+              }}
+              onDragOver={(e) => {
+                if (!draggedSkill) return
+                e.preventDefault()
+                if (draggedSkill !== skill) moveSkill(draggedSkill, skill)
+              }}
+              onDragEnd={() => setDraggedSkill(null)}
+              onKeyDown={(e) => {
+                if (!e.altKey || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return
+                e.preventDefault()
+                shiftSkill(skill, e.key === "ArrowLeft" ? -1 : 1)
+              }}
+              className={cn("cursor-grab gap-1 py-1 pl-2.5 pr-1 text-sm active:cursor-grabbing", draggedSkill === skill && "opacity-50")}
+            >
+              {skill}
+              <button onClick={() => removeSkill(skill)} className="rounded-full p-0.5 hover:bg-destructive hover:text-white" aria-label={`Remove ${skill}`}>
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+          {data.skills.length === 0 && <p className="text-sm text-muted-foreground">No skills yet.</p>}
+        </div>
+        {data.skills.length > 1 && <p className="mt-2 text-xs text-muted-foreground">Drag skills to change their order.</p>}
+        {suggestedSkills.length > 0 && (
+          <div className="mt-4 rounded-lg border border-violet-200 bg-violet-50/60 p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-xs font-medium text-violet-800">Suggested. Click to add only the ones you really have.</p>
+              <div className="flex gap-1">
+                <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => { addSkills(suggestedSkills); setSuggestedSkills([]) }}>
+                  Add all
+                </Button>
+                <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setSuggestedSkills([])} aria-label="Dismiss suggestions">
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {suggestedSkills.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => {
+                    addSkills([s])
+                    setSuggestedSkills((list) => list.filter((x) => x !== s))
+                  }}
+                  className="inline-flex items-center gap-1 rounded-full border border-violet-300 bg-white px-2.5 py-1 text-xs text-violet-800 hover:bg-violet-100"
+                >
+                  <Plus className="h-3 w-3" /> {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </Card>
+    ),
+    custom: (
+      <Card className="gap-0 border-border/50 bg-card/60 p-6 backdrop-blur-sm">
+        <div className="mb-4 flex items-center gap-2">
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold">Additional Sections</h3>
+            <p className="text-xs text-muted-foreground">Projects, certifications, awards, languages…</p>
+          </div>
+          <Button onClick={addCustomSection} size="sm">
+            <Plus className="mr-1.5 h-4 w-4" /> Add
+          </Button>
+          {sectionMover("custom")}
+        </div>
+        <div className="space-y-4">
+          {data.customSections.map((section, index) => (
+            <Card key={section.id} className="gap-0 bg-muted/30 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="truncate font-medium">{section.title || `Section #${index + 1}`}</span>
+                {listControls("customSections", index, data.customSections.length, section.id)}
+              </div>
+              <div className="space-y-3">
+                <Input value={section.title} onChange={(e) => updateList("customSections", section.id, { title: e.target.value })} placeholder="Section title" />
+                <Textarea value={section.content} onChange={(e) => updateList("customSections", section.id, { content: e.target.value })} placeholder={"• AWS Certified Solutions Architect (2024)"} rows={3} />
+              </div>
+            </Card>
+          ))}
+        </div>
+      </Card>
+    ),
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-accent/10">
       {/* Header */}
@@ -581,205 +864,12 @@ export default function EditorClient() {
                         <Label htmlFor="location">Location</Label>
                         <Input id="location" value={data.personal.location} placeholder="City, Country" onChange={(e) => updatePersonal("location", e.target.value)} />
                       </div>
-                      <div className="space-y-2 md:col-span-2">
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor="summary">Professional Summary</Label>
-                          {aiButton("summary", data.personal.summary ? "AI rewrite" : "AI write", aiSummary)}
-                        </div>
-                        <Textarea id="summary" value={data.personal.summary} onChange={(e) => updatePersonal("summary", e.target.value)} rows={6} placeholder="2–4 sentences about who you are and the value you bring." />
-                      </div>
                     </div>
                   </Card>
 
-                  {/* Experience */}
-                  <Card className="gap-0 border-border/50 bg-card/60 p-6 backdrop-blur-sm">
-                    <div className="mb-4 flex items-center justify-between">
-                      <h3 className="text-lg font-semibold">Work Experience</h3>
-                      <Button onClick={addExperience} size="sm">
-                        <Plus className="mr-1.5 h-4 w-4" /> Add
-                      </Button>
-                    </div>
-                    {data.experience.length === 0 && (
-                      <p className="py-6 text-center text-sm text-muted-foreground">No experience yet. Add your most recent role first.</p>
-                    )}
-                    <div className="space-y-4">
-                      {data.experience.map((exp, index) => (
-                        <Card key={exp.id} className="gap-0 bg-muted/30 p-4">
-                          <div className="mb-3 flex items-center justify-between">
-                            <span className="truncate font-medium">{exp.position || exp.company || `Experience #${index + 1}`}</span>
-                            {listControls("experience", index, data.experience.length, exp.id)}
-                          </div>
-                          <div className="grid gap-3 md:grid-cols-2">
-                            <div className="space-y-2">
-                              <Label>Company</Label>
-                              <Input value={exp.company} onChange={(e) => updateList("experience", exp.id, { company: e.target.value })} placeholder="Company name" />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Position</Label>
-                              <Input value={exp.position} onChange={(e) => updateList("experience", exp.id, { position: e.target.value })} placeholder="Job title" />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Start Date</Label>
-                              <Input type="month" value={exp.startDate} onChange={(e) => updateList("experience", exp.id, { startDate: e.target.value })} />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>End Date</Label>
-                              <Input type="month" value={exp.current ? "" : exp.endDate} disabled={exp.current} onChange={(e) => updateList("experience", exp.id, { endDate: e.target.value })} />
-                              <div className="flex items-center gap-2">
-                                <Switch id={`current-${exp.id}`} checked={exp.current} onCheckedChange={(current) => updateList("experience", exp.id, { current })} />
-                                <Label htmlFor={`current-${exp.id}`} className="text-sm font-normal">I currently work here</Label>
-                              </div>
-                            </div>
-                            <div className="space-y-2 md:col-span-2">
-                              <div className="flex items-center justify-between">
-                                <Label>Description</Label>
-                                {aiButton(`exp-${exp.id}`, exp.description ? "AI improve" : "AI write", () => aiImproveExperience(exp.id))}
-                              </div>
-                              <Textarea
-                                value={exp.description}
-                                onChange={(e) => updateList("experience", exp.id, { description: e.target.value })}
-                                placeholder={"• Achievement with impact\n• Another responsibility"}
-                                rows={4}
-                              />
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  </Card>
-
-                  {/* Education */}
-                  <Card className="gap-0 border-border/50 bg-card/60 p-6 backdrop-blur-sm">
-                    <div className="mb-4 flex items-center justify-between">
-                      <h3 className="text-lg font-semibold">Education</h3>
-                      <Button onClick={addEducation} size="sm">
-                        <Plus className="mr-1.5 h-4 w-4" /> Add
-                      </Button>
-                    </div>
-                    {data.education.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">No education added yet.</p>}
-                    <div className="space-y-4">
-                      {data.education.map((edu, index) => (
-                        <Card key={edu.id} className="gap-0 bg-muted/30 p-4">
-                          <div className="mb-3 flex items-center justify-between">
-                            <span className="truncate font-medium">{edu.school || `Education #${index + 1}`}</span>
-                            {listControls("education", index, data.education.length, edu.id)}
-                          </div>
-                          <div className="grid gap-3 md:grid-cols-2">
-                            <div className="space-y-2">
-                              <Label>School / University</Label>
-                              <Input value={edu.school} onChange={(e) => updateList("education", edu.id, { school: e.target.value })} placeholder="Institution name" />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Degree</Label>
-                              <Input value={edu.degree} onChange={(e) => updateList("education", edu.id, { degree: e.target.value })} placeholder="Bachelor of Science" />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>Field of Study</Label>
-                              <Input value={edu.field} onChange={(e) => updateList("education", edu.id, { field: e.target.value })} placeholder="Computer Science" />
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                              <div className="space-y-2">
-                                <Label>Graduation</Label>
-                                <Input type="month" value={edu.graduationDate} onChange={(e) => updateList("education", edu.id, { graduationDate: e.target.value })} />
-                              </div>
-                              <div className="space-y-2">
-                                <Label>GPA (optional)</Label>
-                                <Input value={edu.gpa || ""} onChange={(e) => updateList("education", edu.id, { gpa: e.target.value })} placeholder="3.8/4.0" />
-                              </div>
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  </Card>
-
-                  {/* Skills */}
-                  <Card className="gap-0 border-border/50 bg-card/60 p-6 backdrop-blur-sm">
-                    <div className="mb-4 flex items-center justify-between">
-                      <h3 className="text-lg font-semibold">Skills</h3>
-                      {aiButton("skills", "Suggest skills", aiSuggestSkills)}
-                    </div>
-                    <form
-                      className="mb-4 flex gap-2"
-                      onSubmit={(e) => {
-                        e.preventDefault()
-                        addSkills(skillInput.split(","))
-                        setSkillInput("")
-                      }}
-                    >
-                      <Input value={skillInput} onChange={(e) => setSkillInput(e.target.value)} placeholder="Add skills (comma separated) and press Enter" />
-                      <Button type="submit" aria-label="Add skill">
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </form>
-                    <div className="flex flex-wrap gap-2">
-                      {data.skills.map((skill) => (
-                        <Badge key={skill} variant="secondary" className="gap-1 py-1 pl-2.5 pr-1 text-sm">
-                          {skill}
-                          <button onClick={() => removeSkill(skill)} className="rounded-full p-0.5 hover:bg-destructive hover:text-white" aria-label={`Remove ${skill}`}>
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      ))}
-                      {data.skills.length === 0 && <p className="text-sm text-muted-foreground">No skills yet.</p>}
-                    </div>
-                    {suggestedSkills.length > 0 && (
-                      <div className="mt-4 rounded-lg border border-violet-200 bg-violet-50/60 p-3">
-                        <div className="mb-2 flex items-center justify-between">
-                          <p className="text-xs font-medium text-violet-800">Suggested. Click to add only the ones you really have.</p>
-                          <div className="flex gap-1">
-                            <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => { addSkills(suggestedSkills); setSuggestedSkills([]) }}>
-                              Add all
-                            </Button>
-                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setSuggestedSkills([])} aria-label="Dismiss suggestions">
-                              <X className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {suggestedSkills.map((s) => (
-                            <button
-                              key={s}
-                              onClick={() => {
-                                addSkills([s])
-                                setSuggestedSkills((list) => list.filter((x) => x !== s))
-                              }}
-                              className="inline-flex items-center gap-1 rounded-full border border-violet-300 bg-white px-2.5 py-1 text-xs text-violet-800 hover:bg-violet-100"
-                            >
-                              <Plus className="h-3 w-3" /> {s}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </Card>
-
-                  {/* Custom sections */}
-                  <Card className="gap-0 border-border/50 bg-card/60 p-6 backdrop-blur-sm">
-                    <div className="mb-4 flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold">Additional Sections</h3>
-                        <p className="text-xs text-muted-foreground">Projects, certifications, awards, languages…</p>
-                      </div>
-                      <Button onClick={addCustomSection} size="sm">
-                        <Plus className="mr-1.5 h-4 w-4" /> Add
-                      </Button>
-                    </div>
-                    <div className="space-y-4">
-                      {data.customSections.map((section, index) => (
-                        <Card key={section.id} className="gap-0 bg-muted/30 p-4">
-                          <div className="mb-3 flex items-center justify-between">
-                            <span className="truncate font-medium">{section.title || `Section #${index + 1}`}</span>
-                            {listControls("customSections", index, data.customSections.length, section.id)}
-                          </div>
-                          <div className="space-y-3">
-                            <Input value={section.title} onChange={(e) => updateList("customSections", section.id, { title: e.target.value })} placeholder="Section title" />
-                            <Textarea value={section.content} onChange={(e) => updateList("customSections", section.id, { content: e.target.value })} placeholder={"• AWS Certified Solutions Architect (2024)"} rows={3} />
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  </Card>
+                  {data.sectionOrder.map((key) => (
+                    <Fragment key={key}>{sectionCards[key]}</Fragment>
+                  ))}
                 </TabsContent>
 
                 {/* ================= AI ================= */}
