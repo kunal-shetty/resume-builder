@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge"
 import type React from "react"
 import { User, Mail, Phone, MapPin, Building } from "lucide-react"
+import { DEFAULT_SECTION_ORDER, type SectionKey } from "@/lib/resume"
 
 // Neutral avatar shown when "Show photo" is on but no photo was uploaded.
 // Inline so it renders in the PDF renderer, which blocks external requests.
@@ -11,6 +12,20 @@ const PHOTO_PLACEHOLDER =
   encodeURIComponent(
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#e5e7eb"/><circle cx="32" cy="25" r="11" fill="#9ca3af"/><path d="M12 56c2-11 10-17 20-17s18 6 20 17z" fill="#9ca3af"/></svg>',
   )
+
+/**
+ * Flex/grid `order` for a section, following the order the user picked in the editor.
+ * Headers and contact blocks have no order (0), so they always stay first.
+ */
+function sec(data: any, key: SectionKey): React.CSSProperties {
+  const order: SectionKey[] = data.sectionOrder || DEFAULT_SECTION_ORDER
+  return { order: order.indexOf(key) + 1 }
+}
+
+/** Order for a wrapper that holds several sections: it sits where the earliest of them would. */
+function secMin(data: any, ...keys: SectionKey[]): React.CSSProperties {
+  return { order: Math.min(...keys.map((k) => sec(data, k).order as number)) }
+}
 
 // The page itself. Fixed to A4 width so preview and PDF lay out identically.
 // className from the templates is intentionally ignored: it carried card chrome
@@ -53,6 +68,7 @@ function ExtraSections({ data, styleConfig, fullWidth }: { data: any; styleConfi
   return (
     <div
       style={{
+        ...sec(data, "custom"),
         gridColumn: fullWidth ? "1 / -1" : undefined,
         padding: fullWidth ? styleConfig.spacing : 0,
         paddingTop: 0,
@@ -339,7 +355,7 @@ function ModernMinimalTemplate({
 
       {/* Summary */}
       {data.personal.summary && (
-        <div style={{ marginBottom: styleConfig.spacing }}>
+        <div style={{ marginBottom: styleConfig.spacing, ...sec(data, "summary") }}>
           <h2
             style={{
               fontSize: "20px",
@@ -359,7 +375,7 @@ function ModernMinimalTemplate({
 
       {/* Experience */}
       {data.experience.length > 0 && (
-        <div style={{ marginBottom: styleConfig.spacing }}>
+        <div style={{ marginBottom: styleConfig.spacing, ...sec(data, "experience") }}>
           <h2
             style={{
               fontSize: "20px",
@@ -419,7 +435,7 @@ function ModernMinimalTemplate({
 
       {/* Education */}
       {data.education.length > 0 && (
-        <div style={{ marginBottom: styleConfig.spacing }}>
+        <div style={{ marginBottom: styleConfig.spacing, ...sec(data, "education") }}>
           <h2
             style={{
               fontSize: "20px",
@@ -462,7 +478,7 @@ function ModernMinimalTemplate({
 
       {/* Skills */}
       {data.skills.length > 0 && (
-        <div>
+        <div style={sec(data, "skills")}>
           <h2
             style={{
               fontSize: "20px",
@@ -590,7 +606,7 @@ function ModernMinimalPhotoTemplate({
 
       {/* SUMMARY */}
       {data.personal.summary && (
-        <div style={{ marginBottom: styleConfig.spacing }}>
+        <div style={{ marginBottom: styleConfig.spacing, ...sec(data, "summary") }}>
           <h2
             style={{
               fontSize: "20px",
@@ -608,7 +624,7 @@ function ModernMinimalPhotoTemplate({
 
       {/* EXPERIENCE */}
       {data.experience.length > 0 && (
-        <div style={{ marginBottom: styleConfig.spacing }}>
+        <div style={{ marginBottom: styleConfig.spacing, ...sec(data, "experience") }}>
           <h2
             style={{
               fontSize: "20px",
@@ -661,7 +677,7 @@ function ModernMinimalPhotoTemplate({
 
       {/* EDUCATION */}
       {data.education.length > 0 && (
-        <div style={{ marginBottom: styleConfig.spacing }}>
+        <div style={{ marginBottom: styleConfig.spacing, ...sec(data, "education") }}>
           <h2
             style={{
               fontSize: "20px",
@@ -693,7 +709,7 @@ function ModernMinimalPhotoTemplate({
 
       {/* SKILLS */}
       {data.skills.length > 0 && (
-        <div>
+        <div style={sec(data, "skills")}>
           <h2
             style={{
               fontSize: "20px",
@@ -854,6 +870,8 @@ function CreativePhotoTemplate({
         <div
           style={{
             width: "67%",
+            display: "flex",
+            flexDirection: "column",
             padding: styleConfig.spacing,
             color: styleConfig.colors.text,
             fontFamily: styleConfig.fonts.body,
@@ -861,7 +879,7 @@ function CreativePhotoTemplate({
         >
           {/* SUMMARY */}
           {data.personal.summary && (
-            <div style={{ marginBottom: 20 }}>
+            <div style={{ marginBottom: 20, ...sec(data, "summary") }}>
               <h2
                 style={{
                   fontSize: 18,
@@ -881,7 +899,7 @@ function CreativePhotoTemplate({
 
           {/* EXPERIENCE */}
           {data.experience.length > 0 && (
-            <div style={{ marginBottom: 20 }}>
+            <div style={{ marginBottom: 20, ...sec(data, "experience") }}>
               <h2
                 style={{
                   fontSize: 18,
@@ -927,7 +945,7 @@ function CreativePhotoTemplate({
 
           {/* EDUCATION */}
           {data.education.length > 0 && (
-            <div>
+            <div style={{ marginBottom: 20, ...sec(data, "education") }}>
               <h2
                 style={{
                   fontSize: 18,
@@ -974,7 +992,7 @@ function CreativePhotoTemplate({
             data.customSections.map((section: any) => (
               <div
                 key={section.id}
-                style={{ marginBottom: styleConfig.spacing }}
+                style={{ marginBottom: styleConfig.spacing, ...sec(data, "custom") }}
               >
                 <h2
                   style={{
@@ -1141,10 +1159,10 @@ function ExecutiveProTemplate({
       </div>
 
       {/* MAIN CONTENT */}
-      <div style={{ padding: styleConfig.spacing }}>
+      <div style={{ padding: styleConfig.spacing, display: "flex", flexDirection: "column" }}>
         {/* SUMMARY */}
         {data.personal.summary && (
-          <div style={{ marginBottom: styleConfig.spacing }}>
+          <div style={{ marginBottom: styleConfig.spacing, ...sec(data, "summary") }}>
             <h2
               style={{
                 fontSize: 18,
@@ -1166,7 +1184,7 @@ function ExecutiveProTemplate({
 
         {/* EXPERIENCE */}
         {data.experience.length > 0 && (
-          <div style={{ marginBottom: styleConfig.spacing }}>
+          <div style={{ marginBottom: styleConfig.spacing, ...sec(data, "experience") }}>
             <h2
               style={{
                 fontSize: 18,
@@ -1243,6 +1261,8 @@ function ExecutiveProTemplate({
         {/* TWO COLUMN SECTION */}
         <div
           style={{
+            ...secMin(data, "education", "skills", "custom"),
+            marginBottom: styleConfig.spacing,
             display: "grid",
             gridTemplateColumns: "1fr 1fr",
             gap: styleConfig.spacing,
@@ -1250,7 +1270,7 @@ function ExecutiveProTemplate({
         >
           {/* EDUCATION */}
           {data.education.length > 0 && (
-            <div>
+            <div style={sec(data, "education")}>
               <h2
                 style={{
                   fontSize: 18,
@@ -1298,7 +1318,7 @@ function ExecutiveProTemplate({
 
           {/* SKILLS */}
           {data.skills.length > 0 && (
-            <div>
+            <div style={sec(data, "skills")}>
               <h2
                 style={{
                   fontSize: 18,
@@ -1345,7 +1365,7 @@ function ExecutiveProTemplate({
             data.customSections.map((section: any) => (
               <div
                 key={section.id}
-                style={{ marginBottom: styleConfig.spacing }}
+                style={{ marginBottom: styleConfig.spacing, ...sec(data, "custom") }}
               >
                 <h2
                   style={{
@@ -1526,7 +1546,7 @@ function TechFocusedTemplate({
 
       {/* TECHNICAL SKILLS */}
       {data.skills.length > 0 && (
-        <div style={{ marginBottom: styleConfig.spacing }}>
+        <div style={{ marginBottom: styleConfig.spacing, ...sec(data, "skills") }}>
           <h2
             style={{
               fontSize: 18,
@@ -1579,7 +1599,7 @@ function TechFocusedTemplate({
 
       {/* EXPERIENCE */}
       {data.experience.length > 0 && (
-        <div style={{ marginBottom: styleConfig.spacing }}>
+        <div style={{ marginBottom: styleConfig.spacing, ...sec(data, "experience") }}>
           <h2
             style={{
               fontSize: 18,
@@ -1661,7 +1681,7 @@ function TechFocusedTemplate({
 
       {/* EDUCATION */}
       {data.education.length > 0 && (
-        <div style={{ marginBottom: styleConfig.spacing }}>
+        <div style={{ marginBottom: styleConfig.spacing, ...sec(data, "education") }}>
           <h2
             style={{
               fontSize: 18,
@@ -1724,7 +1744,7 @@ function TechFocusedTemplate({
         data.customSections.map((section: any) => (
           <div
             key={section.id}
-            style={{ marginBottom: styleConfig.spacing }}
+            style={{ marginBottom: styleConfig.spacing, ...sec(data, "custom") }}
           >
             <h2
               style={{
@@ -1803,7 +1823,6 @@ function TimelineResumeTemplate({
 
   return (
     <Card
-      extras={{ data, styleConfig }}
       style={{
         padding: 0,
         background: styleConfig.colors.background,
@@ -1903,10 +1922,10 @@ function TimelineResumeTemplate({
         </aside>
 
         {/* ============ RIGHT COLUMN ============ */}
-        <main style={{ padding: styleConfig.spacing * 1.5 }}>
+        <main style={{ padding: styleConfig.spacing * 1.5, display: "flex", flexDirection: "column" }}>
           {/* EXPERIENCE */}
           {data.experience.length > 0 && (
-            <MainSection title="Work Experience" styleConfig={styleConfig}>
+            <MainSection title="Work Experience" styleConfig={styleConfig} sx={sec(data, "experience")}>
               {data.experience.map((exp: any, i: number) => (
                 <TimelineBlock
                   key={i}
@@ -1924,7 +1943,7 @@ function TimelineResumeTemplate({
 
           {/* EDUCATION */}
           {data.education.length > 0 && (
-            <MainSection title="Education" styleConfig={styleConfig}>
+            <MainSection title="Education" styleConfig={styleConfig} sx={sec(data, "education")}>
               {data.education.map((edu: any, i: number) => (
                 <TimelineBlock
                   key={i}
@@ -1937,6 +1956,7 @@ function TimelineResumeTemplate({
               ))}
             </MainSection>
           )}
+          <ExtraSections data={data} styleConfig={styleConfig} fullWidth={false} />
         </main>
       </div>
     </Card>
@@ -1963,9 +1983,9 @@ function TimelineSection({ title, children, styleConfig }: any) {
   );
 }
 
-function MainSection({ title, children, styleConfig }: any) {
+function MainSection({ title, children, styleConfig, sx }: any) {
   return (
-    <div style={{ marginBottom: styleConfig.spacing * 1.5 }}>
+    <div style={{ marginBottom: styleConfig.spacing * 1.5, ...sx }}>
       <h2
         style={{
           fontSize: 20,
@@ -2141,7 +2161,7 @@ function CenteredElegantTemplate({
 
       {/* SUMMARY */}
       {data.personal.summary && (
-        <div style={{ marginBottom: styleConfig.spacing }}>
+        <div style={{ marginBottom: styleConfig.spacing, ...sec(data, "summary") }}>
           <h2
             style={{
               fontSize: 20,
@@ -2169,7 +2189,7 @@ function CenteredElegantTemplate({
 
       {/* EXPERIENCE */}
       {data.experience.length > 0 && (
-        <div style={{ marginBottom: styleConfig.spacing }}>
+        <div style={{ marginBottom: styleConfig.spacing, ...sec(data, "experience") }}>
           <h2
             style={{
               fontSize: 20,
@@ -2250,7 +2270,7 @@ function CenteredElegantTemplate({
 
       {/* EDUCATION */}
       {data.education.length > 0 && (
-        <div style={{ marginBottom: styleConfig.spacing }}>
+        <div style={{ marginBottom: styleConfig.spacing, ...sec(data, "education") }}>
           <h2
             style={{
               fontSize: 20,
@@ -2308,7 +2328,7 @@ function CenteredElegantTemplate({
 
       {/* SKILLS */}
       {data.skills.length > 0 && (
-        <div>
+        <div style={sec(data, "skills")}>
           <h2
             style={{
               fontSize: 20,
@@ -2363,7 +2383,6 @@ function TwoColumnModernTemplate({
 
   return (
     <Card
-      extras={{ data, styleConfig }}
       className=" py-0"
       style={{
         padding: styleConfig.spacing,
@@ -2377,7 +2396,7 @@ function TwoColumnModernTemplate({
       }}
     >
       {/* LEFT COLUMN */}
-      <div>
+      <div style={{ display: "flex", flexDirection: "column" }}>
         {/* PHOTO */}
         {styleConfig.showPhoto && (
           <div
@@ -2445,7 +2464,7 @@ function TwoColumnModernTemplate({
 
         {/* SKILLS */}
         {data.skills.length > 0 && (
-          <div>
+          <div style={sec(data, "skills")}>
             <h2
               style={{
                 fontSize: 18,
@@ -2486,10 +2505,10 @@ function TwoColumnModernTemplate({
       </div>
 
       {/* RIGHT COLUMN */}
-      <div>
+      <div style={{ display: "flex", flexDirection: "column" }}>
         {/* SUMMARY */}
         {data.personal.summary && (
-          <div style={{ marginBottom: styleConfig.spacing }}>
+          <div style={{ marginBottom: styleConfig.spacing, ...sec(data, "summary") }}>
             <h2
               style={{
                 fontSize: 20,
@@ -2510,7 +2529,7 @@ function TwoColumnModernTemplate({
 
         {/* EXPERIENCE */}
         {data.experience.length > 0 && (
-          <div style={{ marginBottom: styleConfig.spacing }}>
+          <div style={{ marginBottom: styleConfig.spacing, ...sec(data, "experience") }}>
             <h2
               style={{
                 fontSize: 20,
@@ -2582,7 +2601,7 @@ function TwoColumnModernTemplate({
 
         {/* EDUCATION */}
         {data.education.length > 0 && (
-          <div>
+          <div style={{ marginBottom: styleConfig.spacing, ...sec(data, "education") }}>
             <h2
               style={{
                 fontSize: 20,
@@ -2628,6 +2647,8 @@ function TwoColumnModernTemplate({
             </div>
           </div>
         )}
+
+        <ExtraSections data={data} styleConfig={styleConfig} fullWidth={false} />
       </div>
     </Card>
   )
@@ -2674,12 +2695,12 @@ function ClassicHighlightTemplate({
       </div>
 
       {/* SECTION */}
-      <Section title="Professional Summary" highlight={highlight}>
+      <Section title="Professional Summary" highlight={highlight} sx={sec(data, "summary")}>
         <p style={{ lineHeight: 1.7 }}>{data.personal.summary}</p>
       </Section>
 
       {/* SKILLS */}
-      <Section title="Skills" highlight={highlight}>
+      <Section title="Skills" highlight={highlight} sx={sec(data, "skills")}>
         <ul
           style={{
             columns: 2,
@@ -2695,7 +2716,7 @@ function ClassicHighlightTemplate({
       </Section>
 
       {/* WORK HISTORY */}
-      <Section title="Work History" highlight={highlight}>
+      <Section title="Work History" highlight={highlight} sx={sec(data, "experience")}>
         {data.experience.map((exp: any, i: number) => (
           <div key={i} style={{ marginBottom: 20 }}>
             <strong>{exp.position}</strong>
@@ -2714,7 +2735,7 @@ function ClassicHighlightTemplate({
       </Section>
 
       {/* EDUCATION */}
-      <Section title="Education" highlight={highlight}>
+      <Section title="Education" highlight={highlight} sx={sec(data, "education")}>
         {data.education.map((edu: any, i: number) => (
           <div key={i}>
             <strong>
@@ -2735,13 +2756,15 @@ function Section({
   title,
   highlight,
   children,
+  sx,
 }: {
   title: string
   highlight: string
   children: React.ReactNode
+  sx?: React.CSSProperties
 }) {
   return (
-    <div style={{ marginBottom: 28 }}>
+    <div style={{ marginBottom: 28, ...sx }}>
       <div
         style={{
           background: highlight,
@@ -2783,6 +2806,8 @@ function ModernSidebarTemplate({
         style={{
           background: styleConfig.colors.primary,
           color: "#fff",
+          display: "flex",
+          flexDirection: "column",
           padding: styleConfig.spacing,
         }}
       >
@@ -2838,7 +2863,7 @@ function ModernSidebarTemplate({
           )}
         </div>
 
-        <SidebarSection title="Skills">
+        <SidebarSection title="Skills" sx={sec(data, "skills")}>
           {data.skills.map((s: string, i: number) => (
             <div key={i} style={{ fontSize: 14 }}>
               • {s}
@@ -2846,7 +2871,7 @@ function ModernSidebarTemplate({
           ))}
         </SidebarSection>
 
-        <SidebarSection title="Education">
+        <SidebarSection title="Education" sx={sec(data, "education")}>
           {data.education.map((edu: any, i: number) => (
             <div key={i} style={{ fontSize: 14, marginBottom: 8 }}>
               <strong>{edu.degree}</strong>
@@ -2857,13 +2882,14 @@ function ModernSidebarTemplate({
       </div>
 
       {/* MAIN CONTENT */}
-      <div style={{ padding: styleConfig.spacing }}>
+      <div style={{ padding: styleConfig.spacing, display: "flex", flexDirection: "column" }}>
         {data.personal.summary && (
-          <div style={{ marginBottom: 22 }}>
+          <div style={{ marginBottom: 22, ...sec(data, "summary") }}>
             <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8, color: styleConfig.colors.primary }}>Profile</h2>
             <p style={{ fontSize: 14, lineHeight: 1.6 }}>{data.personal.summary}</p>
           </div>
         )}
+        <div style={sec(data, "experience")}>
         <h2
           style={{
             fontSize: 22,
@@ -2890,6 +2916,7 @@ function ModernSidebarTemplate({
             </p>
           </div>
         ))}
+        </div>
         <ExtraSections data={data} styleConfig={styleConfig} fullWidth={false} />
       </div>
     </Card>
@@ -2899,12 +2926,14 @@ function ModernSidebarTemplate({
 function SidebarSection({
   title,
   children,
+  sx,
 }: {
   title: string
   children: React.ReactNode
+  sx?: React.CSSProperties
 }) {
   return (
-    <div style={{ marginBottom: 20 }}>
+    <div style={{ marginBottom: 20, ...sx }}>
       <h3 style={{ fontSize: 16, marginBottom: 8 }}>{title}</h3>
       {children}
     </div>
@@ -3011,7 +3040,7 @@ function CreativeCardTemplate({
 
       {/* SUMMARY */}
       {data.personal.summary && (
-        <div style={{ marginTop: styleConfig.spacing }}>
+        <div style={{ marginTop: styleConfig.spacing, ...sec(data, "summary") }}>
           <h2
             style={{
               fontSize: 20,
@@ -3032,7 +3061,7 @@ function CreativeCardTemplate({
 
       {/* EXPERIENCE */}
       {data.experience?.length > 0 && (
-        <div style={{ marginTop: styleConfig.spacing }}>
+        <div style={{ marginTop: styleConfig.spacing, ...sec(data, "experience") }}>
           <h2
             style={{
               fontSize: 20,
@@ -3085,7 +3114,7 @@ function CreativeCardTemplate({
 
       {/* EDUCATION */}
       {data.education?.length > 0 && (
-        <div style={{ marginTop: styleConfig.spacing }}>
+        <div style={{ marginTop: styleConfig.spacing, ...sec(data, "education") }}>
           <h2
             style={{
               fontSize: 20,
@@ -3130,7 +3159,7 @@ function CreativeCardTemplate({
 
       {/* SKILLS */}
       {data.skills?.length > 0 && (
-        <div style={{ marginTop: styleConfig.spacing }}>
+        <div style={{ marginTop: styleConfig.spacing, ...sec(data, "skills") }}>
           <h2
             style={{
               fontSize: 20,
@@ -3166,7 +3195,7 @@ function CreativeCardTemplate({
       {/* CUSTOM SECTIONS */}
       {data.customSections?.length > 0 &&
         data.customSections.map((section: any) => (
-          <div key={section.id} style={{ marginTop: styleConfig.spacing }}>
+          <div key={section.id} style={{ marginTop: styleConfig.spacing, ...sec(data, "custom") }}>
             <h2
               style={{
                 fontSize: 20,
