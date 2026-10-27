@@ -4,7 +4,8 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import {
   ArrowRight, Sparkles, Zap, Palette, Download,
-  FileDown, Brain, CloudUpload, ShieldCheck, Trophy, LineChart
+  FileDown, Brain, CloudUpload, ShieldCheck, Trophy, LineChart,
+  Github,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -14,6 +15,8 @@ import TypewriterText from "@/components/TypewriterText"
 import GlitchText from "@/components/GlitchText"
 import FloatingElements from "@/components/FloatingElements"
 import { hasSavedResume } from "@/lib/resume"
+import AlsoTry from "@/components/AlsoTry"
+import DemoVideo from "@/components/DemoVideo"
 
 export default function HomePage() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -157,6 +160,23 @@ export default function HomePage() {
         </motion.div>
       </section>
 
+      {/* Demo video (made with Remotion, see /demos in the workspace) */}
+      <section className="relative px-4 py-16" aria-labelledby="demo-heading">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="mx-auto max-w-5xl"
+          >
+            <p className="mb-3 text-center text-sm font-semibold uppercase tracking-[0.25em] text-orange-300/80">See it in action</p>
+            <h2 id="demo-heading" className="mb-8 text-center text-3xl font-black text-white md:text-5xl">Edit, restyle and download in one place</h2>
+            <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-2 shadow-2xl shadow-orange-500/10 backdrop-blur-xl">
+              <DemoVideo src="/demo/resume-builder-demo.mp4" poster="/demo/resume-builder-demo.jpg" title="Edit, restyle and download in one place" />
+            </div>
+          </motion.div>
+      </section>
+
       {/* Features */}
       <section className="mt-6 py-2 px-6 relative">
         <AnimatedBlob />
@@ -241,6 +261,22 @@ export default function HomePage() {
           </Link>
         </motion.div>
       </section>
+
+      <AlsoTry />
+
+      <footer className="relative border-t border-white/10 px-4 py-10">
+        <p className="text-center text-white/60">
+          Made with ❤️ by{" "}
+          <a
+            href="https://github.com/kunal-shetty"
+            target="_blank"
+            rel="noopener"
+            className="inline-flex items-center gap-1 font-semibold text-white underline-offset-4 hover:text-yellow-300 hover:underline"
+          >
+            Kunal <Github className="h-4 w-4" aria-hidden />
+          </a>
+        </p>
+      </footer>
     </div>
   )
 }
