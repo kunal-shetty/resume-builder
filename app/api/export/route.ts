@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs"
 import { NextResponse } from "next/server"
 import type { Browser } from "puppeteer-core"
-import { rateLimit, RateLimitError } from "@/lib/rate-limit"
+import { DAY, MINUTE, envLimit, rateLimit, RateLimitError } from "@/lib/rate-limit"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -65,9 +65,19 @@ function safeFilename(name: unknown, ext: string) {
 
 export async function POST(req: Request) {
   try {
-    rateLimit(req, "export", Number(process.env.EXPORT_RATE_LIMIT_PER_MINUTE || 10))
+    await rateLimit(
+      req,
+      "export",
+      [
+        { name: "minute", max: envLimit("EXPORT_RATE_LIMIT_PER_MINUTE", 10), windowMs: MINUTE },
+        { name: "day", max: envLimit("EXPORT_RATE_LIMIT_PER_DAY", 200), windowMs: DAY },
+      ],
+      { what: "exports" },
+    )
   } catch (err) {
-    if (err instanceof RateLimitError) return NextResponse.json({ error: err.message }, { status: 429 })
+    if (err instanceof RateLimitError) {
+      return NextResponse.json({ error: err.message }, { status: 429, headers: { "Retry-After": String(err.retryAfter) } })
+    }
     throw err
   }
 
