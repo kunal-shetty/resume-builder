@@ -24,6 +24,25 @@ export interface CustomSection {
   type: "text" | "list"
 }
 
+export type SectionKey = "summary" | "experience" | "education" | "skills" | "custom"
+
+/** Order the resume sections appear in, on the page and in the editor. */
+export const DEFAULT_SECTION_ORDER: SectionKey[] = ["summary", "experience", "education", "skills", "custom"]
+
+export const SECTION_LABELS: Record<SectionKey, string> = {
+  summary: "Professional Summary",
+  experience: "Work Experience",
+  education: "Education",
+  skills: "Skills",
+  custom: "Additional Sections",
+}
+
+/** Keeps known keys once each, in the given order, and appends any that are missing. */
+export function normalizeSectionOrder(raw: unknown): SectionKey[] {
+  const given = Array.isArray(raw) ? raw.filter((k): k is SectionKey => DEFAULT_SECTION_ORDER.includes(k)) : []
+  return Array.from(new Set([...given, ...DEFAULT_SECTION_ORDER]))
+}
+
 export interface ResumeData {
   personal: {
     firstName: string
@@ -38,6 +57,7 @@ export interface ResumeData {
   education: Education[]
   skills: string[]
   customSections: CustomSection[]
+  sectionOrder: SectionKey[]
 }
 
 export interface ResumeStyle {
@@ -79,6 +99,7 @@ export const emptyResume = (): ResumeData => ({
   education: [],
   skills: [],
   customSections: [],
+  sectionOrder: [...DEFAULT_SECTION_ORDER],
 })
 
 export const defaultStyle = (): ResumeStyle => ({
@@ -152,6 +173,7 @@ export function normalizeResume(raw: any): ResumeData {
             type: s.type === "list" ? "list" : "text",
           }))
       : [],
+    sectionOrder: normalizeSectionOrder(raw.sectionOrder),
   }
 }
 
